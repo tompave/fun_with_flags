@@ -3,6 +3,8 @@ defmodule FunWithFlags.Mixfile do
 
   def project do
     [app: :fun_with_flags,
+     name: "FunWithFlags",
+     source_url: "https://github.com/tompave/fun_with_flags",
      version: "0.1.0",
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
@@ -29,6 +31,8 @@ defmodule FunWithFlags.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [
+      {:ex_doc, "~> 0.14.5", only: :docs},
+    ]
   end
 end
