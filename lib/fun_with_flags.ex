@@ -28,7 +28,7 @@ defmodule FunWithFlags do
 
       iex> FunWithFlags.enabled?(:super_shrink_ray)
       false
-      iex> {:ok, true} = FunWithFlags.enable(:super_shrink_ray)
+      iex> FunWithFlags.enable(:super_shrink_ray)
       {:ok, true}
       iex> FunWithFlags.enabled?(:super_shrink_ray)
       true
@@ -52,7 +52,7 @@ defmodule FunWithFlags do
       iex> FunWithFlags.enable(:random_koala_gifs)
       iex> FunWithFlags.enabled?(:random_koala_gifs)
       true
-      iex> {:ok, false} = FunWithFlags.disable(:random_koala_gifs)
+      iex> FunWithFlags.disable(:random_koala_gifs)
       {:ok, false}
       iex> FunWithFlags.enabled?(:random_koala_gifs)
       false
