@@ -8,6 +8,9 @@ defmodule FunWithFlags.Application do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
+    # Public table so that every process can write to it.
+    :ets.new(:fun_with_flags, [:set, :public, :named_table])
+
     # Define workers and child supervisors to be supervised
     children = [
       # Starts a worker by calling: FunWithFlags.Worker.start_link(arg1, arg2, arg3)
