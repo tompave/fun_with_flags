@@ -1,6 +1,6 @@
 # FunWithFlags
 
-**TODO: Add description**
+FunWithFlags, the Elixir feature flag library.
 
 ## Installation
 
