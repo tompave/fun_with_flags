@@ -1,6 +1,8 @@
 language: elixir
 elixir:
   - 1.4
+otp_release:
+  - 19
 notifications:
   email:
     on_success: never
