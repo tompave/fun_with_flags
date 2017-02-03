@@ -1,0 +1,7 @@
+language: elixir
+elixir:
+  - 1.4
+notifications:
+  email:
+    on_success: never
+    on_failure: never
