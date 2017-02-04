@@ -1,40 +1,47 @@
 defmodule FunWithFlagsTest do
   use ExUnit.Case, async: true
+  import FunWithFlags.TestUtils
   doctest FunWithFlags
 
   describe "enabled?" do
     test "it returns false for non existing feature flags" do
-      assert false == FunWithFlags.enabled?(:i_do_not_exits)
+      flag_name = unique_atom()
+      assert false == FunWithFlags.enabled?(flag_name)
     end
 
     test "it returns false for a disabled feature flag" do
-      FunWithFlags.disable(:foobar)
-      assert false == FunWithFlags.enabled?(:foobar)
+      flag_name = unique_atom()
+      FunWithFlags.disable(flag_name)
+      assert false == FunWithFlags.enabled?(flag_name)
     end
 
     test "it returns true for an enabled feature flag" do
-      FunWithFlags.enable(:barbaz)
-      assert true == FunWithFlags.enabled?(:barbaz)
+      flag_name = unique_atom()
+      FunWithFlags.enable(flag_name)
+      assert true == FunWithFlags.enabled?(flag_name)
     end
   end
 
 
   test "flags can be enabled and disabled" do
-    assert false == FunWithFlags.enabled?(:domodossola)
-    FunWithFlags.enable(:domodossola)
-    assert true == FunWithFlags.enabled?(:domodossola)
-    FunWithFlags.disable(:domodossola)
-    assert false == FunWithFlags.enabled?(:domodossola)
+    flag_name = unique_atom()
+    assert false == FunWithFlags.enabled?(flag_name)
+    FunWithFlags.enable(flag_name)
+    assert true == FunWithFlags.enabled?(flag_name)
+    FunWithFlags.disable(flag_name)
+    assert false == FunWithFlags.enabled?(flag_name)
   end
 
 
   test "enabling always returns the tuple {:ok, true} on success" do
-    assert {:ok, true} = FunWithFlags.enable(:perugia)
-    assert {:ok, true} = FunWithFlags.enable(:perugia)
+    flag_name = unique_atom()
+    assert {:ok, true} = FunWithFlags.enable(flag_name)
+    assert {:ok, true} = FunWithFlags.enable(flag_name)
   end
 
   test "disabling always returns the tuple {:ok, false} on success" do
-    assert {:ok, false} = FunWithFlags.disable(:norcia)
-    assert {:ok, false} = FunWithFlags.disable(:norcia)
+    flag_name = unique_atom()
+    assert {:ok, false} = FunWithFlags.disable(flag_name)
+    assert {:ok, false} = FunWithFlags.disable(flag_name)
   end
 end
