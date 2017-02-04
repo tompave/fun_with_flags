@@ -7,7 +7,7 @@ defmodule FunWithFlags.Store.Cache do
   ]
 
   def start_link do
-    GenServer.start_link(__MODULE__, nil, [name: __MODULE__])
+    GenServer.start_link(__MODULE__, :ok, [name: __MODULE__])
   end
 
   # We lookup without going through the GenServer
@@ -32,7 +32,7 @@ defmodule FunWithFlags.Store.Cache do
   # GenServer callbacks
 
 
-  def init(_) do
+  def init(:ok) do
     tab_name = @table_name
     ^tab_name = create_table()
     {:ok, tab_name}

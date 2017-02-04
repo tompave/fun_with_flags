@@ -2,11 +2,11 @@ defmodule FunWithFlags.Store.Persistent do
   use GenServer
 
   def start_link() do
-    GenServer.start_link(__MODULE__, nil, [name: __MODULE__])
+    GenServer.start_link(__MODULE__, :ok, [name: __MODULE__])
   end
 
 
-  def init(_) do
+  def init(:ok) do
     {:ok, []}
   end
 
