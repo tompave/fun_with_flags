@@ -3,6 +3,8 @@ defmodule FunWithFlags do
   FunWithFlags, the Elixir feature flag library.
   """
 
+  alias FunWithFlags.Store
+
   @doc """
   Checks if a flag is enabled.
 
@@ -13,10 +15,7 @@ defmodule FunWithFlags do
   """
   @spec enabled?(atom) :: boolean
   def enabled?(flag_name) when is_atom(flag_name) do
-    case :ets.lookup(:fun_with_flags, flag_name) do
-      [{^flag_name, value}] -> value
-      _ -> false
-    end
+    Store.lookup(flag_name)
   end
 
 
@@ -36,10 +35,7 @@ defmodule FunWithFlags do
   """
   @spec enable(atom) :: {:ok, true}
   def enable(flag_name) when is_atom(flag_name) do
-    case :ets.insert(:fun_with_flags, {flag_name, true}) do
-      true -> {:ok, true}
-      _ -> {:error, "couldn't enable the flag"}
-    end
+    Store.put(flag_name, true)
   end
 
 
@@ -60,10 +56,7 @@ defmodule FunWithFlags do
   """
   @spec disable(atom) :: {:ok, false}
   def disable(flag_name) when is_atom(flag_name) do
-    case :ets.insert(:fun_with_flags, {flag_name, false}) do
-      true -> {:ok, false}
-      _ -> {:error, "couldn't disable the flag"}
-    end
+    Store.put(flag_name, false)
   end
 
 end
