@@ -8,7 +8,7 @@ defmodule FunWithFlags.Store.Supervisor do
   def init(_) do
     children = [
       worker(FunWithFlags.Store.Cache, [], restart: :permanent),
-      worker(FunWithFlags.Store.Persistent, [], restart: :permanent)
+      # worker(FunWithFlags.Store.Persistent, [], restart: :permanent)
     ]
 
     supervise(children, strategy: :one_for_one)
