@@ -13,7 +13,7 @@ defmodule FunWithFlags.Store.Persistent do
   # They'll be killed and restarted automatically as well.
   #
   def init(:ok) do
-    Redix.start_link([], [name: @conn_name])
+    Redix.start_link(FunWithFlags.Config.redis_config, [name: @conn_name])
     {:ok, []}
   end
 
