@@ -37,6 +37,7 @@ defmodule FunWithFlags.Mixfile do
   defp deps do
     [
       {:ex_doc, "~> 0.14.5", only: :dev},
+      {:redix, "~> 0.5.1"},
     ]
   end
 
