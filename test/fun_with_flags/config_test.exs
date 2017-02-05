@@ -4,7 +4,7 @@ defmodule FunWithFlags.ConfigTest do
 
   # Test all of these in the same test case because Mix provides
   # no API to clear or reset the App configuration. Since the test
-  # order is randomized, testing these cases seprately makes them
+  # order is randomized, testing these cases separately makes them
   # non-deterministic and causes random failures.
   #
   # The good thing is that the OTP app is started _before_ the

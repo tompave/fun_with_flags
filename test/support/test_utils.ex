@@ -1,5 +1,5 @@
 defmodule FunWithFlags.TestUtils do
-  # Since the the flags are stored on shared storages (ETS and
+  # Since the flags are saved on shared storage (ETS and
   # Redis), in order to keep the tests isolated _and_ async
   # each test must use unique flag names. Not doing so would
   # cause some tests to override other tests flag values.

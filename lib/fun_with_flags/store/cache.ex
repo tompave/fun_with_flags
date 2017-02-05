@@ -20,7 +20,7 @@ defmodule FunWithFlags.Store.Cache do
     end
   end
 
-  # We want to always write serially though the
+  # We want to always write serially through the
   # GenServer to avoid race conditions.
   #
   def put(flag_name, value) do
@@ -34,12 +34,10 @@ defmodule FunWithFlags.Store.Cache do
 
   def init(:ok) do
     tab_name = @table_name
-    ^tab_name = create_table()
+    ^tab_name = :ets.new(@table_name, @table_options)
     {:ok, tab_name}
   end
 
-  # def handle_info(msg, state) do
-  # end
 
   def handle_call({:put, flag_name, value}, _from, state) do
     reply = case :ets.insert(@table_name, {flag_name, value}) do
@@ -48,16 +46,7 @@ defmodule FunWithFlags.Store.Cache do
     end
     {:reply, reply, state}
   end
-
-
-  # def handle_cast() do
-  # end
-
-
-  defp create_table do
-    :ets.new(@table_name, @table_options)
-  end
-
+  
 
   defp set_error_for(value) do
     if value do
