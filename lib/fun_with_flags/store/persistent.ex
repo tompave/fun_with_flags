@@ -1,10 +1,24 @@
 defmodule FunWithFlags.Store.Persistent do
   use GenServer
+  alias FunWithFlags.Config
 
-  @conn_name :fun_with_flags_redis
+  @conn :fun_with_flags_redis
+  @conn_options [name: @conn, sync_connect: false]
 
   def start_link() do
     GenServer.start_link(__MODULE__, :ok, [name: __MODULE__])
+  end
+
+  def get(flag_name) do
+    case Redix.command(@conn, ["GET", flag_name]) do
+      {:ok, "true"}  -> true
+      {:ok, "false"} -> false
+      _              -> false
+    end
+  end
+
+  def put(flag_name, value) do
+    Redix.command!(@conn, ["SET", flag_name, value])
   end
 
 
@@ -13,17 +27,8 @@ defmodule FunWithFlags.Store.Persistent do
   # They'll be killed and restarted automatically as well.
   #
   def init(:ok) do
-    Redix.start_link(FunWithFlags.Config.redis_config, [name: @conn_name])
-    {:ok, []}
+    {:ok, _pid} = Redix.start_link(Config.redis_config, @conn_options)
+    {:ok, nil}
   end
 
-  # def handle_info(msg, state) do
-  # end
-
-  # def handle_call() do
-  # end
-
-
-  # def handle_cast() do
-  # end
 end
