@@ -4,6 +4,11 @@ defmodule FunWithFlags.Store.PersistentTest do
 
   alias FunWithFlags.Store.Persistent
 
+  setup_all do
+    on_exit(__MODULE__, fn() -> clear_redis_test_db() end)
+    :ok
+  end
+
 
   test "looking up an undefined flag returns false" do
     flag_name = unique_atom()

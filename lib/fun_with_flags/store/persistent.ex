@@ -4,13 +4,14 @@ defmodule FunWithFlags.Store.Persistent do
 
   @conn :fun_with_flags_redis
   @conn_options [name: @conn, sync_connect: false]
+  @prefix "fun_with_flags:"
 
   def start_link() do
     GenServer.start_link(__MODULE__, :ok, [name: __MODULE__])
   end
 
   def get(flag_name) do
-    case Redix.command(@conn, ["GET", flag_name]) do
+    case Redix.command(@conn, ["GET", format(flag_name)]) do
       {:ok, "true"}  -> true
       {:ok, "false"} -> false
       _              -> false
@@ -18,7 +19,7 @@ defmodule FunWithFlags.Store.Persistent do
   end
 
   def put(flag_name, value) do
-    Redix.command!(@conn, ["SET", flag_name, value])
+    Redix.command!(@conn, ["SET", format(flag_name), value])
   end
 
 
@@ -29,6 +30,11 @@ defmodule FunWithFlags.Store.Persistent do
   def init(:ok) do
     {:ok, _pid} = Redix.start_link(Config.redis_config, @conn_options)
     {:ok, nil}
+  end
+
+
+  defp format(flag_name) do
+    @prefix <> to_string(flag_name)
   end
 
 end
