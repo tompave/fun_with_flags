@@ -23,10 +23,10 @@ defmodule FunWithFlags.ConfigTest do
     assert ^url = Config.redis_config
 
     # when confgured with keywords, it merges them with the default
-    configure_redis_with(db: 42, port: 2000)
+    configure_redis_with(database: 42, port: 2000)
     assert defaults[:host] == Config.redis_config[:host]
     assert            2000 == Config.redis_config[:port]
-    assert              42 == Config.redis_config[:db]
+    assert              42 == Config.redis_config[:database]
   end
 
 
