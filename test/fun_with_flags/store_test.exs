@@ -1,5 +1,5 @@
 defmodule FunWithFlags.StoreTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   import FunWithFlags.TestUtils
 
   alias FunWithFlags.Store
@@ -50,5 +50,45 @@ defmodule FunWithFlags.StoreTest do
       FunWithFlags.enable(flag_name)
       assert true == Store.lookup(flag_name)
     end
+  end
+
+
+  describe "Cache and Persistence" do
+    alias FunWithFlags.Store.{Cache, Persistent}
+
+    test "setting a value will update both the cache and the persistent store" do
+      flag_name = unique_atom()
+
+      assert :not_found == Cache.present?(flag_name)
+      assert false == Persistent.get(flag_name)
+      Store.put(flag_name, true)
+      assert {:found, true} == Cache.present?(flag_name)
+      assert true == Persistent.get(flag_name)
+    end
+
+    test "when the value is initially not in the cache but set in redis,
+          looking it up will populate the cache" do
+      flag_name = unique_atom()
+      Persistent.put(flag_name, true)
+
+      assert :not_found == Cache.present?(flag_name)
+      assert true == Persistent.get(flag_name)
+      
+      assert true == Store.lookup(flag_name)
+      assert {:found, true} == Cache.present?(flag_name)
+    end
+
+
+    test "when the value is initially not in the cache and not in redis,
+          looking it up will populate the cache" do
+      flag_name = unique_atom()
+
+      assert :not_found == Cache.present?(flag_name)
+      assert false == Persistent.get(flag_name)
+      
+      assert false == Store.lookup(flag_name)
+      assert {:found, false} == Cache.present?(flag_name)
+    end
+
   end
 end
