@@ -25,6 +25,28 @@ The planned functionality of this library is heavily inspired by the [flipper Ru
 
 Just as Elixir and Phoenix are meant to scale better than Ruby on Rails with high levels of traffic and concurrency, FunWithFlags should aim to be more scalable than Flipper.
 
+## Status and Roadmap
+
+### Done
+
+* Simple boolean flags: either ON or OFF.
+* Flags are persisted in Redis and available on application restart.
+* In-process ETS cache. On lookup, the library checks the cache first. If the ETS table doesn't contain a flag, it falls back to Redis and copies the value into the cache. Subsequent lookups won't hit Redis. The ETS table is empty when the application starts.
+* Creating or toggling a flag will update both the ETS cache and Redis.
+* Both the ETS cache and the Redis connection are in a supervision tree. The [Redix](https://hex.pm/packages/redix) adapter will try to reconnect to Redis if the connection is lost.
+* If the connection to Redis is lost, the application will continue to work with the known values from the ETS cache.
+* Several nodes can connect to the same Redis and share the flag settings. Each one will hit Redis the first time a flag is looked up, and then will populate its ETS cache.
+
+### Next / Problems
+
+* If Redis become unavailable, and an unknown flag is looked up, the fallback logic will still try to check Redis and raise an exception.
+* When two or more nodes are using the same Redis, and one of them updates a flag that the others have already cached, or creates a flag that the others have already looked up (and cached as "disabled"), then the other nodes will not be notified of the changes.
+** Use Redis PubSub to emit change notifications.
+** Add a TTL to the ETS cache (use [ConCache](https://hex.pm/packages/con_cache)?).
+** Add polling to refresh the cache from Redis every X seconds (not ideal).
+* Implement other "gates": at least actors and groups.
+
+
 ## Usage
 
 Still a work in progress, expect breaking changes.
