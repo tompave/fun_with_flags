@@ -1,4 +1,5 @@
 defmodule FunWithFlags.Store.Cache do
+  @moduledoc false
   use GenServer
 
   @table_name :fun_with_flags_cache

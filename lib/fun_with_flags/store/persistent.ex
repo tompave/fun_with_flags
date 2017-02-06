@@ -1,4 +1,5 @@
 defmodule FunWithFlags.Store.Persistent do
+  @moduledoc false
   use GenServer
   alias FunWithFlags.Config
 

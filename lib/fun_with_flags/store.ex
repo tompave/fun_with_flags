@@ -1,4 +1,5 @@
 defmodule FunWithFlags.Store do
+  @moduledoc false
   alias FunWithFlags.Store.{Cache, Persistent}
 
   def lookup(flag_name) do

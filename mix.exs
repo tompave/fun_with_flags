@@ -1,11 +1,13 @@
 defmodule FunWithFlags.Mixfile do
   use Mix.Project
 
+  @version "0.0.2"
+
   def project do
     [
       app: :fun_with_flags,
       source_url: "https://github.com/tompave/fun_with_flags",
-      version: "0.0.2",
+      version: @version,
       elixir: "~> 1.4",
       elixirc_paths: elixirc_paths(Mix.env),
       build_embedded: Mix.env == :prod,
@@ -13,6 +15,7 @@ defmodule FunWithFlags.Mixfile do
       deps: deps(),
       description: description(),
       package: package(),
+      docs: docs(),
     ]
   end
 
@@ -63,6 +66,16 @@ defmodule FunWithFlags.Mixfile do
       links: %{
         "GitHub" => "https://github.com/tompave/fun_with_flags",
       }
+    ]
+  end
+
+
+  defp docs do
+    [
+      extras: ["README.md"],
+      main: "FunWithFlags",
+      source_url: "https://github.com/tompave/fun_with_flags/",
+      source_ref: @version
     ]
   end
 end
