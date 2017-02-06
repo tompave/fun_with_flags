@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/tompave/fun_with_flags.svg?branch=master)](https://travis-ci.org/tompave/fun_with_flags)
 [![Hex.pm](https://img.shields.io/hexpm/v/fun_with_flags.svg)](https://hex.pm/packages/fun_with_flags)
-[![hexdocs.pm](https://img.shields.io/badge/docs-0.0.3-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/api-reference.html)
+[![hexdocs.pm](https://img.shields.io/badge/docs-0.0.3-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/)
 
 FunWithFlags, the Elixir feature flag library.
 
@@ -41,9 +41,9 @@ Just as Elixir and Phoenix are meant to scale better than Ruby on Rails with hig
 
 * If Redis become unavailable, and an unknown flag is looked up, the fallback logic will still try to check Redis and raise an exception.
 * When two or more nodes are using the same Redis, and one of them updates a flag that the others have already cached, or creates a flag that the others have already looked up (and cached as "disabled"), then the other nodes will not be notified of the changes.
-** Use Redis PubSub to emit change notifications.
-** Add a TTL to the ETS cache (use [ConCache](https://hex.pm/packages/con_cache)?).
-** Add polling to refresh the cache from Redis every X seconds (not ideal).
+    * Use Redis PubSub to emit change notifications.
+    * Add a TTL to the ETS cache (use [ConCache](https://hex.pm/packages/con_cache)?).
+    * Add polling to refresh the cache from Redis every X seconds (not ideal).
 * Implement other "gates": at least actors and groups.
 
 
