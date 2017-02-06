@@ -53,16 +53,16 @@ defmodule FunWithFlags.StoreTest do
   end
 
 
-  describe "Cache and Persistence" do
+  describe "integration: Cache and Persistence" do
     alias FunWithFlags.Store.{Cache, Persistent}
 
     test "setting a value will update both the cache and the persistent store" do
       flag_name = unique_atom()
 
-      assert :not_found == Cache.present?(flag_name)
+      assert :not_found == Cache.get(flag_name)
       assert false == Persistent.get(flag_name)
       Store.put(flag_name, true)
-      assert {:found, true} == Cache.present?(flag_name)
+      assert {:found, true} == Cache.get(flag_name)
       assert true == Persistent.get(flag_name)
     end
 
@@ -71,11 +71,11 @@ defmodule FunWithFlags.StoreTest do
       flag_name = unique_atom()
       Persistent.put(flag_name, true)
 
-      assert :not_found == Cache.present?(flag_name)
+      assert :not_found == Cache.get(flag_name)
       assert true == Persistent.get(flag_name)
       
       assert true == Store.lookup(flag_name)
-      assert {:found, true} == Cache.present?(flag_name)
+      assert {:found, true} == Cache.get(flag_name)
     end
 
 
@@ -83,11 +83,11 @@ defmodule FunWithFlags.StoreTest do
           looking it up will populate the cache" do
       flag_name = unique_atom()
 
-      assert :not_found == Cache.present?(flag_name)
+      assert :not_found == Cache.get(flag_name)
       assert false == Persistent.get(flag_name)
       
       assert false == Store.lookup(flag_name)
-      assert {:found, false} == Cache.present?(flag_name)
+      assert {:found, false} == Cache.get(flag_name)
     end
 
   end

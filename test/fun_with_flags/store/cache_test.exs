@@ -11,19 +11,19 @@ defmodule FunWithFlags.Store.CacheTest do
   #   :ok
   # end
 
-  test "looking up an undefined flag returns false" do
+  test "looking up an undefined flag returns :not_found" do
     flag_name = unique_atom()
-    assert false == Cache.get(flag_name)
+    assert :not_found == Cache.get(flag_name)
   end
 
   test "put() can change the value of a flag" do
     flag_name = unique_atom()
 
-    assert false == Cache.get(flag_name)
+    assert :not_found == Cache.get(flag_name)
     Cache.put(flag_name, true)
-    assert true == Cache.get(flag_name)
+    assert {:found, true} == Cache.get(flag_name)
     Cache.put(flag_name, false)
-    assert false == Cache.get(flag_name)
+    assert {:found, false}== Cache.get(flag_name)
   end
 
   test "put() returns the tuple {:ok, a_boolean_value}" do
@@ -32,34 +32,27 @@ defmodule FunWithFlags.Store.CacheTest do
     assert {:ok, false} == Cache.put(flag_name, false)
   end
 
-  test "get() returns a boolean" do
-    flag_name = unique_atom()
-    assert false == Cache.get(flag_name)
-    Cache.put(flag_name, true)
-    assert true == Cache.get(flag_name)
-  end
 
-
-  test "present?() checks if a flag is already stored, it returns {:found, flag_value}" do
+  test "get() checks if a flag is already stored, it returns {:found, flag_value} or :not_found" do
     flag_name = unique_atom()
-    assert :not_found = Cache.present?(flag_name)
+    assert :not_found = Cache.get(flag_name)
     Cache.put(flag_name, false)
-    assert {:found, false} = Cache.present?(flag_name)
+    assert {:found, false}= Cache.get(flag_name)
     Cache.put(flag_name, true)
-    assert {:found, true} = Cache.present?(flag_name)
+    assert {:found, true} = Cache.get(flag_name)
   end
 
   describe "unit: enable and disable with this module's API" do
-    test "looking up a disabled flag returns false" do
+    test "looking up a disabled flag returns {:found, false}" do
       flag_name = unique_atom()
       Cache.put(flag_name, false)
-      assert false == Cache.get(flag_name)
+      assert {:found, false}== Cache.get(flag_name)
     end
 
-    test "looking up an enabled flag returns true" do
+    test "looking up an enabled flag returns {:found, true}" do
       flag_name = unique_atom()
       Cache.put(flag_name, true)
-      assert true == Cache.get(flag_name)
+      assert {:found, true} == Cache.get(flag_name)
     end
   end
 
@@ -71,16 +64,16 @@ defmodule FunWithFlags.Store.CacheTest do
       :ok
     end
 
-    test "looking up a disabled flag returns false" do
+    test "looking up a disabled flag returns {:found, false}" do
       flag_name = unique_atom()
       FunWithFlags.disable(flag_name)
-      assert false == Cache.get(flag_name)
+      assert {:found, false}== Cache.get(flag_name)
     end
 
-    test "looking up an enabled flag returns true" do
+    test "looking up an enabled flag returns {:found, true}" do
       flag_name = unique_atom()
       FunWithFlags.enable(flag_name)
-      assert true == Cache.get(flag_name)
+      assert {:found, true} == Cache.get(flag_name)
     end
   end    
 end

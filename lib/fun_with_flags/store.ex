@@ -2,7 +2,7 @@ defmodule FunWithFlags.Store do
   alias FunWithFlags.Store.{Cache, Persistent}
 
   def lookup(flag_name) do
-    case Cache.present?(flag_name) do
+    case Cache.get(flag_name) do
       :not_found ->
         bool = Persistent.get(flag_name)
         {:ok, ^bool} = Cache.put(flag_name, bool)

@@ -10,20 +10,11 @@ defmodule FunWithFlags.Store.Cache do
     GenServer.start_link(__MODULE__, :ok, [name: __MODULE__])
   end
 
+  
   # We lookup without going through the GenServer
   # for concurrency and perfomance.
   #
   def get(flag_name) do
-    case :ets.lookup(@table_name, flag_name) do
-      [{^flag_name, value}] -> value
-      _ -> false
-    end
-  end
-
-
-  # Check if a flag is in the ETS cache.
-  # 
-  def present?(flag_name) do
     case :ets.lookup(@table_name, flag_name) do
       [{^flag_name, value}] -> {:found, value}
       _ -> :not_found
