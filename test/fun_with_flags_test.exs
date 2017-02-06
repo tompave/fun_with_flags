@@ -3,6 +3,11 @@ defmodule FunWithFlagsTest do
   import FunWithFlags.TestUtils
   doctest FunWithFlags
 
+  setup_all do
+    on_exit(__MODULE__, fn() -> clear_redis_test_db() end)
+    :ok
+  end
+
   describe "enabled?" do
     test "it returns false for non existing feature flags" do
       flag_name = unique_atom()

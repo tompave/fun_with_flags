@@ -4,6 +4,11 @@ defmodule FunWithFlags.StoreTest do
 
   alias FunWithFlags.Store
 
+  setup_all do
+    on_exit(__MODULE__, fn() -> clear_redis_test_db() end)
+    :ok
+  end
+
   test "looking up an undefined flag returns false" do
     flag_name = unique_atom()
     assert false == Store.lookup(flag_name)

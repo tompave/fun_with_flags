@@ -54,6 +54,13 @@ defmodule FunWithFlags.Store.CacheTest do
   end
 
   describe "integration: enable and disable with the top-level API" do
+    setup do
+      # can't use setup_all in here, but the on_exit should
+      # be run only once because it's identifed by a common ref
+      on_exit(:cache_integration_group, fn() -> clear_redis_test_db() end)
+      :ok
+    end
+
     test "looking up a disabled flag returns false" do
       flag_name = unique_atom()
       FunWithFlags.disable(flag_name)
