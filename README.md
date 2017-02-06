@@ -31,7 +31,7 @@ Just as Elixir and Phoenix are meant to scale better than Ruby on Rails with hig
 
 * Simple boolean flags: either ON or OFF.
 * Flags are persisted in Redis and available on application restart.
-* In-process ETS cache. On lookup, the library checks the cache first. If the ETS table doesn't contain a flag, it falls back to Redis and copies the value into the cache. Subsequent lookups won't hit Redis. The ETS table is empty when the application starts.
+* In-process ETS cache. On lookup, the library checks the cache first. If the ETS table doesn't contain a flag, it falls back to Redis and copies the value into the cache. Subsequent lookups won't hit Redis. The ETS table is empty when the application starts. Writes to the ETS table are managed by a GenServer and are serial, while any other process can read from it concurrently.
 * Creating or toggling a flag will update both the ETS cache and Redis.
 * Both the ETS cache and the Redis connection are in a supervision tree. The [Redix](https://hex.pm/packages/redix) adapter will try to reconnect to Redis if the connection is lost.
 * If the connection to Redis is lost, the application will continue to work with the known values from the ETS cache.
