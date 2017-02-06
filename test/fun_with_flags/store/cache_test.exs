@@ -39,6 +39,16 @@ defmodule FunWithFlags.Store.CacheTest do
     assert true == Cache.get(flag_name)
   end
 
+
+  test "present?() checks if a flag is already stored, it returns {:found, flag_value}" do
+    flag_name = unique_atom()
+    assert :not_found = Cache.present?(flag_name)
+    Cache.put(flag_name, false)
+    assert {:found, false} = Cache.present?(flag_name)
+    Cache.put(flag_name, true)
+    assert {:found, true} = Cache.present?(flag_name)
+  end
+
   describe "unit: enable and disable with this module's API" do
     test "looking up a disabled flag returns false" do
       flag_name = unique_atom()

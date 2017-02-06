@@ -20,6 +20,17 @@ defmodule FunWithFlags.Store.Cache do
     end
   end
 
+
+  # Check if a flag is in the ETS cache.
+  # 
+  def present?(flag_name) do
+    case :ets.lookup(@table_name, flag_name) do
+      [{^flag_name, value}] -> {:found, value}
+      _ -> :not_found
+    end
+  end
+
+
   # We want to always write serially through the
   # GenServer to avoid race conditions.
   #
