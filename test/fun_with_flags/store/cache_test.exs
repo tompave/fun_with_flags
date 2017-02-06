@@ -26,6 +26,19 @@ defmodule FunWithFlags.Store.CacheTest do
     assert false == Cache.get(flag_name)
   end
 
+  test "put() returns the tuple {:ok, a_boolean_value}" do
+    flag_name = unique_atom()
+    assert {:ok, true} == Cache.put(flag_name, true)
+    assert {:ok, false} == Cache.put(flag_name, false)
+  end
+
+  test "get() returns a boolean" do
+    flag_name = unique_atom()
+    assert false == Cache.get(flag_name)
+    Cache.put(flag_name, true)
+    assert true == Cache.get(flag_name)
+  end
+
   describe "unit: enable and disable with this module's API" do
     test "looking up a disabled flag returns false" do
       flag_name = unique_atom()

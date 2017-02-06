@@ -19,7 +19,10 @@ defmodule FunWithFlags.Store.Persistent do
   end
 
   def put(flag_name, value) do
-    Redix.command!(@conn, ["SET", format(flag_name), value])
+    case Redix.command(@conn, ["SET", format(flag_name), value]) do
+      {:ok, "OK"} -> {:ok, value}
+      {:error, _reason} = error -> error
+    end
   end
 
 
