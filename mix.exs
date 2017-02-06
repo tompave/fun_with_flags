@@ -75,7 +75,7 @@ defmodule FunWithFlags.Mixfile do
       extras: ["README.md"],
       main: "FunWithFlags",
       source_url: "https://github.com/tompave/fun_with_flags/",
-      source_ref: @version
+      source_ref: "v#{@version}"
     ]
   end
 end
