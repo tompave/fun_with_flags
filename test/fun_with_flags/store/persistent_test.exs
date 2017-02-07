@@ -52,17 +52,17 @@ defmodule FunWithFlags.Store.PersistentTest do
     end
   end
 
-  # describe "integration: enable and disable with the top-level API" do
-  #   test "looking up a disabled flag returns false" do
-  #     flag_name = unique_atom()
-  #     FunWithFlags.disable(flag_name)
-  #     assert false == Persistent.get(flag_name)
-  #   end
-  #
-  #   test "looking up an enabled flag returns true" do
-  #     flag_name = unique_atom()
-  #     FunWithFlags.enable(flag_name)
-  #     assert true == Persistent.get(flag_name)
-  #   end
-  # end
+  describe "integration: enable and disable with the top-level API" do
+    test "looking up a disabled flag returns false" do
+      flag_name = unique_atom()
+      FunWithFlags.disable(flag_name)
+      assert false == Persistent.get(flag_name)
+    end
+  
+    test "looking up an enabled flag returns true" do
+      flag_name = unique_atom()
+      FunWithFlags.enable(flag_name)
+      assert true == Persistent.get(flag_name)
+    end
+  end
 end

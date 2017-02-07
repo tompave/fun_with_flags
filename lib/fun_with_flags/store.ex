@@ -5,16 +5,26 @@ defmodule FunWithFlags.Store do
   def lookup(flag_name) do
     case Cache.get(flag_name) do
       :not_found ->
-        bool = Persistent.get(flag_name)
-        {:ok, ^bool} = Cache.put(flag_name, bool)
-        bool
+        case Persistent.get(flag_name) do
+          {:error, _reason} ->
+            false
+          bool when is_boolean(bool) ->
+            # {:ok, ^bool} = Cache.put(flag_name, bool)
+            # swallow cache errors for the moment
+            Cache.put(flag_name, bool) 
+            bool
+        end
       {:found, value} ->
         value
     end
   end
 
   def put(flag_name, value) do
-    Persistent.put(flag_name, value)
-    Cache.put(flag_name, value)
+    case Persistent.put(flag_name, value) do
+      {:ok, ^value} ->
+        Cache.put(flag_name, value)
+      {:error, _reason} = error ->
+        error
+    end
   end  
 end

@@ -8,6 +8,8 @@ FunWithFlags, the Elixir feature flag library.
 
 **This library is still a work in progress and is not ready to use**
 
+This readme refers to the `master` branch. For the latest version released on Hex, please check [the readme published with the docs](https://hexdocs.pm/fun_with_flags/readme.html).
+
 ## Goals
 
 This library is meant to be an OTP application that provides an Elixir API to toggle and query feature flags and an (authenticated) web UI for administrators.
@@ -34,12 +36,11 @@ Just as Elixir and Phoenix are meant to scale better than Ruby on Rails with hig
 * In-process ETS cache. On lookup, the library checks the cache first. If the ETS table doesn't contain a flag, it falls back to Redis and copies the value into the cache. Subsequent lookups won't hit Redis. The ETS table is empty when the application starts. Writes to the ETS table are managed by a GenServer and are serial, while any other process can read from it concurrently.
 * Creating or toggling a flag will update both the ETS cache and Redis.
 * Both the ETS cache and the Redis connection are in a supervision tree. The [Redix](https://hex.pm/packages/redix) adapter will try to reconnect to Redis if the connection is lost.
-* If the connection to Redis is lost, the application will continue to work with the known values from the ETS cache.
+* If the connection to Redis is lost, the application will continue to work with the known values from the ETS cache. If an unknown flag is looked up when Redis is unavailable it will default to the disabled state.
 * Several nodes can connect to the same Redis and share the flag settings. Each one will hit Redis the first time a flag is looked up, and then will populate its ETS cache.
 
 ### Next / Problems
 
-* If Redis become unavailable, and an unknown flag is looked up, the fallback logic will still try to check Redis and raise an exception.
 * When two or more nodes are using the same Redis, and one of them updates a flag that the others have already cached, or creates a flag that the others have already looked up (and cached as "disabled"), then the other nodes will not be notified of the changes.
     * Use Redis PubSub to emit change notifications.
     * Add a TTL to the ETS cache (use [ConCache](https://hex.pm/packages/con_cache)?).

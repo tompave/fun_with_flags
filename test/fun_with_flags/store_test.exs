@@ -24,6 +24,12 @@ defmodule FunWithFlags.StoreTest do
     assert false == Store.lookup(flag_name)
   end
 
+  test "put() returns the tuple {:ok, a_boolean_value}" do
+    flag_name = unique_atom()
+    assert {:ok, true} == Store.put(flag_name, true)
+    assert {:ok, false} == Store.put(flag_name, false)
+  end
+
   describe "unit: enable and disable with this module's API" do
     test "looking up a disabled flag returns false" do
       flag_name = unique_atom()

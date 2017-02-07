@@ -15,6 +15,7 @@ defmodule FunWithFlags.Store.Persistent do
     case Redix.command(@conn, ["GET", format(flag_name)]) do
       {:ok, "true"}  -> true
       {:ok, "false"} -> false
+      {:error, why}  -> {:error, redis_error(why)}
       _              -> false
     end
   end
@@ -22,7 +23,7 @@ defmodule FunWithFlags.Store.Persistent do
   def put(flag_name, value) do
     case Redix.command(@conn, ["SET", format(flag_name), value]) do
       {:ok, "OK"} -> {:ok, value}
-      {:error, _reason} = error -> error
+      {:error, why} -> {:error, redis_error(why)}
     end
   end
 
@@ -39,6 +40,10 @@ defmodule FunWithFlags.Store.Persistent do
 
   defp format(flag_name) do
     @prefix <> to_string(flag_name)
+  end
+
+  defp redis_error(reason_atom) do
+    "Redis Error: #{reason_atom}"
   end
 
 end
