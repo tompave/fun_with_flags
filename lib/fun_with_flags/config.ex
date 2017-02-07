@@ -5,6 +5,10 @@ defmodule FunWithFlags.Config do
     port: 6379,
   ]
 
+  @default_cache_config [
+    enabled: true,
+  ]
+
   def redis_config do
     case Application.get_env(:fun_with_flags, :redis, []) do
       uri  when is_binary(uri) ->
@@ -12,5 +16,18 @@ defmodule FunWithFlags.Config do
       opts when is_list(opts) ->
         Keyword.merge(@default_redis_config, opts)
     end
+  end
+
+
+  def cache? do
+    Keyword.get(ets_cache_config(), :enabled)
+  end
+
+
+  defp ets_cache_config do
+    Keyword.merge(
+      @default_cache_config,
+      Application.get_env(:fun_with_flags, :cache, [])
+    )
   end
 end

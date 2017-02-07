@@ -27,7 +27,24 @@ defmodule FunWithFlags.ConfigTest do
     assert defaults[:host] == Config.redis_config[:host]
     assert            2000 == Config.redis_config[:port]
     assert              42 == Config.redis_config[:database]
+
+    # cleanup
+    configure_redis_with(defaults)
   end
+
+
+  test "cache?" do
+    # defaults to true
+    assert true == Config.cache?
+
+    # can be configured
+    Mix.Config.persist(fun_with_flags: [cache: [enabled: false]])
+    assert false == Config.cache?
+
+    # cleanup
+    Mix.Config.persist(fun_with_flags: [cache: [enabled: true]])
+  end
+
 
 
 

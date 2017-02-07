@@ -38,10 +38,11 @@ Just as Elixir and Phoenix are meant to scale better than Ruby on Rails with hig
 * Both the ETS cache and the Redis connection are in a supervision tree. The [Redix](https://hex.pm/packages/redix) adapter will try to reconnect to Redis if the connection is lost.
 * If the connection to Redis is lost, the application will continue to work with the known values from the ETS cache. If an unknown flag is looked up when Redis is unavailable it will default to the disabled state.
 * Several nodes can connect to the same Redis and share the flag settings. Each one will hit Redis the first time a flag is looked up, and then will populate its ETS cache.
+* The ETS cache is enabled by default, but it can be disabled to only use Redis.
 
 ### Next / Problems
 
-* When two or more nodes are using the same Redis, and one of them updates a flag that the others have already cached, or creates a flag that the others have already looked up (and cached as "disabled"), then the other nodes will not be notified of the changes.
+* When two or more nodes are using the same Redis, and one of them updates a flag that the others have already cached, or creates a flag that the others have already looked up (and cached as "disabled"), then the other nodes will not be notified of the changes. Of course, disabling the cache avoids this problem. Solutions:
     * Use Redis PubSub to emit change notifications.
     * Add a TTL to the ETS cache (use [ConCache](https://hex.pm/packages/con_cache)?).
     * Add polling to refresh the cache from Redis every X seconds (not ideal).

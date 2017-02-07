@@ -31,4 +31,13 @@ defmodule FunWithFlags.TestUtils do
   defp delete_keys(keys) do
     Redix.command!(@redis, ["DEL" | keys])
   end
+
+
+  def enable_the_cache do
+    Mix.Config.persist(fun_with_flags: [cache: [enabled: true]])
+  end
+
+  def disable_the_cache do
+    Mix.Config.persist(fun_with_flags: [cache: [enabled: false]])
+  end
 end
