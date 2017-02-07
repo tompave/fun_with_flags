@@ -35,6 +35,10 @@ defmodule FunWithFlags.Store.Cache do
     GenServer.call(__MODULE__, :flush)
   end
 
+  def dump do
+    :ets.tab2list(@table_name)
+  end
+
   # ------------------------------------------------------------
   # GenServer callbacks
 

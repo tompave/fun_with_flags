@@ -86,4 +86,20 @@ defmodule FunWithFlags.Store.CacheTest do
     Cache.flush()
     assert [] = Cache.dump()
   end
+
+
+  test "dump() returns a List with the cached keys" do
+    one = unique_atom()
+    Cache.put(one, true)
+    two = unique_atom()
+    Cache.put(two, true)
+    three = unique_atom()
+    Cache.put(three, false)
+
+    kw = Cache.dump()
+    assert is_list(kw)
+    assert true == Keyword.get(kw, one)
+    assert true == Keyword.get(kw, two)
+    assert false == Keyword.get(kw, three)
+  end
 end
