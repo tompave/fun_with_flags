@@ -31,6 +31,10 @@ defmodule FunWithFlags.Store.Cache do
   end
 
 
+  def flush do
+    GenServer.call(__MODULE__, :flush)
+  end
+
   # ------------------------------------------------------------
   # GenServer callbacks
 
@@ -48,6 +52,11 @@ defmodule FunWithFlags.Store.Cache do
       _    -> {:error, set_error_for(value)}
     end
     {:reply, reply, state}
+  end
+
+
+  def handle_call(:flush, _from, state) do
+    {:reply, :ets.delete_all_objects(@table_name), state}
   end
   
 

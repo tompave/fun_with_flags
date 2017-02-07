@@ -75,5 +75,15 @@ defmodule FunWithFlags.Store.CacheTest do
       FunWithFlags.enable(flag_name)
       assert {:found, true} == Cache.get(flag_name)
     end
-  end    
+  end
+
+  test "flush() empties the cache" do
+    flag_name = unique_atom()
+    Cache.put(flag_name, true)
+
+    assert [{_,_}|_] = Cache.dump()
+
+    Cache.flush()
+    assert [] = Cache.dump()
+  end
 end
