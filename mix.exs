@@ -16,6 +16,7 @@ defmodule FunWithFlags.Mixfile do
       description: description(),
       package: package(),
       docs: docs(),
+      aliases: aliases(),
     ]
   end
 
@@ -45,7 +46,37 @@ defmodule FunWithFlags.Mixfile do
   end
 
 
+  defp aliases do
+    [
+      # {:"test.all", ["test", &run_integration_test/1]}
+      {:"test.all", [&run_tests/1, &run_integration_tests/1]}
+    ]
+  end
+
+
+  # Runs the normal test suite
+  #
+  defp run_tests(_) do
+    Mix.shell.cmd(
+      "mix test", 
+      env: [{"MIX_ENV", "test"}]
+    )
+  end
+
+  # Re-run integration tests with the _other_
+  # test ENV, where the cache is disabled.
+  #
+  defp run_integration_tests(_) do
+    IO.puts "\nRepeating integration tests with the Cache disabled."
+    Mix.shell.cmd(
+      "mix test test/fun_with_flags_test.exs",
+      env: [{"MIX_ENV", "test_no_cache"}]
+    )
+  end
+
+
   defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(:test_no_cache), do: ["lib", "test/support"]
   defp elixirc_paths(_),     do: ["lib"]
 
 
