@@ -48,7 +48,6 @@ defmodule FunWithFlags.Mixfile do
 
   defp aliases do
     [
-      # {:"test.all", ["test", &run_integration_test/1]}
       {:"test.all", [&run_tests/1, &run_integration_tests/1]}
     ]
   end
@@ -58,7 +57,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_tests(_) do
     Mix.shell.cmd(
-      "mix test", 
+      "mix test --color", 
       env: [{"MIX_ENV", "test"}]
     )
   end
@@ -69,7 +68,7 @@ defmodule FunWithFlags.Mixfile do
   defp run_integration_tests(_) do
     IO.puts "\nRepeating integration tests with the Cache disabled."
     Mix.shell.cmd(
-      "mix test test/fun_with_flags_test.exs",
+      "mix test test/fun_with_flags_test.exs --color",
       env: [{"MIX_ENV", "test_no_cache"}]
     )
   end
