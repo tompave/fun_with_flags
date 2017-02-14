@@ -79,4 +79,18 @@ def deps do
 end
 ```
 
+## Test
 
+This library depends on Redis and you'll need it installed on your system in order to run the tests. A test run will create a few keys in the [Redis db number 5](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_utils.ex#L2) and then remove them, but it's safer to start Redis in a directory where there is no `dump.rdb` file you care about to avoid issues.
+
+Start Redis with:
+```shell
+$ redis-server
+```
+
+Then:
+```
+$ mix test.all
+```
+
+The `test.all` task will run the default `mix test` task with `MIX_ENV=test`, and then will switch to a custom `MIX_ENV=test_no_cache` environment where the ETS cache is disabled and re-run the integration tests.

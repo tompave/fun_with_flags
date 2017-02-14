@@ -6,7 +6,6 @@ defmodule FunWithFlags.SimpleStoreTest do
 
   setup_all do
     on_exit(__MODULE__, fn() -> clear_redis_test_db() end)
-    # disable_the_cache()
     :ok
   end
 

@@ -6,7 +6,6 @@ defmodule FunWithFlags.StoreTest do
 
   setup_all do
     on_exit(__MODULE__, fn() -> clear_redis_test_db() end)
-    # disable_the_cache()
     :ok
   end
 
@@ -64,7 +63,6 @@ defmodule FunWithFlags.StoreTest do
     alias FunWithFlags.Store.{Cache, Persistent}
 
     setup do
-      enable_the_cache()
       :ok
     end
 
