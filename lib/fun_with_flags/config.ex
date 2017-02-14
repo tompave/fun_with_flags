@@ -30,4 +30,13 @@ defmodule FunWithFlags.Config do
       Application.get_env(:fun_with_flags, :cache, [])
     )
   end
+
+
+  def store_module do
+    if __MODULE__.cache? do
+      FunWithFlags.Store
+    else
+      FunWithFlags.SimpleStore
+    end
+  end
 end

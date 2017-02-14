@@ -43,8 +43,22 @@ defmodule FunWithFlags.ConfigTest do
 
     # cleanup
     Mix.Config.persist(fun_with_flags: [cache: [enabled: true]])
+    assert true == Config.cache?
   end
 
+
+  test "store_module" do
+    # defaults to FunWithFlags.Store
+    assert FunWithFlags.Store = Config.store_module
+
+    # can be configured
+    Mix.Config.persist(fun_with_flags: [cache: [enabled: false]])
+    assert FunWithFlags.SimpleStore = Config.store_module
+
+    # cleanup
+    Mix.Config.persist(fun_with_flags: [cache: [enabled: true]])
+    assert FunWithFlags.Store = Config.store_module
+  end
 
 
 
