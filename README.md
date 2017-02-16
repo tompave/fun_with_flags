@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/tompave/fun_with_flags.svg?branch=master)](https://travis-ci.org/tompave/fun_with_flags)
 [![Hex.pm](https://img.shields.io/hexpm/v/fun_with_flags.svg)](https://hex.pm/packages/fun_with_flags)
-[![hexdocs.pm](https://img.shields.io/badge/docs-0.0.4-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/)
+[![hexdocs.pm](https://img.shields.io/badge/docs-0.0.5-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/)
 
 FunWithFlags, the Elixir feature flag library.
 
@@ -95,7 +95,7 @@ The package can be installed by adding `fun_with_flags` to your list of dependen
 
 ```elixir
 def deps do
-  [{:fun_with_flags, "~> 0.0.4"}]
+  [{:fun_with_flags, "~> 0.0.5"}]
 end
 ```
 
