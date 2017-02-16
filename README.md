@@ -65,7 +65,8 @@ config :fun_with_flags, :cache,
 # the Redis options will be forwarded to Redix
 config :fun_with_flags, :redis,
   host: 'localhost',
-  port: 6379
+  port: 6379,
+  database: 0
 ```
 
 ## Usage

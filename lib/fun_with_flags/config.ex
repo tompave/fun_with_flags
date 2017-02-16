@@ -3,6 +3,7 @@ defmodule FunWithFlags.Config do
   @default_redis_config [
     host: 'localhost',
     port: 6379,
+    database: 0,
   ]
 
   @default_cache_config [
