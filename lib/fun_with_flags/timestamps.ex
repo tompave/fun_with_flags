@@ -1,4 +1,6 @@
 defmodule FunWithFlags.Timestamps do
+  @moduledoc false
+
   def now do
     DateTime.utc_now() |> DateTime.to_unix(:second)
   end
