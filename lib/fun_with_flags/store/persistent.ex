@@ -1,15 +1,18 @@
 defmodule FunWithFlags.Store.Persistent do
   @moduledoc false
-  use GenServer
+
   alias FunWithFlags.Config
 
-  @conn :fun_with_flags_redis
+  @conn __MODULE__
   @conn_options [name: @conn, sync_connect: false]
   @prefix "fun_with_flags:"
 
-  def start_link() do
-    GenServer.start_link(__MODULE__, :ok, [name: __MODULE__])
+
+  def worker_spec do
+    import Supervisor.Spec, only: [worker: 3]
+    worker(Redix, [Config.redis_config, @conn_options], [restart: :permanent])
   end
+
 
   def get(flag_name) do
     case Redix.command(@conn, ["GET", format(flag_name)]) do
@@ -20,21 +23,12 @@ defmodule FunWithFlags.Store.Persistent do
     end
   end
 
+
   def put(flag_name, value) do
     case Redix.command(@conn, ["SET", format(flag_name), value]) do
       {:ok, "OK"} -> {:ok, value}
       {:error, why} -> {:error, redis_error(why)}
     end
-  end
-
-
-  # The Redix process and its tree are linked to the current
-  # Store.Persistent process, which is supervised.
-  # They'll be killed and restarted automatically as well.
-  #
-  def init(:ok) do
-    {:ok, _pid} = Redix.start_link(Config.redis_config, @conn_options)
-    {:ok, nil}
   end
 
 

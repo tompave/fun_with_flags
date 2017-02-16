@@ -7,7 +7,7 @@ defmodule FunWithFlags.Application do
     import Supervisor.Spec, warn: false
 
     children = [
-      supervisor(FunWithFlags.Store.Supervisor, [])
+      supervisor(FunWithFlags.Store.Supervisor, [], restart: :permanent),
     ]
 
     opts = [strategy: :one_for_one, name: FunWithFlags.Supervisor]
