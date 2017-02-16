@@ -3,8 +3,7 @@ defmodule FunWithFlags.StoreTest do
   import FunWithFlags.TestUtils
   import Mock
 
-  alias FunWithFlags.Store
-  alias FunWithFlags.Timestamps
+  alias FunWithFlags.{Store, Timestamps, Config}
 
   setup_all do
     on_exit(__MODULE__, fn() -> clear_redis_test_db() end)
@@ -110,9 +109,11 @@ defmodule FunWithFlags.StoreTest do
       assert true == Store.lookup(flag_name)
       assert {:ok, true} == Cache.get(flag_name)
 
+      the_ttl = Config.cache_ttl
+
       with_mock(Timestamps, [
-        now: fn() -> now + 61 end,
-        expired?: fn(^now, 60) -> :meck.passthrough([now, 60]) end
+        now: fn() -> now + (the_ttl + 1) end,
+        expired?: fn(^now, ^the_ttl) -> :meck.passthrough([now, the_ttl]) end
       ]) do
         assert {:miss, :expired} = Cache.get(flag_name)
         assert true == Store.lookup(flag_name)
