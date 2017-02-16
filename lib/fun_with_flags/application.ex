@@ -8,6 +8,7 @@ defmodule FunWithFlags.Application do
 
     children = [
       supervisor(FunWithFlags.Store.Supervisor, [], restart: :permanent),
+      worker(FunWithFlags.Notifications, [], restart: :permanent),
     ]
 
     opts = [strategy: :one_for_one, name: FunWithFlags.Supervisor]
