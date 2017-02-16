@@ -39,15 +39,34 @@ Just as Elixir and Phoenix are meant to scale better than Ruby on Rails with hig
 * If the connection to Redis is lost, the application will continue to work with the known values from the ETS cache. If an unknown flag is looked up when Redis is unavailable it will default to the disabled state.
 * Several nodes can connect to the same Redis and share the flag settings. Each one will hit Redis the first time a flag is looked up, and then will populate its ETS cache.
 * The ETS cache is enabled by default, but it can be disabled to only use Redis.
+* The ETS cache supports a global TTL, expressed in seconds. It defaults to 900s (15 minutes). After expiration, flags are re-fetched from Redis. This allows multiple nodes to use the same redis, and slowly acquire and cache flags that have been changed by another node.
 
 ### Next / Problems
 
-* When two or more nodes are using the same Redis, and one of them updates a flag that the others have already cached, or creates a flag that the others have already looked up (and cached as "disabled"), then the other nodes will not be notified of the changes. Of course, disabling the cache avoids this problem. Solutions:
-    * Use Redis PubSub to emit change notifications.
-    * Add a TTL to the ETS cache (use [ConCache](https://hex.pm/packages/con_cache)?).
-    * Add polling to refresh the cache from Redis every X seconds (not ideal).
+* When two or more nodes are using the same Redis, and one of them updates a flag that the others have already cached, or creates a flag that the others have already looked up (and cached as "disabled"), then the other nodes will not be notified of the changes.
+    * Current mitigations:
+        - It's possible to disable the cache
+        - the cache has a configurable TTL
+    * Real solution, to be added:
+        - Use Redis PubSub to emit change notifications.
 * Implement other "gates": at least actors and groups.
+* Add some optional randomness to the TTL, so that Redis doesn't get hammered at constant intervals after a server restart.
 
+
+## Configuration
+
+The library can be configured in host applications through Mix and the `config.exs` file. This example shows the default values:
+
+```elixir
+config :fun_with_flags, :cache,
+  enabled: true,
+  ttl: 900 # in seconds
+
+# the Redis options will be forwarded to Redix
+config :fun_with_flags, :redis,
+  host: 'localhost',
+  port: 6379
+```
 
 ## Usage
 
