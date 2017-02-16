@@ -1,8 +1,10 @@
 defmodule FunWithFlags.StoreTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   import FunWithFlags.TestUtils
+  import Mock
 
   alias FunWithFlags.Store
+  alias FunWithFlags.Timestamps
 
   setup_all do
     on_exit(__MODULE__, fn() -> clear_redis_test_db() end)
@@ -62,17 +64,13 @@ defmodule FunWithFlags.StoreTest do
   describe "integration: Cache and Persistence" do
     alias FunWithFlags.Store.{Cache, Persistent}
 
-    setup do
-      :ok
-    end
-
     test "setting a value will update both the cache and the persistent store" do
       flag_name = unique_atom()
 
-      assert :not_found == Cache.get(flag_name)
+      assert {:miss, :not_found} == Cache.get(flag_name)
       assert false == Persistent.get(flag_name)
       Store.put(flag_name, true)
-      assert {:found, true} == Cache.get(flag_name)
+      assert {:ok, true} == Cache.get(flag_name)
       assert true == Persistent.get(flag_name)
     end
 
@@ -81,11 +79,11 @@ defmodule FunWithFlags.StoreTest do
       flag_name = unique_atom()
       Persistent.put(flag_name, true)
 
-      assert :not_found == Cache.get(flag_name)
+      assert {:miss, :not_found} == Cache.get(flag_name)
       assert true == Persistent.get(flag_name)
       
       assert true == Store.lookup(flag_name)
-      assert {:found, true} == Cache.get(flag_name)
+      assert {:ok, true} == Cache.get(flag_name)
     end
 
 
@@ -93,11 +91,32 @@ defmodule FunWithFlags.StoreTest do
           looking it up will populate the cache" do
       flag_name = unique_atom()
 
-      assert :not_found == Cache.get(flag_name)
+      assert {:miss, :not_found} == Cache.get(flag_name)
       assert false == Persistent.get(flag_name)
       
       assert false == Store.lookup(flag_name)
-      assert {:found, false} == Cache.get(flag_name)
+      assert {:ok, false} == Cache.get(flag_name)
+    end
+
+    test "when a value in the cache expires, we can still reload it from redis" do
+      flag_name = unique_atom()
+      Persistent.put(flag_name, true)
+
+      now = Timestamps.now
+
+      assert {:miss, :not_found} == Cache.get(flag_name)
+      assert true == Persistent.get(flag_name)
+
+      assert true == Store.lookup(flag_name)
+      assert {:ok, true} == Cache.get(flag_name)
+
+      with_mock(Timestamps, [
+        now: fn() -> now + 61 end,
+        expired?: fn(^now, 60) -> :meck.passthrough([now, 60]) end
+      ]) do
+        assert {:miss, :expired} = Cache.get(flag_name)
+        assert true == Store.lookup(flag_name)
+      end
     end
 
   end

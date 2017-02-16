@@ -1,8 +1,10 @@
 defmodule FunWithFlags.Store.CacheTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false # mocks!
   import FunWithFlags.TestUtils
+  import Mock
 
   alias FunWithFlags.Store.Cache
+  alias FunWithFlags.Timestamps
 
   # No need to start it as it's in the supervision tree, but:
   #
@@ -11,48 +13,80 @@ defmodule FunWithFlags.Store.CacheTest do
   #   :ok
   # end
 
-  test "looking up an undefined flag returns :not_found" do
-    flag_name = unique_atom()
-    assert :not_found == Cache.get(flag_name)
+  describe "put()" do
+    test "put() can change the value of a flag" do
+      flag_name = unique_atom()
+
+      assert {:miss, :not_found} = Cache.get(flag_name)
+      Cache.put(flag_name, true)
+      assert {:ok, true} = Cache.get(flag_name)
+      Cache.put(flag_name, false)
+      assert {:ok, false} = Cache.get(flag_name)
+    end
+
+    test "put() returns the tuple {:ok, a_boolean_value}" do
+      flag_name = unique_atom()
+      assert {:ok, true} = Cache.put(flag_name, true)
+      assert {:ok, false} = Cache.put(flag_name, false)
+    end
   end
 
-  test "put() can change the value of a flag" do
-    flag_name = unique_atom()
+  describe "get()" do
+    test "looking up an undefined flag returns {:miss, :not_found}" do
+      flag_name = unique_atom()
+      assert {:miss, :not_found} = Cache.get(flag_name)
+    end
 
-    assert :not_found == Cache.get(flag_name)
-    Cache.put(flag_name, true)
-    assert {:found, true} == Cache.get(flag_name)
-    Cache.put(flag_name, false)
-    assert {:found, false}== Cache.get(flag_name)
+    test "get() checks if a flag is already stored, it returns {:ok, flag_value} or {:miss, :not_found}" do
+      flag_name = unique_atom()
+      assert {:miss, :not_found} = Cache.get(flag_name)
+      Cache.put(flag_name, false)
+      assert {:ok, false} = Cache.get(flag_name)
+      Cache.put(flag_name, true)
+      assert {:ok, true} = Cache.get(flag_name)
+    end
+
+    test "looking up an expired flag returns {:miss, :expired}" do
+      flag_name = unique_atom()
+      assert {:miss, :not_found} = Cache.get(flag_name)
+
+      now = Timestamps.now
+      {:ok, true} = Cache.put(flag_name, true)
+      assert {:ok, true} = Cache.get(flag_name)
+
+      # 1 second before expiring
+      with_mock(Timestamps, [
+        now: fn() -> now + 59 end,
+        expired?: fn(^now, 60) -> :meck.passthrough([now, 60]) end
+      ]) do
+        assert {:ok, true} = Cache.get(flag_name)
+      end
+
+      # 1 second after expiring
+      with_mock(Timestamps, [
+        now: fn() -> now + 61 end,
+        expired?: fn(^now, 60) -> :meck.passthrough([now, 60]) end
+      ]) do
+        assert {:miss, :expired} = Cache.get(flag_name)
+
+        Cache.flush
+        assert {:miss, :not_found} = Cache.get(flag_name)
+      end
+    end
   end
 
-  test "put() returns the tuple {:ok, a_boolean_value}" do
-    flag_name = unique_atom()
-    assert {:ok, true} == Cache.put(flag_name, true)
-    assert {:ok, false} == Cache.put(flag_name, false)
-  end
-
-
-  test "get() checks if a flag is already stored, it returns {:found, flag_value} or :not_found" do
-    flag_name = unique_atom()
-    assert :not_found = Cache.get(flag_name)
-    Cache.put(flag_name, false)
-    assert {:found, false}= Cache.get(flag_name)
-    Cache.put(flag_name, true)
-    assert {:found, true} = Cache.get(flag_name)
-  end
 
   describe "unit: enable and disable with this module's API" do
     test "looking up a disabled flag returns {:found, false}" do
       flag_name = unique_atom()
-      Cache.put(flag_name, false)
-      assert {:found, false}== Cache.get(flag_name)
+      {:ok, false} = Cache.put(flag_name, false)
+      assert {:ok, false} = Cache.get(flag_name)
     end
 
-    test "looking up an enabled flag returns {:found, true}" do
+    test "looking up an enabled flag returns {:ok, true}" do
       flag_name = unique_atom()
-      Cache.put(flag_name, true)
-      assert {:found, true} == Cache.get(flag_name)
+      {:ok, true} = Cache.put(flag_name, true)
+      assert {:ok, true} = Cache.get(flag_name)
     end
   end
 
@@ -64,16 +98,16 @@ defmodule FunWithFlags.Store.CacheTest do
       :ok
     end
 
-    test "looking up a disabled flag returns {:found, false}" do
+    test "looking up a disabled flag returns {:ok, false}" do
       flag_name = unique_atom()
       FunWithFlags.disable(flag_name)
-      assert {:found, false}== Cache.get(flag_name)
+      assert {:ok, false} = Cache.get(flag_name)
     end
 
-    test "looking up an enabled flag returns {:found, true}" do
+    test "looking up an enabled flag returns {:ok, true}" do
       flag_name = unique_atom()
       FunWithFlags.enable(flag_name)
-      assert {:found, true} == Cache.get(flag_name)
+      assert {:ok, true} = Cache.get(flag_name)
     end
   end
 
@@ -81,7 +115,10 @@ defmodule FunWithFlags.Store.CacheTest do
     flag_name = unique_atom()
     Cache.put(flag_name, true)
 
-    assert [{_,_}|_] = Cache.dump()
+    assert [{n, {v, t}}|_] = Cache.dump()
+    assert is_atom(n)    # name
+    assert is_boolean(v) # value
+    assert is_integer(t) # timestamp
 
     Cache.flush()
     assert [] = Cache.dump()
@@ -89,6 +126,9 @@ defmodule FunWithFlags.Store.CacheTest do
 
 
   test "dump() returns a List with the cached keys" do
+    # because the test is faster than one second
+    now = Timestamps.now
+
     one = unique_atom()
     Cache.put(one, true)
     two = unique_atom()
@@ -96,10 +136,15 @@ defmodule FunWithFlags.Store.CacheTest do
     three = unique_atom()
     Cache.put(three, false)
 
+    assert [{n, {v, t}}|_] = Cache.dump()
+    assert is_atom(n)    # name
+    assert is_boolean(v) # value
+    assert is_integer(t) # timestamp
+
     kw = Cache.dump()
     assert is_list(kw)
-    assert true == Keyword.get(kw, one)
-    assert true == Keyword.get(kw, two)
-    assert false == Keyword.get(kw, three)
+    assert {true, ^now} = Keyword.get(kw, one)
+    assert {true, ^now} = Keyword.get(kw, two)
+    assert {false, ^now} = Keyword.get(kw, three)
   end
 end

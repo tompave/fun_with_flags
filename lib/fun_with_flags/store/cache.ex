@@ -1,11 +1,13 @@
 defmodule FunWithFlags.Store.Cache do
   @moduledoc false
   use GenServer
+  alias FunWithFlags.Timestamps
 
   @table_name :fun_with_flags_cache
   @table_options [
     :set, :protected, :named_table, {:read_concurrency, true}
   ]
+  @ttl FunWithFlags.Config.cache_ttl
 
   def start_link do
     GenServer.start_link(__MODULE__, :ok, [name: __MODULE__])
@@ -17,8 +19,18 @@ defmodule FunWithFlags.Store.Cache do
   #
   def get(flag_name) do
     case :ets.lookup(@table_name, flag_name) do
-      [{^flag_name, value}] -> {:found, value}
-      _ -> :not_found
+      [{^flag_name, {value, timestamp}}] ->
+        validate_expiration(value, timestamp)
+      _ ->
+        {:miss, :not_found}
+    end
+  end
+
+  defp validate_expiration(value, timestamp) do
+    if Timestamps.expired?(timestamp, @ttl) do
+      {:miss, :expired}
+    else
+      {:ok, value}
     end
   end
 
@@ -51,7 +63,7 @@ defmodule FunWithFlags.Store.Cache do
 
 
   def handle_call({:put, flag_name, value}, _from, state) do
-    reply = case :ets.insert(@table_name, {flag_name, value}) do
+    reply = case :ets.insert(@table_name, {flag_name, {value, Timestamps.now}}) do
       true -> {:ok, value}
       _    -> {:error, set_error_for(value)}
     end

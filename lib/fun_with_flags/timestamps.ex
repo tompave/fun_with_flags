@@ -4,6 +4,6 @@ defmodule FunWithFlags.Timestamps do
   end
 
   def expired?(timestamp, ttl) do
-    (timestamp + ttl) < now()
+    (timestamp + ttl) < __MODULE__.now()
   end
 end
