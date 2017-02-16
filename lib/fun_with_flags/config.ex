@@ -45,4 +45,15 @@ defmodule FunWithFlags.Config do
       FunWithFlags.SimpleStore
     end
   end
+
+
+  # I can't use Kernel.make_ref/0 because this needs to be
+  # serializable to a string and sent via Redis.
+  # Erlang References lose a lot of "uniqueness" when
+  # represented as binaries.
+  #
+  def build_unique_id do
+    (:crypto.strong_rand_bytes(10) <> inspect(:os.timestamp()))
+    |> Base.url_encode64(padding: false)
+  end
 end

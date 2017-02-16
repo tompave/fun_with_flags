@@ -75,6 +75,13 @@ defmodule FunWithFlags.ConfigTest do
   end
 
 
+  test "build_unique_id() returns a unique string" do
+    assert is_binary(Config.build_unique_id)
+
+    list = Enum.map(1..20, fn(_) -> Config.build_unique_id() end)
+    assert length(list) == length(Enum.uniq(list))
+  end
+
 
   defp configure_redis_with(conf) do
     Mix.Config.persist(fun_with_flags: [redis: conf])
