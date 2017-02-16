@@ -1,7 +1,7 @@
 defmodule FunWithFlags.Store.Persistent do
   @moduledoc false
 
-  alias FunWithFlags.Config
+  alias FunWithFlags.{Config, Notifications}
 
   @conn __MODULE__
   @conn_options [name: @conn, sync_connect: false]
@@ -26,8 +26,19 @@ defmodule FunWithFlags.Store.Persistent do
 
   def put(flag_name, value) do
     case Redix.command(@conn, ["SET", format(flag_name), value]) do
-      {:ok, "OK"} -> {:ok, value}
+      {:ok, "OK"} ->
+        publish_change(flag_name)
+        {:ok, value}
       {:error, why} -> {:error, redis_error(why)}
+    end
+  end
+
+
+  def publish_change(flag_name) do
+    if Config.cache? do
+      Task.async fn() ->
+        Redix.command(@conn, ["PUBLISH", Notifications.channel, flag_name])
+      end
     end
   end
 

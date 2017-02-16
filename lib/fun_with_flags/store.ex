@@ -30,4 +30,16 @@ defmodule FunWithFlags.Store do
         error
     end
   end
+
+
+  def reload(flag_name) do
+    IO.puts "reloading #{flag_name}"
+    case Persistent.get(flag_name) do
+      {:error, _reason} = error ->
+        error
+      bool when is_boolean(bool) ->
+        Cache.put(flag_name, bool) 
+        {:ok, bool}
+    end
+  end
 end

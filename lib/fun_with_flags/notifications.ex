@@ -1,7 +1,7 @@
 defmodule FunWithFlags.Notifications do
   @moduledoc false
   use GenServer
-  alias FunWithFlags.Config
+  alias FunWithFlags.{Config, Store}
 
   @conn :fun_with_flags_notifications
   @conn_options [name: @conn, sync_connect: false]
@@ -12,6 +12,9 @@ defmodule FunWithFlags.Notifications do
     GenServer.start_link(__MODULE__, :ok, [name: __MODULE__])
   end
 
+  def channel, do: @channel
+
+
   # ------------------------------------------------------------
   # GenServer callbacks
 
@@ -21,12 +24,14 @@ defmodule FunWithFlags.Notifications do
     {:ok, nil}
   end
 
-  def handle_info({:redix_pubsub, _from, :subscribed, %{channel: "fun_with_flags_changes"}}, state) do
+  def handle_info({:redix_pubsub, _from, :subscribed, %{channel: @channel}}, state) do
     {:noreply, state}
   end
 
-  def handle_info({:redix_pubsub, _from, :message, %{channel: "fun_with_flags_changes", payload: msg}}, state) do
+  def handle_info({:redix_pubsub, _from, :message, %{channel: @channel, payload: msg}}, state) do
     IO.puts "Received PubSub message: #{inspect(msg)}"
+    flag_name = String.to_atom(msg)
+    Store.reload(flag_name)
     {:noreply, state}
   end
 end
