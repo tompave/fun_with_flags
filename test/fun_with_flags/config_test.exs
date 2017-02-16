@@ -42,8 +42,22 @@ defmodule FunWithFlags.ConfigTest do
     assert false == Config.cache?
 
     # cleanup
-    Mix.Config.persist(fun_with_flags: [cache: [enabled: true]])
+    reset_cache_defaults()
     assert true == Config.cache?
+  end
+
+
+  test "cache_ttl" do
+    # defaults to 60 seconds in test
+    assert 60 = Config.cache_ttl
+
+    # can be configured
+    Mix.Config.persist(fun_with_flags: [cache: [ttl: 3600]])
+    assert 3600 = Config.cache_ttl
+
+    # cleanup
+    reset_cache_defaults()
+    assert 60 = Config.cache_ttl
   end
 
 
@@ -56,7 +70,7 @@ defmodule FunWithFlags.ConfigTest do
     assert FunWithFlags.SimpleStore = Config.store_module
 
     # cleanup
-    Mix.Config.persist(fun_with_flags: [cache: [enabled: true]])
+    reset_cache_defaults()
     assert FunWithFlags.Store = Config.store_module
   end
 
@@ -70,5 +84,9 @@ defmodule FunWithFlags.ConfigTest do
   defp ensure_no_redis_config do
     assert match?(nil, Application.get_env(:fun_with_flags, :redis))
     refute Keyword.has_key?(Application.get_all_env(:fun_with_flags), :redis)
+  end
+
+  defp reset_cache_defaults do
+    Mix.Config.persist(fun_with_flags: [cache: [enabled: true, ttl: 60]])
   end
 end

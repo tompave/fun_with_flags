@@ -7,6 +7,7 @@ defmodule FunWithFlags.Config do
 
   @default_cache_config [
     enabled: true,
+    ttl: 900 # in seconds, 15 minutes
   ]
 
   def redis_config do
@@ -21,6 +22,10 @@ defmodule FunWithFlags.Config do
 
   def cache? do
     Keyword.get(ets_cache_config(), :enabled)
+  end
+
+  def cache_ttl do
+    Keyword.get(ets_cache_config(), :ttl)
   end
 
 
