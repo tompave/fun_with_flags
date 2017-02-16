@@ -1,6 +1,8 @@
 defmodule FunWithFlagsTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   import FunWithFlags.TestUtils
+  import Mock
+
   doctest FunWithFlags
 
   setup_all do
@@ -48,5 +50,27 @@ defmodule FunWithFlagsTest do
     flag_name = unique_atom()
     assert {:ok, false} = FunWithFlags.disable(flag_name)
     assert {:ok, false} = FunWithFlags.disable(flag_name)
+  end
+
+  describe "looking up a flag after a delay (indirectly test the cache TTL, if present)" do
+    alias FunWithFlags.{Config, Timestamps}
+
+    test "the flag value is still set even after the TTL of the cache (regardless of the cache being present)" do
+      flag_name = unique_atom()
+
+      the_ttl = Config.cache_ttl
+      now = Timestamps.now
+
+      assert false == FunWithFlags.enabled?(flag_name)
+      {:ok, true} = FunWithFlags.enable(flag_name)
+      assert true == FunWithFlags.enabled?(flag_name)
+
+      with_mock(Timestamps, [
+        expired?: fn(^now, ^the_ttl) -> true end,
+        now: fn() -> :meck.passthrough([]) end
+      ]) do
+        assert true == FunWithFlags.enabled?(flag_name)
+      end
+    end
   end
 end
