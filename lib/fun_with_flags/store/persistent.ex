@@ -36,8 +36,8 @@ defmodule FunWithFlags.Store.Persistent do
 
   def publish_change(flag_name) do
     if Config.cache? do
-      Task.async fn() ->
-        Redix.command(@conn, ["PUBLISH", Notifications.channel, flag_name])
+      Task.start fn() ->
+        Redix.command(@conn, ["PUBLISH" | Notifications.payload_for(flag_name)])
       end
     end
   end
