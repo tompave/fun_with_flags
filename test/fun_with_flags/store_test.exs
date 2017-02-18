@@ -45,6 +45,56 @@ defmodule FunWithFlags.StoreTest do
     end
   end
 
+
+  describe "reload(flag_name) reads the flag value from Redis and updates the Cache" do
+    alias FunWithFlags.Store.{Cache, Persistent}
+
+    test "if the flag is not found in Redis, it sets it to false in the Cache" do
+      flag_name = unique_atom()
+      assert false == Persistent.get(flag_name)
+
+      Cache.put(flag_name, true)
+      assert {:ok, true} = Cache.get(flag_name)
+      assert true = Store.lookup(flag_name)
+
+      Store.reload(flag_name)
+
+      assert {:ok, false} = Cache.get(flag_name)
+      assert false == Store.lookup(flag_name)
+    end
+
+    test "if the flag is false in Redis, it sets it to false in the Cache" do
+      flag_name = unique_atom()
+      Persistent.put(flag_name, false)
+      assert false == Persistent.get(flag_name)
+
+      Cache.put(flag_name, true)
+      assert {:ok, true} = Cache.get(flag_name)
+      assert true == Store.lookup(flag_name)
+
+      Store.reload(flag_name)
+
+      assert {:ok, false} = Cache.get(flag_name)
+      assert false == Store.lookup(flag_name)
+    end
+
+    test "if the flag is true in Redis, it sets it to true in the Cache" do
+      flag_name = unique_atom()
+      Persistent.put(flag_name, true)
+      assert true == Persistent.get(flag_name)
+
+      Cache.put(flag_name, false)
+      assert {:ok, false} = Cache.get(flag_name)
+      assert false == Store.lookup(flag_name)
+
+      Store.reload(flag_name)
+
+      assert {:ok, true} = Cache.get(flag_name)
+      assert true == Store.lookup(flag_name)
+    end
+  end
+
+
   describe "integration: enable and disable with the top-level API" do
     test "looking up a disabled flag returns false" do
       flag_name = unique_atom()

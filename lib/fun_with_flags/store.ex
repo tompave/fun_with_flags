@@ -33,7 +33,7 @@ defmodule FunWithFlags.Store do
 
 
   def reload(flag_name) do
-    IO.puts "reloading #{flag_name}"
+    # IO.puts "reloading #{flag_name}"
     case Persistent.get(flag_name) do
       {:error, _reason} = error ->
         error
