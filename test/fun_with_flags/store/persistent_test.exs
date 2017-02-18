@@ -10,33 +10,39 @@ defmodule FunWithFlags.Store.PersistentTest do
   end
 
 
-  test "looking up an undefined flag returns false" do
-    flag_name = unique_atom()
-    assert false == Persistent.get(flag_name)
+  describe "put(flag_name, value)" do
+    test "put() can change the value of a flag" do
+      flag_name = unique_atom()
+
+      assert false == Persistent.get(flag_name)
+      Persistent.put(flag_name, true)
+      assert true == Persistent.get(flag_name)
+      Persistent.put(flag_name, false)
+      assert false == Persistent.get(flag_name)
+    end
+
+    test "put() returns the tuple {:ok, a_boolean_value}" do
+      flag_name = unique_atom()
+      assert {:ok, true} == Persistent.put(flag_name, true)
+      assert {:ok, false} == Persistent.put(flag_name, false)
+    end
   end
 
-  test "put() can change the value of a flag" do
-    flag_name = unique_atom()
 
-    assert false == Persistent.get(flag_name)
-    Persistent.put(flag_name, true)
-    assert true == Persistent.get(flag_name)
-    Persistent.put(flag_name, false)
-    assert false == Persistent.get(flag_name)
-  end
+  describe "get(flag_name)" do
+    test "looking up an undefined flag returns false" do
+      flag_name = unique_atom()
+      assert false == Persistent.get(flag_name)
+    end
 
-  test "put() returns the tuple {:ok, a_boolean_value}" do
-    flag_name = unique_atom()
-    assert {:ok, true} == Persistent.put(flag_name, true)
-    assert {:ok, false} == Persistent.put(flag_name, false)
+    test "get() returns a boolean" do
+      flag_name = unique_atom()
+      assert false == Persistent.get(flag_name)
+      Persistent.put(flag_name, true)
+      assert true == Persistent.get(flag_name)
+    end  
   end
-
-  test "get() returns a boolean" do
-    flag_name = unique_atom()
-    assert false == Persistent.get(flag_name)
-    Persistent.put(flag_name, true)
-    assert true == Persistent.get(flag_name)
-  end
+  
 
   describe "unit: enable and disable with this module's API" do
     test "looking up a disabled flag returns false" do
