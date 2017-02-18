@@ -31,4 +31,26 @@ defmodule FunWithFlags.TestUtils do
   defp delete_keys(keys) do
     Redix.command!(@redis, ["DEL" | keys])
   end
+
+
+  
+  defmacro timetravel([by: offset], [do: body]) do
+    quote do
+      fake_now = FunWithFlags.Timestamps.now + unquote(offset)
+      # IO.puts("now:      #{FunWithFlags.Timestamps.now}")
+      # IO.puts("offset:   #{unquote(offset)}")
+      # IO.puts("fake_now: #{fake_now}")
+
+      with_mock(FunWithFlags.Timestamps, [
+        now: fn() ->
+          fake_now
+        end,
+        expired?: fn(timestamp, ttl) ->
+          :meck.passthrough([timestamp, ttl])
+        end
+      ]) do
+        unquote(body)
+      end
+    end
+  end
 end

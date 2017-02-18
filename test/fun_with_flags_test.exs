@@ -58,17 +58,11 @@ defmodule FunWithFlagsTest do
     test "the flag value is still set even after the TTL of the cache (regardless of the cache being present)" do
       flag_name = unique_atom()
 
-      the_ttl = Config.cache_ttl
-      now = Timestamps.now
-
       assert false == FunWithFlags.enabled?(flag_name)
       {:ok, true} = FunWithFlags.enable(flag_name)
       assert true == FunWithFlags.enabled?(flag_name)
 
-      with_mock(Timestamps, [
-        expired?: fn(^now, ^the_ttl) -> true end,
-        now: fn() -> :meck.passthrough([]) end
-      ]) do
+      timetravel by: (Config.cache_ttl + 10_000) do
         assert true == FunWithFlags.enabled?(flag_name)
       end
     end

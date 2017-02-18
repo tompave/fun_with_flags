@@ -50,25 +50,16 @@ defmodule FunWithFlags.Store.CacheTest do
       flag_name = unique_atom()
       assert {:miss, :not_found} = Cache.get(flag_name)
 
-      now = Timestamps.now
       {:ok, true} = Cache.put(flag_name, true)
       assert {:ok, true} = Cache.get(flag_name)
 
-      the_ttl = Config.cache_ttl
-
       # 1 second before expiring
-      with_mock(Timestamps, [
-        now: fn() -> now + (the_ttl - 1) end,
-        expired?: fn(^now, ^the_ttl) -> :meck.passthrough([now, the_ttl]) end
-      ]) do
+      timetravel by: (Config.cache_ttl - 1) do
         assert {:ok, true} = Cache.get(flag_name)
       end
 
       # 1 second after expiring
-      with_mock(Timestamps, [
-        now: fn() -> now + (the_ttl + 1) end,
-        expired?: fn(^now, ^the_ttl) -> :meck.passthrough([now, the_ttl]) end
-      ]) do
+      timetravel by: (Config.cache_ttl + 1) do
         assert {:miss, :expired} = Cache.get(flag_name)
 
         Cache.flush

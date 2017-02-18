@@ -3,7 +3,7 @@ defmodule FunWithFlags.StoreTest do
   import FunWithFlags.TestUtils
   import Mock
 
-  alias FunWithFlags.{Store, Timestamps, Config}
+  alias FunWithFlags.{Store, Config}
 
   setup_all do
     on_exit(__MODULE__, fn() -> clear_redis_test_db() end)
@@ -101,20 +101,13 @@ defmodule FunWithFlags.StoreTest do
       flag_name = unique_atom()
       Persistent.put(flag_name, true)
 
-      now = Timestamps.now
-
       assert {:miss, :not_found} == Cache.get(flag_name)
       assert true == Persistent.get(flag_name)
 
       assert true == Store.lookup(flag_name)
       assert {:ok, true} == Cache.get(flag_name)
 
-      the_ttl = Config.cache_ttl
-
-      with_mock(Timestamps, [
-        now: fn() -> now + (the_ttl + 1) end,
-        expired?: fn(^now, ^the_ttl) -> :meck.passthrough([now, the_ttl]) end
-      ]) do
+      timetravel by: (Config.cache_ttl + 1) do
         assert {:miss, :expired} = Cache.get(flag_name)
         assert true == Store.lookup(flag_name)
       end
