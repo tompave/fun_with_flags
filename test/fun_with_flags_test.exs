@@ -53,7 +53,7 @@ defmodule FunWithFlagsTest do
   end
 
   describe "looking up a flag after a delay (indirectly test the cache TTL, if present)" do
-    alias FunWithFlags.{Config, Timestamps}
+    alias FunWithFlags.Config
 
     test "the flag value is still set even after the TTL of the cache (regardless of the cache being present)" do
       flag_name = unique_atom()

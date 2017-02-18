@@ -1,6 +1,7 @@
 defmodule FunWithFlags.Store.PersistentTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   import FunWithFlags.TestUtils
+  import Mock
 
   alias FunWithFlags.Store.Persistent
 
@@ -25,6 +26,53 @@ defmodule FunWithFlags.Store.PersistentTest do
       flag_name = unique_atom()
       assert {:ok, true} == Persistent.put(flag_name, true)
       assert {:ok, false} == Persistent.put(flag_name, false)
+    end
+
+    test "when the cache is enabled, put() will publish a notification to Redis" do
+      assert true == FunWithFlags.Config.cache?
+      flag_name = unique_atom()
+
+      with_mocks([
+        {FunWithFlags.Notifications, [], [
+          payload_for: fn(name) ->
+            ["fun_with_flags_changes", "unique_id_foobar:#{name}"]
+          end,
+          handle_info: fn(payload, state) ->
+            :meck.passthrough([payload, state])
+          end
+        ]},
+        {Redix, [:passthrough], []}
+      ]) do
+        assert {:ok, true} = Persistent.put(flag_name, true)
+        assert called FunWithFlags.Notifications.payload_for(flag_name)
+
+        assert called(
+          Redix.command(
+            FunWithFlags.Store.Persistent,
+            ["PUBLISH", "fun_with_flags_changes", "unique_id_foobar:#{flag_name}"]
+          )
+        )
+      end
+    end
+
+    test "when the cache is NOT enabled, put() will publish a notification to Redis" do
+      flag_name = unique_atom()
+
+      with_mocks([
+        {FunWithFlags.Config, [], [cache?: fn() -> false end]},
+        {FunWithFlags.Notifications, [:passthrough], []},
+        {Redix, [:passthrough], []}
+      ]) do
+        assert {:ok, true} = Persistent.put(flag_name, true)
+        refute called FunWithFlags.Notifications.payload_for(flag_name)
+
+        refute called(
+          Redix.command(
+            FunWithFlags.Store.Persistent,
+            ["PUBLISH", "fun_with_flags_changes", "unique_id_foobar:#{flag_name}"]
+          )
+        )
+      end
     end
   end
 

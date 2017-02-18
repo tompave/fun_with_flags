@@ -58,7 +58,7 @@ defmodule FunWithFlags.Notifications do
   # We react to it by validating the unique_id in the message.
   #
   def handle_info({:redix_pubsub, _from, :message, %{channel: @channel, payload: msg}}, unique_id) do
-    IO.puts "Received PubSub message: #{inspect(msg)}"
+    # IO.puts "Received PubSub message: #{inspect(msg)}"
     validate_message(msg, unique_id)
     {:noreply, unique_id}
   end
@@ -69,10 +69,11 @@ defmodule FunWithFlags.Notifications do
   # If it doesn't match, on the other hand, we need to reload it.
   #
   defp validate_message(msg, unique_id) do
-    IO.puts "validating the message. My own id is: #{unique_id}"
+    # IO.puts "validating the message. My own id is: #{unique_id}"
     case String.split(msg, ":") do
       [^unique_id, _name] ->
-        IO.puts "received my own message, doing nothing"
+        nil
+        # IO.puts "received my own message, doing nothing"
       [_id, name] ->
         Task.start fn() ->
           name |> String.to_atom |> Store.reload()
