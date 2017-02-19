@@ -10,38 +10,30 @@ defmodule FunWithFlags.StoreTest do
     :ok
   end
 
-  test "looking up an undefined flag returns false" do
-    flag_name = unique_atom()
-    assert false == Store.lookup(flag_name)
-  end
 
-  test "put() can change the value of a flag" do
-    flag_name = unique_atom()
-
-    assert false == Store.lookup(flag_name)
-    Store.put(flag_name, true)
-    assert true == Store.lookup(flag_name)
-    Store.put(flag_name, false)
-    assert false == Store.lookup(flag_name)
-  end
-
-  test "put() returns the tuple {:ok, a_boolean_value}" do
-    flag_name = unique_atom()
-    assert {:ok, true} == Store.put(flag_name, true)
-    assert {:ok, false} == Store.put(flag_name, false)
-  end
-
-  describe "unit: enable and disable with this module's API" do
-    test "looking up a disabled flag returns false" do
+  describe "lookup(flag_name)" do
+    test "looking up an undefined flag returns false" do
       flag_name = unique_atom()
+      assert false == Store.lookup(flag_name)
+    end
+  end
+
+
+  describe "put(flag_name, value)" do
+    test "put() can change the value of a flag" do
+      flag_name = unique_atom()
+
+      assert false == Store.lookup(flag_name)
+      Store.put(flag_name, true)
+      assert true == Store.lookup(flag_name)
       Store.put(flag_name, false)
       assert false == Store.lookup(flag_name)
     end
 
-    test "looking up an enabled flag returns true" do
+    test "put() returns the tuple {:ok, a_boolean_value}" do
       flag_name = unique_atom()
-      Store.put(flag_name, true)
-      assert true == Store.lookup(flag_name)
+      assert {:ok, true} == Store.put(flag_name, true)
+      assert {:ok, false} == Store.put(flag_name, false)
     end
   end
 
@@ -90,6 +82,21 @@ defmodule FunWithFlags.StoreTest do
       Store.reload(flag_name)
 
       assert {:ok, true} = Cache.get(flag_name)
+      assert true == Store.lookup(flag_name)
+    end
+  end
+
+
+  describe "unit: enable and disable with this module's API" do
+    test "looking up a disabled flag returns false" do
+      flag_name = unique_atom()
+      Store.put(flag_name, false)
+      assert false == Store.lookup(flag_name)
+    end
+
+    test "looking up an enabled flag returns true" do
+      flag_name = unique_atom()
+      Store.put(flag_name, true)
       assert true == Store.lookup(flag_name)
     end
   end
@@ -162,6 +169,5 @@ defmodule FunWithFlags.StoreTest do
         assert true == Store.lookup(flag_name)
       end
     end
-
   end
 end
