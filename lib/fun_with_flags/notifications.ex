@@ -59,6 +59,9 @@ defmodule FunWithFlags.Notifications do
     {:noreply, unique_id}
   end
 
+  def handle_info({:redix_pubsub, _from, :unsubscribed, %{channel: @channel}}, unique_id) do
+    {:noreply, unique_id}
+  end
 
   # 1/2
   # Another node has updated a flag and published an event.

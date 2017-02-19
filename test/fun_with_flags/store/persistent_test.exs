@@ -12,6 +12,8 @@ defmodule FunWithFlags.Store.PersistentTest do
 
 
   describe "put(flag_name, value)" do
+    alias FunWithFlags.{Config, Notifications}
+
     test "put() can change the value of a flag" do
       flag_name = unique_atom()
 
@@ -29,11 +31,11 @@ defmodule FunWithFlags.Store.PersistentTest do
     end
 
     test "when the cache is enabled, put() will publish a notification to Redis" do
-      assert true == FunWithFlags.Config.cache?
+      assert true == Config.cache?
       flag_name = unique_atom()
 
       with_mocks([
-        {FunWithFlags.Notifications, [], [
+        {Notifications, [], [
           payload_for: fn(name) ->
             ["fun_with_flags_changes", "unique_id_foobar:#{name}"]
           end,
@@ -45,7 +47,7 @@ defmodule FunWithFlags.Store.PersistentTest do
       ]) do
         assert {:ok, true} = Persistent.put(flag_name, true)
         :timer.sleep(10)
-        assert called FunWithFlags.Notifications.payload_for(flag_name)
+        assert called Notifications.payload_for(flag_name)
 
         assert called(
           Redix.command(
@@ -56,17 +58,59 @@ defmodule FunWithFlags.Store.PersistentTest do
       end
     end
 
+
+    test "when the cache is enabled, put() will cause other subscribers to receive a Redis notification" do
+      assert true == Config.cache?
+      flag_name = unique_atom()
+      channel = "fun_with_flags_changes"
+      u_id = Notifications.unique_id()
+
+      # Subscribe to the notifications
+
+      {:ok, receiver} = Redix.PubSub.start_link(Config.redis_config, [sync_connect: true])
+      :ok = Redix.PubSub.subscribe(receiver, channel, self())
+
+      receive do
+        {:redix_pubsub, ^receiver, :subscribed, %{channel: ^channel}} -> :ok
+      after
+        500 -> flunk "Subscribe didn't work"
+      end
+
+      assert {:ok, true} = Persistent.put(flag_name, true)
+
+      payload = "#{u_id}:#{to_string(flag_name)}"
+      
+      receive do
+        {:redix_pubsub, ^receiver, :message, %{channel: ^channel, payload: ^payload}} -> :ok
+      after
+        500 -> flunk "Haven't received any message after 0.5 seconds"
+      end
+
+      # cleanup
+
+      Redix.PubSub.unsubscribe(receiver, channel, self())
+
+      receive do
+        {:redix_pubsub, ^receiver, :unsubscribed, %{channel: ^channel}} -> :ok
+      after
+        500 -> flunk "Unsubscribe didn't work"
+      end
+
+      Process.exit(receiver, :kill)
+    end
+
+
     test "when the cache is NOT enabled, put() will publish a notification to Redis" do
       flag_name = unique_atom()
 
       with_mocks([
-        {FunWithFlags.Config, [], [cache?: fn() -> false end]},
-        {FunWithFlags.Notifications, [:passthrough], []},
+        {Config, [], [cache?: fn() -> false end]},
+        {Notifications, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, true} = Persistent.put(flag_name, true)
         :timer.sleep(10)
-        refute called FunWithFlags.Notifications.payload_for(flag_name)
+        refute called Notifications.payload_for(flag_name)
 
         refute called(
           Redix.command(
