@@ -92,6 +92,9 @@ defmodule FunWithFlags.Notifications do
         Task.start fn() ->
           name |> String.to_atom |> Store.reload()
         end
+      _ ->
+        # invalid message, ignore
+        nil
     end
 
   end
