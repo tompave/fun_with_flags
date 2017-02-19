@@ -53,4 +53,9 @@ defmodule FunWithFlags.TestUtils do
       end
     end
   end
+
+
+  def kill_process(name) do
+    true = GenServer.whereis(name) |> Process.exit(:kill)
+  end
 end

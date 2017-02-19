@@ -16,7 +16,16 @@ defmodule FunWithFlags.Notifications do
   def start_link do
     GenServer.start_link(__MODULE__, Config.build_unique_id, [name: __MODULE__])
   end
-  
+
+
+  # Get the unique_id for this running node, which is the state
+  # passed to the GenServer when it's (re)started.
+  #
+  def unique_id do
+    {:ok, unique_id} = GenServer.call(__MODULE__, :get_unique_id)
+    unique_id
+  end  
+
 
   # Build a payload to be passed to Redis.
   # Must go through the GenServer because we need the unique_id
@@ -39,6 +48,11 @@ defmodule FunWithFlags.Notifications do
     {:ok, _pid} = Redix.PubSub.start_link(Config.redis_config, @conn_options)
     :ok = Redix.PubSub.subscribe(@conn, @channel, self())
     {:ok, unique_id}
+  end
+
+
+  def handle_call(:get_unique_id, _from, unique_id) do
+    {:reply, {:ok, unique_id}, unique_id}
   end
 
 
