@@ -6,7 +6,7 @@ defmodule FunWithFlags.Store do
 
   def lookup(flag_name) do
     case Cache.get(flag_name) do
-      {:miss, _reason} ->
+      {:miss, _reason, _stale_value_or_nil} ->
         case Persistent.get(flag_name) do
           {:error, _reason} ->
             false

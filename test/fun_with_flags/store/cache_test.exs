@@ -17,7 +17,7 @@ defmodule FunWithFlags.Store.CacheTest do
     test "put() can change the value of a flag" do
       flag_name = unique_atom()
 
-      assert {:miss, :not_found} = Cache.get(flag_name)
+      assert {:miss, :not_found, nil} = Cache.get(flag_name)
       Cache.put(flag_name, true)
       assert {:ok, true} = Cache.get(flag_name)
       Cache.put(flag_name, false)
@@ -34,21 +34,21 @@ defmodule FunWithFlags.Store.CacheTest do
   describe "get()" do
     test "looking up an undefined flag returns {:miss, :not_found}" do
       flag_name = unique_atom()
-      assert {:miss, :not_found} = Cache.get(flag_name)
+      assert {:miss, :not_found, nil} = Cache.get(flag_name)
     end
 
     test "get() checks if a flag is already stored, it returns {:ok, flag_value} or {:miss, :not_found}" do
       flag_name = unique_atom()
-      assert {:miss, :not_found} = Cache.get(flag_name)
+      assert {:miss, :not_found, nil} = Cache.get(flag_name)
       Cache.put(flag_name, false)
       assert {:ok, false} = Cache.get(flag_name)
       Cache.put(flag_name, true)
       assert {:ok, true} = Cache.get(flag_name)
     end
 
-    test "looking up an expired flag returns {:miss, :expired}" do
+    test "looking up an expired flag returns {:miss, :expired, stale_value}" do
       flag_name = unique_atom()
-      assert {:miss, :not_found} = Cache.get(flag_name)
+      assert {:miss, :not_found, nil} = Cache.get(flag_name)
 
       {:ok, true} = Cache.put(flag_name, true)
       assert {:ok, true} = Cache.get(flag_name)
@@ -60,10 +60,10 @@ defmodule FunWithFlags.Store.CacheTest do
 
       # 1 second after expiring
       timetravel by: (Config.cache_ttl + 1) do
-        assert {:miss, :expired} = Cache.get(flag_name)
+        assert {:miss, :expired, true} = Cache.get(flag_name)
 
         Cache.flush
-        assert {:miss, :not_found} = Cache.get(flag_name)
+        assert {:miss, :not_found, nil} = Cache.get(flag_name)
       end
     end
   end

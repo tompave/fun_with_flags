@@ -116,7 +116,7 @@ defmodule FunWithFlags.StoreTest do
     test "setting a value will update both the cache and the persistent store" do
       flag_name = unique_atom()
 
-      assert {:miss, :not_found} == Cache.get(flag_name)
+      assert {:miss, :not_found, nil} == Cache.get(flag_name)
       assert false == Persistent.get(flag_name)
       Store.put(flag_name, true)
       assert {:ok, true} == Cache.get(flag_name)
@@ -128,7 +128,7 @@ defmodule FunWithFlags.StoreTest do
       flag_name = unique_atom()
       Persistent.put(flag_name, true)
 
-      assert {:miss, :not_found} == Cache.get(flag_name)
+      assert {:miss, :not_found, nil} == Cache.get(flag_name)
       assert true == Persistent.get(flag_name)
       
       assert true == Store.lookup(flag_name)
@@ -140,7 +140,7 @@ defmodule FunWithFlags.StoreTest do
           looking it up will populate the cache" do
       flag_name = unique_atom()
 
-      assert {:miss, :not_found} == Cache.get(flag_name)
+      assert {:miss, :not_found, nil} == Cache.get(flag_name)
       assert false == Persistent.get(flag_name)
       
       assert false == Store.lookup(flag_name)
@@ -151,14 +151,14 @@ defmodule FunWithFlags.StoreTest do
       flag_name = unique_atom()
       Persistent.put(flag_name, true)
 
-      assert {:miss, :not_found} == Cache.get(flag_name)
+      assert {:miss, :not_found, nil} == Cache.get(flag_name)
       assert true == Persistent.get(flag_name)
 
       assert true == Store.lookup(flag_name)
       assert {:ok, true} == Cache.get(flag_name)
 
       timetravel by: (Config.cache_ttl + 1) do
-        assert {:miss, :expired} = Cache.get(flag_name)
+        assert {:miss, :expired, true} = Cache.get(flag_name)
         assert true == Store.lookup(flag_name)
       end
     end

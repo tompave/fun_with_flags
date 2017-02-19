@@ -22,13 +22,13 @@ defmodule FunWithFlags.Store.Cache do
       [{^flag_name, {value, timestamp}}] ->
         validate_expiration(value, timestamp)
       _ ->
-        {:miss, :not_found}
+        {:miss, :not_found, nil}
     end
   end
 
   defp validate_expiration(value, timestamp) do
     if Timestamps.expired?(timestamp, @ttl) do
-      {:miss, :expired}
+      {:miss, :expired, value}
     else
       {:ok, value}
     end
