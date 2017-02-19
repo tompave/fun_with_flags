@@ -86,12 +86,10 @@ defmodule FunWithFlags.Notifications do
     # IO.puts "validating the message. My own id is: #{unique_id}"
     case String.split(msg, ":") do
       [^unique_id, _name] ->
-        nil
         # IO.puts "received my own message, doing nothing"
+        nil
       [_id, name] ->
-        Task.start fn() ->
-          name |> String.to_atom |> Store.reload()
-        end
+        Task.start(Store, :reload, [String.to_atom(name)])
       _ ->
         # invalid message, ignore
         nil

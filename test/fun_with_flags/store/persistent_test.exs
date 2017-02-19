@@ -44,7 +44,7 @@ defmodule FunWithFlags.Store.PersistentTest do
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, true} = Persistent.put(flag_name, true)
-        :timer.sleep(1)
+        :timer.sleep(10)
         assert called FunWithFlags.Notifications.payload_for(flag_name)
 
         assert called(
@@ -65,6 +65,7 @@ defmodule FunWithFlags.Store.PersistentTest do
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, true} = Persistent.put(flag_name, true)
+        :timer.sleep(10)
         refute called FunWithFlags.Notifications.payload_for(flag_name)
 
         refute called(
