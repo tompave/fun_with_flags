@@ -1,5 +1,5 @@
 defmodule FunWithFlags.SimpleStoreTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   import FunWithFlags.TestUtils
 
   alias FunWithFlags.SimpleStore
