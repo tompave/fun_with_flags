@@ -33,8 +33,7 @@ defmodule FunWithFlags.Notifications do
   #
   @spec payload_for(atom) :: [String.t]
   def payload_for(flag_name) do
-    {:ok, payload} = GenServer.call(__MODULE__, {:build_payload, flag_name})
-    payload
+    [@channel, "#{unique_id()}:#{to_string(flag_name)}"]
   end
 
 
@@ -53,12 +52,6 @@ defmodule FunWithFlags.Notifications do
 
   def handle_call(:get_unique_id, _from, unique_id) do
     {:reply, {:ok, unique_id}, unique_id}
-  end
-
-
-  def handle_call({:build_payload, flag_name}, _from, unique_id) do
-    payload = [@channel, "#{unique_id}:#{to_string(flag_name)}"]
-    {:reply, {:ok, payload}, unique_id}
   end
 
 
