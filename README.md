@@ -82,7 +82,7 @@ A grab bag. I'll add more items as I get closer to a stable release.
 * In-process ETS cache. On lookup, the library checks the cache first. If the ETS table doesn't contain a flag, it falls back to Redis and copies the value into the cache. Subsequent lookups won't hit Redis. The ETS table is empty when the application starts. Writes to the ETS table are managed by a GenServer and are serial, while any other process can read from it concurrently.
 * Creating or toggling a flag will update both the ETS cache and Redis.
 * Both the ETS cache and the Redis connection are in a supervision tree. The [Redix](https://hex.pm/packages/redix) adapter will try to reconnect to Redis if the connection is lost.
-* If the connection to Redis is lost, the application will continue to work with the known values from the ETS cache. If an unknown flag is looked up when Redis is unavailable it will default to the disabled state.
+* If the connection to Redis is lost, the application will continue to work with the known values from the ETS cache, even if normally they might be considered expired (because of the TTL). If an unknown flag is looked up when Redis is unavailable it will default to the disabled state.
 * Several nodes can connect to the same Redis and share the flag settings. Each one will hit Redis the first time a flag is looked up, and then will populate its ETS cache.
 * The ETS cache is enabled by default, but it can be disabled to only use Redis.
 * The ETS cache supports a global TTL, expressed in seconds. It defaults to 900s (15 minutes). After expiration, flags are re-fetched from Redis. This allows multiple nodes to use the same redis, and slowly acquire and cache flags that have been changed by another node.
@@ -91,7 +91,6 @@ A grab bag. I'll add more items as I get closer to a stable release.
 
 ### To do next
 
-* Ensure that if Redis is not available, expired cached values can still be used.
 * Implement other "gates": at least actors and groups.
 * Add a web GUI, as a plug, ideally in another package.
 * Add some optional randomness to the TTL, so that Redis doesn't get hammered at constant intervals after a server restart.

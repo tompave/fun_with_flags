@@ -16,6 +16,16 @@ defmodule FunWithFlags.StoreTest do
       flag_name = unique_atom()
       assert false == Store.lookup(flag_name)
     end
+
+    test "looking up a defined flag returns its value" do
+      flag_name = unique_atom()
+
+      Store.put(flag_name, true)
+      assert true == Store.lookup(flag_name)
+
+      Store.put(flag_name, false)
+      assert false == Store.lookup(flag_name)
+    end
   end
 
 
@@ -154,6 +164,23 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, false} == Cache.get(flag_name)
     end
 
+
+    test "put() will change both the value stored in the Cache and in Redis" do
+      flag_name = unique_atom()
+
+      {:ok, false} = Persistent.put(flag_name, false)
+      {:ok, false} = Cache.put(flag_name, false)
+
+      assert {:ok, false} = Cache.get(flag_name)
+      assert false == Persistent.get(flag_name)
+
+      {:ok, true} = Store.put(flag_name, true)
+
+      assert {:ok, true} = Cache.get(flag_name)
+      assert true == Persistent.get(flag_name)
+    end
+
+
     test "when a value in the cache expires, we can still reload it from redis" do
       flag_name = unique_atom()
       Persistent.put(flag_name, true)
@@ -167,6 +194,58 @@ defmodule FunWithFlags.StoreTest do
       timetravel by: (Config.cache_ttl + 1) do
         assert {:miss, :expired, true} = Cache.get(flag_name)
         assert true == Store.lookup(flag_name)
+      end
+    end
+  end
+
+
+  describe "in case of Persistent store failure" do
+    alias FunWithFlags.Store.{Cache, Persistent}
+
+    test "if we have a Cached value, the Persistent store is not touched at all" do
+      flag_name = unique_atom()
+      Cache.put(flag_name, true)
+
+      with_mock(Persistent, [:passthrough], []) do
+        assert true == Store.lookup(flag_name)
+        refute called(Persistent.get(flag_name))
+      end
+    end
+
+
+    test "if the Cached value is expired, it will still be used" do
+      flag_name = unique_atom()
+
+      Persistent.put(flag_name, false)
+      assert false == Store.lookup(flag_name)
+
+      Cache.put(flag_name, true)
+      assert {:ok, true} = Cache.get(flag_name)
+
+      timetravel by: (Config.cache_ttl + 1) do
+        with_mock(Persistent, [], get: fn(^flag_name) -> {:error, "mocked error"} end) do
+          assert {:miss, :expired, true} = Cache.get(flag_name)
+          assert true == Store.lookup(flag_name)
+          assert called(Persistent.get(flag_name))
+          assert {:error, "mocked error"} = Persistent.get(flag_name)
+        end
+      end
+    end
+
+
+    test "if there is no cached value, it defaults to false" do
+      flag_name = unique_atom()
+
+      Persistent.put(flag_name, true)
+      assert true == Store.lookup(flag_name)
+
+      Cache.flush()
+      assert {:miss, :not_found, nil} = Cache.get(flag_name)
+
+      with_mock(Persistent, [], get: fn(^flag_name) -> {:error, "mocked error"} end) do
+        assert false == Store.lookup(flag_name)
+        assert called(Persistent.get(flag_name))
+        assert {:error, "mocked error"} = Persistent.get(flag_name)
       end
     end
   end
