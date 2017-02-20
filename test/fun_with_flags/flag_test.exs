@@ -1,12 +1,22 @@
 defmodule FunWithFlags.FlagTest do
   use ExUnit.Case, async: true
-  import FunWithFlags.TestUtils
+  # import FunWithFlags.TestUtils
 
   alias FunWithFlags.Flag
 
+  describe "new(name, bool)" do
+    test "it returns a new flag struct" do
+      assert %Flag{name: :pear, boolean: true} = Flag.new("pear", true)
+      assert %Flag{name: :pear, boolean: true} = Flag.new(:pear, true)
+
+      assert %Flag{name: :pear, boolean: false} = Flag.new("pear", false)
+      assert %Flag{name: :pear, boolean: false} = Flag.new(:pear, false)
+    end
+  end
+
   describe "enabled?(flag)" do
     setup do
-      flag = %Flag{boolean: true} = make_flag("foobar", true)
+      flag = Flag.new(:banana, true)
       {:ok, flag: flag}
     end
 
