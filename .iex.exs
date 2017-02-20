@@ -1,5 +1,5 @@
 import FunWithFlags
-alias FunWithFlags.{Store,Config}
+alias FunWithFlags.{Store,Config,Flag}
 alias FunWithFlags.Store.{Cache,Persistent}
 
 {:ok, redis} =

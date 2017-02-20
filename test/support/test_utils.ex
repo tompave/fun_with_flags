@@ -58,4 +58,14 @@ defmodule FunWithFlags.TestUtils do
   def kill_process(name) do
     true = GenServer.whereis(name) |> Process.exit(:kill)
   end
+
+
+  def make_flag(name, bool, actors \\ nil, groups \\ nil) do
+    %FunWithFlags.Flag{
+      name: name,
+      boolean: bool,
+      actors: actors,
+      groups: groups
+    }
+  end
 end
