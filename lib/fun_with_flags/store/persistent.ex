@@ -1,11 +1,12 @@
 defmodule FunWithFlags.Store.Persistent do
   @moduledoc false
 
-  alias FunWithFlags.{Config, Notifications}
+  alias FunWithFlags.{Config, Notifications, Flag}
 
   @conn __MODULE__
   @conn_options [name: @conn, sync_connect: false]
   @prefix "fun_with_flags:"
+  @flags_set "fun_with_flags"
 
 
   def worker_spec do
@@ -30,6 +31,28 @@ defmodule FunWithFlags.Store.Persistent do
         publish_change(flag_name)
         {:ok, value}
       {:error, why} -> {:error, redis_error(why)}
+    end
+  end
+
+
+  def save(flag = %Flag{}) do
+    {name, fields} = Flag.to_redis(flag)
+
+    result = Redix.pipeline(@conn, [
+      ["MULTI"],
+      ["SADD", @flags_set, name],
+      ["HMSET" | [format(name) | fields]],
+      ["EXEC"]
+    ])
+
+    case result do
+      {:ok, ["OK", "QUEUED", "QUEUED", [0, "OK"]]} ->
+        publish_change(name)
+        {:ok, flag}
+      {:error, reason} ->
+        {:error, redis_error(reason)}
+      {:ok, _results} ->
+        {:error, redis_error("one of the commands failed")}
     end
   end
 

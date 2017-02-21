@@ -29,4 +29,14 @@ defmodule FunWithFlags.FlagTest do
       refute Flag.enabled?(flag)
     end
   end
+
+  describe "to_redis(flag) returns data ready to be flushed into redis" do
+    test "when the flag has just a boolean value" do
+      flag = Flag.new(:ananas, true)
+      assert {:ananas, ["boolean", true]}
+
+      flag = Flag.new(:ananas, false)
+      assert {:ananas, ["boolean", false]}
+    end
+  end
 end

@@ -21,6 +21,11 @@ defmodule FunWithFlags.Flag do
   end
 
 
+  def to_redis(flag = %__MODULE__{}) do
+    {flag.name, ["boolean", flag.boolean]}
+  end
+
+
   # defp is_gate?(name) do
   #   name in @gates
   # end
