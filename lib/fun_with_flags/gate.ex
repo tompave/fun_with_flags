@@ -10,6 +10,10 @@ defmodule FunWithFlags.Gate do
   end
 
 
+  def boolean?(%__MODULE__{type: :boolean}), do: true
+  def boolean?(%__MODULE__{type: _}),        do: false
+
+
   def enabled?(%{type: :boolean, enabled: enabled}) do
     enabled
   end

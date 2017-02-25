@@ -20,4 +20,12 @@ defmodule FunWithFlags.GateTest do
       refute Gate.enabled?(gate)
     end
   end
+
+
+  describe "boolean?(gate)" do
+    test "a boolean gate" do
+      gate = %Gate{type: :boolean, for: nil, enabled: false}
+      assert Gate.boolean?(gate)
+    end
+  end
 end
