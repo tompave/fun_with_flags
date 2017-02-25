@@ -2,6 +2,7 @@ defmodule FunWithFlags.Store.Cache do
   @moduledoc false
   use GenServer
   alias FunWithFlags.Timestamps
+  alias FunWithFlags.Flag
 
   @table_name :fun_with_flags_cache
   @table_options [
@@ -19,27 +20,30 @@ defmodule FunWithFlags.Store.Cache do
   #
   def get(flag_name) do
     case :ets.lookup(@table_name, flag_name) do
-      [{^flag_name, {value, timestamp}}] ->
-        validate_expiration(value, timestamp)
+      [{^flag_name, {flag, timestamp}}] ->
+        validate(flag_name, flag, timestamp)
       _ ->
         {:miss, :not_found, nil}
     end
   end
 
-  defp validate_expiration(value, timestamp) do
+  defp validate(name, flag = %Flag{name: name}, timestamp) do
     if Timestamps.expired?(timestamp, @ttl) do
-      {:miss, :expired, value}
+      {:miss, :expired, flag}
     else
-      {:ok, value}
+      {:ok, flag}
     end
+  end
+  defp validate(_name, _flag, _timestamp) do
+    {:miss, :invalid, nil}
   end
 
 
   # We want to always write serially through the
   # GenServer to avoid race conditions.
   #
-  def put(flag_name, value) do
-    GenServer.call(__MODULE__, {:put, flag_name, value})
+  def put(flag = %Flag{}) do
+    GenServer.call(__MODULE__, {:put, flag})
   end
 
 
@@ -62,10 +66,10 @@ defmodule FunWithFlags.Store.Cache do
   end
 
 
-  def handle_call({:put, flag_name, value}, _from, state) do
-    reply = case :ets.insert(@table_name, {flag_name, {value, Timestamps.now}}) do
-      true -> {:ok, value}
-      _    -> {:error, set_error_for(value)}
+  def handle_call({:put, flag = %Flag{name: name}}, _from, state) do
+    reply = case :ets.insert(@table_name, {name, {flag, Timestamps.now}}) do
+      true -> {:ok, flag}
+      _    -> {:error, error_for(flag)}
     end
     {:reply, reply, state}
   end
@@ -76,11 +80,7 @@ defmodule FunWithFlags.Store.Cache do
   end
   
 
-  defp set_error_for(value) do
-    if value do
-      "couldn't enable the flag"
-    else
-      "couldn't disable the flag"
-    end
+  defp error_for(flag) do
+    "Couldn't cache the flag '#{flag.name}'"
   end
 end
