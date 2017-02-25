@@ -11,6 +11,14 @@ defmodule FunWithFlags.GateTest do
   end
 
 
+  describe "from_redis() returns a Gate struct" do
+    test "with boolean data" do
+      assert %Gate{type: :boolean, for: nil, enabled: true} = Gate.from_redis(["boolean", "true"])
+      assert %Gate{type: :boolean, for: nil, enabled: false} = Gate.from_redis(["boolean", "false"])
+    end
+  end
+
+
   describe "enabled?(gate), for boolean gates" do
     test "it simply check the value of the gate" do
       gate = %Gate{type: :boolean, for: nil, enabled: true}
