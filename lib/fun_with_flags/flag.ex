@@ -1,32 +1,30 @@
 defmodule FunWithFlags.Flag do
   @moduledoc false
 
-  defstruct [:name, :boolean, :actors, :groups]
-  @type t :: %FunWithFlags.Flag{name: atom, boolean: boolean}
+  alias FunWithFlags.Gate
 
-  # @gates ~w(boolean actors groups)a
+  defstruct [name: nil, gates: []]
+  @type t :: %FunWithFlags.Flag{name: atom, gates: [FunWithFlags.Gate.t]}
 
 
-  def new(name, bool) when is_binary(name) do
-    new(String.to_atom(name), bool)
+  def new(name) when is_binary(name) do
+    new(String.to_atom(name))
   end
-  def new(name, bool) do
-    %__MODULE__{name: name, boolean: bool}
+  def new(name) do
+    %__MODULE__{name: name}
   end
 
 
   @spec enabled?(t) :: boolean
-  def enabled?(flag) do
-    flag.boolean
+  def enabled?(%__MODULE__{gates: []}), do: false
+  def enabled?(%__MODULE__{gates: gates}) do
+    gates
+    |> boolean_gate()
+    |> Gate.enabled?()
   end
 
 
-  def to_redis(flag = %__MODULE__{}) do
-    {flag.name, ["boolean", flag.boolean]}
+  defp boolean_gate(gates) do
+    Enum.find(gates, &Gate.boolean?/1)
   end
-
-
-  # defp is_gate?(name) do
-  #   name in @gates
-  # end
 end

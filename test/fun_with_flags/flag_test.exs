@@ -1,42 +1,30 @@
 defmodule FunWithFlags.FlagTest do
   use ExUnit.Case, async: true
-  # import FunWithFlags.TestUtils
 
-  alias FunWithFlags.Flag
+  alias FunWithFlags.{Flag,Gate}
 
-  describe "new(name, bool)" do
+  describe "new(name)" do
     test "it returns a new flag struct" do
-      assert %Flag{name: :pear, boolean: true} = Flag.new("pear", true)
-      assert %Flag{name: :pear, boolean: true} = Flag.new(:pear, true)
-
-      assert %Flag{name: :pear, boolean: false} = Flag.new("pear", false)
-      assert %Flag{name: :pear, boolean: false} = Flag.new(:pear, false)
+      assert %Flag{name: :pear, gates: []} = Flag.new("pear")
+      assert %Flag{name: :pear, gates: []} = Flag.new(:pear)
     end
   end
 
-  describe "enabled?(flag)" do
-    setup do
-      flag = Flag.new(:banana, true)
-      {:ok, flag: flag}
-    end
 
-    test "it returns true if the flag has a boolean value = true", %{flag: flag} do
+  describe "enabled?(flag)" do
+    test "it returns true if the flag has a boolean value = true" do
+      flag = %Flag{name: :banana, gates: [Gate.new(:boolean, true)]}
       assert Flag.enabled?(flag)
     end
 
-    test "it returns false if the flag has a boolean value = false", %{flag: flag} do
-      flag = %Flag{flag | boolean: false}
+    test "it returns false if the flag has a boolean value = false" do
+      flag = %Flag{name: :banana, gates: [Gate.new(:boolean, false)]}
       refute Flag.enabled?(flag)
     end
-  end
 
-  describe "to_redis(flag) returns data ready to be flushed into redis" do
-    test "when the flag has just a boolean value" do
-      flag = Flag.new(:ananas, true)
-      assert {:ananas, ["boolean", true]}
-
-      flag = Flag.new(:ananas, false)
-      assert {:ananas, ["boolean", false]}
+    test "it returns false if the flag doesn't have any gate" do
+      flag = %Flag{name: :banana, gates: []}
+      refute Flag.enabled?(flag)
     end
   end
 end
