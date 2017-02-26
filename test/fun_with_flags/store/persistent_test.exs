@@ -4,6 +4,7 @@ defmodule FunWithFlags.Store.PersistentTest do
   import Mock
 
   alias FunWithFlags.Store.Persistent
+  alias FunWithFlags.{Config, Notifications, Flag, Gate}
 
   setup_all do
     on_exit(__MODULE__, fn() -> clear_redis_test_db() end)
@@ -12,32 +13,38 @@ defmodule FunWithFlags.Store.PersistentTest do
 
 
   describe "put(flag_name, value)" do
-    alias FunWithFlags.{Config, Notifications}
-
-    test "put() can change the value of a flag" do
-      flag_name = unique_atom()
-
-      assert false == Persistent.get(flag_name)
-      Persistent.put(flag_name, true)
-      assert true == Persistent.get(flag_name)
-      Persistent.put(flag_name, false)
-      assert false == Persistent.get(flag_name)
+    setup do
+      name = unique_atom()
+      gate = %Gate{type: :boolean, enabled: true}
+      {:ok, name: name, gate: gate}
     end
 
-    test "put() returns the tuple {:ok, a_boolean_value}" do
-      flag_name = unique_atom()
-      assert {:ok, true} == Persistent.put(flag_name, true)
-      assert {:ok, false} == Persistent.put(flag_name, false)
+
+    test "put() can change the value of a flag", %{name: name, gate: gate} do
+      assert %Flag{name: ^name, gates: []} = Persistent.get(name)
+
+      Persistent.put(name, gate)
+      assert %Flag{name: ^name, gates: [^gate]} = Persistent.get(name)
+
+      gate2 = %Gate{gate | enabled: false}
+      Persistent.put(name, gate2)
+      assert %Flag{name: ^name, gates: [^gate2]} = Persistent.get(name)
+      refute match? %Flag{name: ^name, gates: [^gate]}, Persistent.get(name)
     end
 
-    test "when the cache is enabled, put() will publish a notification to Redis" do
+
+    test "put() returns the tuple {:ok, %Gate{}}", %{name: name, gate: gate} do
+      assert {:ok, ^gate} = Persistent.put(name, gate)
+    end
+
+
+    test "when the cache is enabled, put() will publish a notification to Redis", %{name: name, gate: gate} do
       assert true == Config.cache?
-      flag_name = unique_atom()
 
       with_mocks([
         {Notifications, [], [
-          payload_for: fn(name) ->
-            ["fun_with_flags_changes", "unique_id_foobar:#{name}"]
+          payload_for: fn(flag_name) ->
+            ["fun_with_flags_changes", "unique_id_foobar:#{flag_name}"]
           end,
           handle_info: fn(payload, state) ->
             :meck.passthrough([payload, state])
@@ -45,23 +52,22 @@ defmodule FunWithFlags.Store.PersistentTest do
         ]},
         {Redix, [:passthrough], []}
       ]) do
-        assert {:ok, true} = Persistent.put(flag_name, true)
+        assert {:ok, ^gate} = Persistent.put(name, gate)
         :timer.sleep(10)
-        assert called Notifications.payload_for(flag_name)
+        assert called Notifications.payload_for(name)
 
         assert called(
           Redix.command(
             FunWithFlags.Store.Persistent,
-            ["PUBLISH", "fun_with_flags_changes", "unique_id_foobar:#{flag_name}"]
+            ["PUBLISH", "fun_with_flags_changes", "unique_id_foobar:#{name}"]
           )
         )
       end
     end
 
 
-    test "when the cache is enabled, put() will cause other subscribers to receive a Redis notification" do
+    test "when the cache is enabled, put() will cause other subscribers to receive a Redis notification", %{name: name, gate: gate} do
       assert true == Config.cache?
-      flag_name = unique_atom()
       channel = "fun_with_flags_changes"
       u_id = Notifications.unique_id()
 
@@ -76,9 +82,9 @@ defmodule FunWithFlags.Store.PersistentTest do
         500 -> flunk "Subscribe didn't work"
       end
 
-      assert {:ok, true} = Persistent.put(flag_name, true)
+      assert {:ok, ^gate} = Persistent.put(name, gate)
 
-      payload = "#{u_id}:#{to_string(flag_name)}"
+      payload = "#{u_id}:#{to_string(name)}"
       
       receive do
         {:redix_pubsub, ^receiver, :message, %{channel: ^channel, payload: ^payload}} -> :ok
@@ -100,22 +106,20 @@ defmodule FunWithFlags.Store.PersistentTest do
     end
 
 
-    test "when the cache is NOT enabled, put() will publish a notification to Redis" do
-      flag_name = unique_atom()
-
+    test "when the cache is NOT enabled, put() will publish a notification to Redis", %{name: name, gate: gate} do
       with_mocks([
         {Config, [], [cache?: fn() -> false end]},
         {Notifications, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
-        assert {:ok, true} = Persistent.put(flag_name, true)
+        assert {:ok, ^gate} = Persistent.put(name, gate)
         :timer.sleep(10)
-        refute called Notifications.payload_for(flag_name)
+        refute called Notifications.payload_for(name)
 
         refute called(
           Redix.command(
             FunWithFlags.Store.Persistent,
-            ["PUBLISH", "fun_with_flags_changes", "unique_id_foobar:#{flag_name}"]
+            ["PUBLISH", "fun_with_flags_changes", "unique_id_foobar:#{name}"]
           )
         )
       end
@@ -124,45 +128,34 @@ defmodule FunWithFlags.Store.PersistentTest do
 
 
   describe "get(flag_name)" do
-    test "looking up an undefined flag returns false" do
-      flag_name = unique_atom()
-      assert false == Persistent.get(flag_name)
+    test "looking up an undefined flag returns an flag with no gates" do
+      name = unique_atom()
+      assert %Flag{name: ^name, gates: []} = Persistent.get(name)
     end
 
-    test "get() returns a boolean" do
-      flag_name = unique_atom()
-      assert false == Persistent.get(flag_name)
-      Persistent.put(flag_name, true)
-      assert true == Persistent.get(flag_name)
+    test "looking up a saved flag returns the flag" do
+      name = unique_atom()
+      gate = %Gate{type: :boolean, enabled: true}
+
+      assert %Flag{name: ^name, gates: []} = Persistent.get(name)
+      Persistent.put(name, gate)
+      assert %Flag{name: ^name, gates: [^gate]} = Persistent.get(name)
     end  
   end
   
 
-  describe "unit: enable and disable with this module's API" do
-    test "looking up a disabled flag returns false" do
-      flag_name = unique_atom()
-      Persistent.put(flag_name, false)
-      assert false == Persistent.get(flag_name)
-    end
 
-    test "looking up an enabled flag returns true" do
-      flag_name = unique_atom()
-      Persistent.put(flag_name, true)
-      assert true == Persistent.get(flag_name)
-    end
-  end
-
-  describe "integration: enable and disable with the top-level API" do
-    test "looking up a disabled flag returns false" do
-      flag_name = unique_atom()
-      FunWithFlags.disable(flag_name)
-      assert false == Persistent.get(flag_name)
-    end
+  # describe "integration: enable and disable with the top-level API" do
+  #   test "looking up a disabled flag returns false" do
+  #     flag_name = unique_atom()
+  #     FunWithFlags.disable(flag_name)
+  #     assert false == Persistent.get(flag_name)
+  #   end
   
-    test "looking up an enabled flag returns true" do
-      flag_name = unique_atom()
-      FunWithFlags.enable(flag_name)
-      assert true == Persistent.get(flag_name)
-    end
-  end
+  #   test "looking up an enabled flag returns true" do
+  #     flag_name = unique_atom()
+  #     FunWithFlags.enable(flag_name)
+  #     assert true == Persistent.get(flag_name)
+  #   end
+  # end
 end

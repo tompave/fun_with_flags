@@ -5,8 +5,26 @@ defmodule FunWithFlags.FlagTest do
 
   describe "new(name)" do
     test "it returns a new flag struct" do
-      assert %Flag{name: :pear, gates: []} = Flag.new("pear")
       assert %Flag{name: :pear, gates: []} = Flag.new(:pear)
+    end
+  end
+
+
+  describe "from_redis(name, [gate, data])" do
+    test "with empty data it returns an empty flag" do
+      assert %Flag{name: :kiwi, gates: []} = Flag.from_redis(:kiwi, [])
+    end
+
+    test "with boolean gate data it returns a simple boolean flag" do
+      assert(
+        %Flag{name: :kiwi, gates: [%Gate{type: :boolean, enabled: true}]} =
+          Flag.from_redis(:kiwi, ["boolean", "true"])
+      )
+
+      assert(
+        %Flag{name: :kiwi, gates: [%Gate{type: :boolean, enabled: false}]} =
+          Flag.from_redis(:kiwi, ["boolean", "false"])
+      )
     end
   end
 

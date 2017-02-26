@@ -1,7 +1,8 @@
 defmodule FunWithFlags.Store.Persistent do
   @moduledoc false
 
-  alias FunWithFlags.{Config, Notifications, Flag}
+  alias FunWithFlags.{Config, Notifications, Flag, Gate}
+  alias FunWithFlags.Store.Serializer
 
   @conn __MODULE__
   @conn_options [name: @conn, sync_connect: false]
@@ -16,43 +17,32 @@ defmodule FunWithFlags.Store.Persistent do
 
 
   def get(flag_name) do
-    case Redix.command(@conn, ["GET", format(flag_name)]) do
-      {:ok, "true"}  -> true
-      {:ok, "false"} -> false
-      {:error, why}  -> {:error, redis_error(why)}
-      _              -> false
-    end
-  end
-
-
-  def put(flag_name, value) do
-    case Redix.command(@conn, ["SET", format(flag_name), value]) do
-      {:ok, "OK"} ->
-        publish_change(flag_name)
-        {:ok, value}
+    case Redix.command(@conn, ["HGETALL", format(flag_name)]) do
+      {:ok, data}   -> Flag.from_redis(flag_name, data)
       {:error, why} -> {:error, redis_error(why)}
+      _             -> {:error, :unknown}
     end
   end
 
 
-  def save(flag = %Flag{}) do
-    {name, fields} = Flag.to_redis(flag)
+  def put(flag_name, gate = %Gate{}) do
+    data = Serializer.to_redis(gate)
 
     result = Redix.pipeline(@conn, [
       ["MULTI"],
-      ["SADD", @flags_set, name],
-      ["HMSET" | [format(name) | fields]],
+      ["SADD", @flags_set, flag_name],
+      ["HSET" | [format(flag_name) | data]],
       ["EXEC"]
     ])
 
     case result do
-      {:ok, ["OK", "QUEUED", "QUEUED", [0, "OK"]]} ->
-        publish_change(name)
-        {:ok, flag}
+      {:ok, ["OK", "QUEUED", "QUEUED", [a, b]]} when a in [0, 1] and b in [0, 1] ->
+        publish_change(flag_name)
+        {:ok, gate}
       {:error, reason} ->
         {:error, redis_error(reason)}
-      {:ok, _results} ->
-        {:error, redis_error("one of the commands failed")}
+      {:ok, results} ->
+        {:error, redis_error("one of the commands failed: #{inspect(results)}")}
     end
   end
 

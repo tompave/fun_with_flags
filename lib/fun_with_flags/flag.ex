@@ -7,11 +7,18 @@ defmodule FunWithFlags.Flag do
   @type t :: %FunWithFlags.Flag{name: atom, gates: [FunWithFlags.Gate.t]}
 
 
-  def new(name) when is_binary(name) do
-    new(String.to_atom(name))
+  def new(name, gates \\ []) when is_atom(name) do
+    %__MODULE__{name: name, gates: gates}
   end
-  def new(name) do
-    %__MODULE__{name: name}
+
+
+  def from_redis(name, []), do: new(name, [])
+  def from_redis(name, list) when is_list(list) do
+    gates =
+      list
+      |> Enum.chunk(2)
+      |> Enum.map(&Gate.from_redis/1)
+    new(name, gates)
   end
 
 
