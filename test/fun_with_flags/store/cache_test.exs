@@ -69,24 +69,26 @@ defmodule FunWithFlags.Store.CacheTest do
   end
 
 
-  # describe "integration: enable and disable with the top-level API" do
-  #   setup do
-  #     # can't use setup_all in here, but the on_exit should
-  #     # be run only once because it's identifed by a common ref
-  #     on_exit(:cache_integration_group, fn() -> clear_redis_test_db() end)
-  #     :ok
-  #   end
-  #   test "looking up a disabled flag returns {:ok, false}" do
-  #     flag_name = unique_atom()
-  #     FunWithFlags.disable(flag_name)
-  #     assert {:ok, false} = Cache.get(flag_name)
-  #   end
-  #   test "looking up an enabled flag returns {:ok, true}" do
-  #     flag_name = unique_atom()
-  #     FunWithFlags.enable(flag_name)
-  #     assert {:ok, true} = Cache.get(flag_name)
-  #   end
-  # end
+  describe "integration: enable and disable with the top-level API" do
+    setup do
+      # can't use setup_all in here, but the on_exit should
+      # be run only once because it's identifed by a common ref
+      on_exit(:cache_integration_group, fn() -> clear_redis_test_db() end)
+      :ok
+    end
+
+    test "looking up a disabled flag" do
+      name = unique_atom()
+      FunWithFlags.disable(name)
+      assert {:ok, %Flag{name: ^name, gates: [%Gate{type: :boolean, enabled: false}]}} = Cache.get(name)
+    end
+
+    test "looking up an enabled flag" do
+      name = unique_atom()
+      FunWithFlags.enable(name)
+      assert {:ok, %Flag{name: ^name, gates: [%Gate{type: :boolean, enabled: true}]}} = Cache.get(name)
+    end
+  end
 
 
   test "flush() empties the cache", %{flag: flag}  do

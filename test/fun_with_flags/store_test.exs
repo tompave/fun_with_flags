@@ -93,19 +93,19 @@ defmodule FunWithFlags.StoreTest do
   end
 
 
-  # describe "integration: enable and disable with the top-level API" do
-  #   test "looking up a disabled flag returns false" do
-  #     flag_name = unique_atom()
-  #     FunWithFlags.disable(flag_name)
-  #     assert false == Store.lookup(flag_name)
-  #   end
+  describe "integration: enable and disable with the top-level API" do
+    test "looking up a disabled flag" do
+      name = unique_atom()
+      FunWithFlags.disable(name)
+      assert %Flag{name: ^name, gates: [%Gate{type: :boolean, enabled: false}]} = Store.lookup(name)
+    end
 
-  #   test "looking up an enabled flag returns true" do
-  #     flag_name = unique_atom()
-  #     FunWithFlags.enable(flag_name)
-  #     assert true == Store.lookup(flag_name)
-  #   end
-  # end
+    test "looking up an enabled flag" do
+      name = unique_atom()
+      FunWithFlags.enable(name)
+      assert %Flag{name: ^name, gates: [%Gate{type: :boolean, enabled: true}]} = Store.lookup(name)
+    end
+  end
 
 
   describe "integration: Cache and Persistence" do
