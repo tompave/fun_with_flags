@@ -2,7 +2,7 @@ defmodule FunWithFlags.SimpleStore do
   @moduledoc false
 
   alias FunWithFlags.Store.Persistent
-  alias FunWithFlags.{Flag, Gate}
+  alias FunWithFlags.Flag
 
 
   def lookup(flag_name) do
