@@ -18,7 +18,7 @@ defmodule FunWithFlags.Store.Persistent do
 
   def get(flag_name) do
     case Redix.command(@conn, ["HGETALL", format(flag_name)]) do
-      {:ok, data}   -> Flag.from_redis(flag_name, data)
+      {:ok, data}   -> {:ok, Flag.from_redis(flag_name, data)}
       {:error, why} -> {:error, redis_error(why)}
       _             -> {:error, :unknown}
     end
@@ -37,8 +37,9 @@ defmodule FunWithFlags.Store.Persistent do
 
     case result do
       {:ok, ["OK", "QUEUED", "QUEUED", [a, b]]} when a in [0, 1] and b in [0, 1] ->
+        {:ok, flag} = get(flag_name)
         publish_change(flag_name)
-        {:ok, gate}
+        {:ok, flag}
       {:error, reason} ->
         {:error, redis_error(reason)}
       {:ok, results} ->

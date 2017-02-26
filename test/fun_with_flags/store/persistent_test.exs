@@ -12,33 +12,35 @@ defmodule FunWithFlags.Store.PersistentTest do
   end
 
 
-  describe "put(flag_name, value)" do
+  describe "put(flag_name, %Gate{})" do
     setup do
       name = unique_atom()
       gate = %Gate{type: :boolean, enabled: true}
-      {:ok, name: name, gate: gate}
+      flag = %Flag{name: name, gates: [gate]}
+      {:ok, name: name, gate: gate, flag: flag}
     end
 
 
     test "put() can change the value of a flag", %{name: name, gate: gate} do
-      assert %Flag{name: ^name, gates: []} = Persistent.get(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Persistent.get(name)
 
       Persistent.put(name, gate)
-      assert %Flag{name: ^name, gates: [^gate]} = Persistent.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^gate]}} = Persistent.get(name)
 
       gate2 = %Gate{gate | enabled: false}
       Persistent.put(name, gate2)
-      assert %Flag{name: ^name, gates: [^gate2]} = Persistent.get(name)
-      refute match? %Flag{name: ^name, gates: [^gate]}, Persistent.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^gate2]}} = Persistent.get(name)
+      refute match? {:ok, %Flag{name: ^name, gates: [^gate]}}, Persistent.get(name)
     end
 
 
-    test "put() returns the tuple {:ok, %Gate{}}", %{name: name, gate: gate} do
-      assert {:ok, ^gate} = Persistent.put(name, gate)
+    test "put() returns the tuple {:ok, %Flag{}}", %{name: name, gate: gate, flag: flag} do
+      assert {:ok, %Flag{name: ^name, gates: [^gate]}} = Persistent.put(name, gate)
+      assert {:ok, ^flag} = Persistent.put(name, gate)
     end
 
 
-    test "when the cache is enabled, put() will publish a notification to Redis", %{name: name, gate: gate} do
+    test "when the cache is enabled, put() will publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
       assert true == Config.cache?
 
       with_mocks([
@@ -52,7 +54,7 @@ defmodule FunWithFlags.Store.PersistentTest do
         ]},
         {Redix, [:passthrough], []}
       ]) do
-        assert {:ok, ^gate} = Persistent.put(name, gate)
+        assert {:ok, ^flag} = Persistent.put(name, gate)
         :timer.sleep(10)
         assert called Notifications.payload_for(name)
 
@@ -66,7 +68,7 @@ defmodule FunWithFlags.Store.PersistentTest do
     end
 
 
-    test "when the cache is enabled, put() will cause other subscribers to receive a Redis notification", %{name: name, gate: gate} do
+    test "when the cache is enabled, put() will cause other subscribers to receive a Redis notification", %{name: name, gate: gate, flag: flag} do
       assert true == Config.cache?
       channel = "fun_with_flags_changes"
       u_id = Notifications.unique_id()
@@ -82,7 +84,7 @@ defmodule FunWithFlags.Store.PersistentTest do
         500 -> flunk "Subscribe didn't work"
       end
 
-      assert {:ok, ^gate} = Persistent.put(name, gate)
+      assert {:ok, ^flag} = Persistent.put(name, gate)
 
       payload = "#{u_id}:#{to_string(name)}"
       
@@ -106,13 +108,13 @@ defmodule FunWithFlags.Store.PersistentTest do
     end
 
 
-    test "when the cache is NOT enabled, put() will publish a notification to Redis", %{name: name, gate: gate} do
+    test "when the cache is NOT enabled, put() will publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
       with_mocks([
         {Config, [], [cache?: fn() -> false end]},
         {Notifications, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
-        assert {:ok, ^gate} = Persistent.put(name, gate)
+        assert {:ok, ^flag} = Persistent.put(name, gate)
         :timer.sleep(10)
         refute called Notifications.payload_for(name)
 
@@ -130,16 +132,16 @@ defmodule FunWithFlags.Store.PersistentTest do
   describe "get(flag_name)" do
     test "looking up an undefined flag returns an flag with no gates" do
       name = unique_atom()
-      assert %Flag{name: ^name, gates: []} = Persistent.get(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Persistent.get(name)
     end
 
     test "looking up a saved flag returns the flag" do
       name = unique_atom()
       gate = %Gate{type: :boolean, enabled: true}
 
-      assert %Flag{name: ^name, gates: []} = Persistent.get(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Persistent.get(name)
       Persistent.put(name, gate)
-      assert %Flag{name: ^name, gates: [^gate]} = Persistent.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^gate]}} = Persistent.get(name)
     end  
   end
   
