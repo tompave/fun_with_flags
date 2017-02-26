@@ -120,57 +120,60 @@ defmodule FunWithFlags.NotificationsTest do
 
   describe "integration: side effects" do
     alias FunWithFlags.Store.{Cache,Persistent}
-    alias FunWithFlags.{Store, Config}
+    alias FunWithFlags.{Store, Config, Gate, Flag}
 
     setup do
-      flag_name = unique_atom()
-      {:ok, false} = Persistent.put(flag_name, false)
+      name = unique_atom()
+      gate = %Gate{type: :boolean, enabled: true}
+      stored_flag = %Flag{name: name, gates: [gate]}
+
+      gate2 = %Gate{type: :boolean, enabled: false}
+      cached_flag = %Flag{name: name, gates: [gate2]}
+
+      {:ok, ^stored_flag} = Persistent.put(name, gate)
       :timer.sleep(10)
-      {:ok, true} = Cache.put(flag_name, true)
+      {:ok, ^cached_flag} = Cache.put(cached_flag)
 
-      assert false == Persistent.get(flag_name)
-      assert {:ok, true} = Cache.get(flag_name)
+      assert {:ok, ^stored_flag} = Persistent.get(name)
+      assert {:ok, ^cached_flag} = Cache.get(name)
 
-      {:ok, flag_name: flag_name}
+      refute match? ^stored_flag, cached_flag
+
+      {:ok, name: name, stored_flag: stored_flag, cached_flag: cached_flag}
     end
 
 
-    test "when the message is not valid, the Cached value is not changed", %{flag_name: flag_name} do
+    test "when the message is not valid, the Cached value is not changed", %{name: name, cached_flag: cached_flag} do
       channel = "fun_with_flags_changes"
       
-      with_mock(Store, [:passthrough], []) do
-        Redix.command(Persistent, ["PUBLISH", channel, to_string(flag_name)])
-        :timer.sleep(30)
-        assert {:ok, true} = Cache.get(flag_name)
-      end
+      Redix.command(Persistent, ["PUBLISH", channel, to_string(name)])
+      :timer.sleep(30)
+      assert {:ok, ^cached_flag} = Cache.get(name)
     end
 
 
-    test "when the message comes from this same process, the Cached value is not changed", %{flag_name: flag_name} do
+    test "when the message comes from this same process, the Cached value is not changed", %{name: name, cached_flag: cached_flag} do
       u_id = Notifications.unique_id()
       channel = "fun_with_flags_changes"
-      message = "#{u_id}:#{to_string(flag_name)}"
+      message = "#{u_id}:#{to_string(name)}"
       
-      with_mock(Store, [:passthrough], []) do
-        Redix.command(Persistent, ["PUBLISH", channel, message])
-        :timer.sleep(30)
-        assert {:ok, true} = Cache.get(flag_name)
-      end
+      Redix.command(Persistent, ["PUBLISH", channel, message])
+      :timer.sleep(30)
+      assert {:ok, ^cached_flag} = Cache.get(name)
     end
 
 
-    test "when the message comes from another process, the Cached value is reloaded", %{flag_name: flag_name} do
+    test "when the message comes from another process, the Cached value is reloaded", %{name: name, cached_flag: cached_flag, stored_flag: stored_flag} do
       another_u_id = Config.build_unique_id()
       refute another_u_id == Notifications.unique_id()
 
       channel = "fun_with_flags_changes"
-      message = "#{another_u_id}:#{to_string(flag_name)}"
+      message = "#{another_u_id}:#{to_string(name)}"
       
-      with_mock(Store, [:passthrough], []) do
-        Redix.command(Persistent, ["PUBLISH", channel, message])
-        :timer.sleep(30)
-        assert {:ok, false} = Cache.get(flag_name)
-      end
+      assert {:ok, ^cached_flag} = Cache.get(name)
+      Redix.command(Persistent, ["PUBLISH", channel, message])
+      :timer.sleep(30)
+      assert {:ok, ^stored_flag} = Cache.get(name)
     end
   end
 end

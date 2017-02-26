@@ -14,7 +14,7 @@ defmodule FunWithFlags.ConfigTest do
   test "the redis configuration" do
     # without configuration, it returns the defaults
     ensure_no_redis_config()
-    defaults = [host: 'localhost', port: 6379, database: 0]
+    defaults = [host: 'localhost', port: 6379, database: 5]
     assert ^defaults = Config.redis_config
 
     # when configured to use a URL string, it returns the string and ignores the defaults
@@ -89,8 +89,7 @@ defmodule FunWithFlags.ConfigTest do
   end
 
   defp ensure_no_redis_config do
-    assert match?(nil, Application.get_env(:fun_with_flags, :redis))
-    refute Keyword.has_key?(Application.get_all_env(:fun_with_flags), :redis)
+    assert match?([database: 5], Application.get_env(:fun_with_flags, :redis))
   end
 
   defp reset_cache_defaults do
