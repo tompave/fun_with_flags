@@ -7,7 +7,7 @@ defmodule FunWithFlags.SimpleStore do
 
   def lookup(flag_name) do
     case Persistent.get(flag_name) do
-      {:ok, flag = %Flag{}} -> flag
+      {:ok, flag = %Flag{}} -> {:ok, flag}
       error                 -> error
     end
   end

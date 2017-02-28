@@ -6,12 +6,13 @@ defmodule FunWithFlags.Store do
 
   def lookup(flag_name) do
     case Cache.get(flag_name) do
-      {:ok, flag} -> flag
+      {:ok, flag} ->
+        {:ok, flag}
       {:miss, reason, stale_value_or_nil} ->
         case Persistent.get(flag_name) do
           {:ok, flag} ->
             Cache.put(flag) 
-            flag
+            {:ok, flag}
           {:error, _reason} ->
             try_to_use_the_cached_value(reason, stale_value_or_nil)
         end
@@ -19,7 +20,9 @@ defmodule FunWithFlags.Store do
   end
 
 
-  defp try_to_use_the_cached_value(:expired, value), do: value
+  defp try_to_use_the_cached_value(:expired, value) do
+    {:ok, value}
+  end
   defp try_to_use_the_cached_value(_, _) do
     raise "Can't load feature flag"
   end

@@ -17,7 +17,11 @@ defmodule FunWithFlags do
   """
   @spec enabled?(atom) :: boolean
   def enabled?(flag_name) when is_atom(flag_name) do
-    Flag.enabled?(@store.lookup(flag_name))
+    case @store.lookup(flag_name) do
+      {:ok, flag} -> Flag.enabled?(flag)
+      _           -> false
+    end
+    
   end
 
 

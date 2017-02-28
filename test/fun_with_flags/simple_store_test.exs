@@ -20,15 +20,15 @@ defmodule FunWithFlags.SimpleStoreTest do
     end
 
     test "put() can change the value of a flag", %{name: name, gate: gate} do
-      assert %Flag{name: ^name, gates: []} = SimpleStore.lookup(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.lookup(name)
 
       SimpleStore.put(name, gate)
-      assert %Flag{name: ^name, gates: [^gate]} = SimpleStore.lookup(name)
+      assert {:ok, %Flag{name: ^name, gates: [^gate]}} = SimpleStore.lookup(name)
 
       gate2 = %Gate{gate | enabled: false}
       SimpleStore.put(name, gate2)
-      assert %Flag{name: ^name, gates: [^gate2]} = SimpleStore.lookup(name)
-      refute match? %Flag{name: ^name, gates: [^gate]}, SimpleStore.lookup(name)
+      assert {:ok, %Flag{name: ^name, gates: [^gate2]}} = SimpleStore.lookup(name)
+      refute match? {:ok, %Flag{name: ^name, gates: [^gate]}}, SimpleStore.lookup(name)
     end
 
     test "put() returns the tuple {:ok, %Flag{}}", %{name: name, gate: gate, flag: flag} do
@@ -40,16 +40,16 @@ defmodule FunWithFlags.SimpleStoreTest do
   describe "lookup(flag_name)" do
     test "looking up an undefined flag returns an flag with no gates" do
       name = unique_atom()
-      assert %Flag{name: ^name, gates: []} = SimpleStore.lookup(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.lookup(name)
     end
 
     test "looking up a saved flag returns the flag" do
       name = unique_atom()
       gate = %Gate{type: :boolean, enabled: true}
 
-      assert %Flag{name: ^name, gates: []} = SimpleStore.lookup(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.lookup(name)
       SimpleStore.put(name, gate)
-      assert %Flag{name: ^name, gates: [^gate]} = SimpleStore.lookup(name)
+      assert {:ok, %Flag{name: ^name, gates: [^gate]}} = SimpleStore.lookup(name)
     end  
   end
 
@@ -58,13 +58,13 @@ defmodule FunWithFlags.SimpleStoreTest do
     test "looking up a disabled flag" do
       name = unique_atom()
       FunWithFlags.disable(name)
-      assert %Flag{name: ^name, gates: [%Gate{type: :boolean, enabled: false}]} = SimpleStore.lookup(name)
+      assert {:ok, %Flag{name: ^name, gates: [%Gate{type: :boolean, enabled: false}]}} = SimpleStore.lookup(name)
     end
 
     test "looking up an enabled flag" do
       name = unique_atom()
       FunWithFlags.enable(name)
-      assert %Flag{name: ^name, gates: [%Gate{type: :boolean, enabled: true}]} = SimpleStore.lookup(name)
+      assert {:ok, %Flag{name: ^name, gates: [%Gate{type: :boolean, enabled: true}]}} = SimpleStore.lookup(name)
     end
   end
 end

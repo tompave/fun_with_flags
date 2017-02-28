@@ -23,27 +23,27 @@ defmodule FunWithFlags.StoreTest do
   describe "lookup(flag_name)" do
     test "looking up an undefined flag returns a flag with no gates" do
       flag_name = unique_atom()
-      assert %Flag{name: ^flag_name, gates: []} = Store.lookup(flag_name)
+      assert {:ok, %Flag{name: ^flag_name, gates: []}} = Store.lookup(flag_name)
     end
 
     test "looking up a defined flag returns the flag", %{name: name, gate: gate, flag: flag} do
-      assert %Flag{name: ^name, gates: []} = Store.lookup(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Store.lookup(name)
       Store.put(name, gate)
-      assert ^flag = Store.lookup(name)
+      assert {:ok, ^flag} = Store.lookup(name)
     end
   end
 
 
   describe "put(flag_name, value)" do
     test "put() can change the value of a flag", %{name: name, gate: gate, flag: flag} do
-      assert %Flag{name: ^name, gates: []} = Store.lookup(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Store.lookup(name)
 
       Store.put(name, gate)
-      assert ^flag = Store.lookup(name)
+      assert {:ok, ^flag} = Store.lookup(name)
 
       gate2 = %Gate{gate | enabled: false}
       Store.put(name, gate2)
-      assert %Flag{name: ^name, gates: [^gate2]} = Store.lookup(name)
+      assert {:ok, %Flag{name: ^name, gates: [^gate2]}} = Store.lookup(name)
       refute match? ^flag, Store.lookup(name)
     end
 
@@ -58,16 +58,16 @@ defmodule FunWithFlags.StoreTest do
       empty_flag = %Flag{name: name, gates: []}
       assert {:ok, ^empty_flag} = Persistent.get(name)
       assert {:miss, :not_found, nil} = Cache.get(name)
-      assert ^empty_flag = Store.lookup(name)
+      assert {:ok, ^empty_flag} = Store.lookup(name)
 
       Cache.put(flag)
       assert {:ok, ^flag} = Cache.get(name)
-      assert ^flag = Store.lookup(name)
+      assert {:ok, ^flag} = Store.lookup(name)
 
       Store.reload(name)
 
       assert {:ok, ^empty_flag} = Cache.get(name)
-      assert ^empty_flag = Store.lookup(name)
+      assert {:ok, ^empty_flag} = Store.lookup(name)
     end
 
 
@@ -81,14 +81,14 @@ defmodule FunWithFlags.StoreTest do
 
       Cache.put(flag2)
       assert {:ok, ^flag2} = Cache.get(name)
-      assert ^flag2 = Store.lookup(name)
-      refute match? ^flag, Store.lookup(name)
+      assert {:ok, ^flag2} = Store.lookup(name)
+      refute match? {:ok, ^flag}, Store.lookup(name)
 
       Store.reload(name)
 
       assert {:ok, ^flag} = Cache.get(name)
-      assert ^flag = Store.lookup(name)
-      refute match? ^flag2, Store.lookup(name)
+      assert {:ok, ^flag} = Store.lookup(name)
+      refute match? {:ok, ^flag2}, Store.lookup(name)
     end
   end
 
@@ -97,13 +97,13 @@ defmodule FunWithFlags.StoreTest do
     test "looking up a disabled flag" do
       name = unique_atom()
       FunWithFlags.disable(name)
-      assert %Flag{name: ^name, gates: [%Gate{type: :boolean, enabled: false}]} = Store.lookup(name)
+      assert {:ok, %Flag{name: ^name, gates: [%Gate{type: :boolean, enabled: false}]}} = Store.lookup(name)
     end
 
     test "looking up an enabled flag" do
       name = unique_atom()
       FunWithFlags.enable(name)
-      assert %Flag{name: ^name, gates: [%Gate{type: :boolean, enabled: true}]} = Store.lookup(name)
+      assert {:ok, %Flag{name: ^name, gates: [%Gate{type: :boolean, enabled: true}]}} = Store.lookup(name)
     end
   end
 
@@ -116,7 +116,7 @@ defmodule FunWithFlags.StoreTest do
         {Persistent, [:passthrough], []},
         {Cache, [:passthrough], []}
       ]) do
-        assert ^flag = Store.lookup(name)
+        assert {:ok, ^flag} = Store.lookup(name)
         assert called(Cache.get(name))
         refute called(Persistent.get(name))
       end
@@ -142,7 +142,7 @@ defmodule FunWithFlags.StoreTest do
       assert {:miss, :not_found, nil} = Cache.get(name)
       assert {:ok, ^flag} = Persistent.get(name)
       
-      assert ^flag = Store.lookup(name)
+      assert {:ok, ^flag} = Store.lookup(name)
       assert {:ok, ^flag} = Cache.get(name)
     end
 
@@ -154,7 +154,7 @@ defmodule FunWithFlags.StoreTest do
       assert {:miss, :not_found, nil} == Cache.get(name)
       assert {:ok, ^empty_flag} = Persistent.get(name)
 
-      assert ^empty_flag = Store.lookup(name)
+      assert {:ok, ^empty_flag} = Store.lookup(name)
       assert {:ok, ^empty_flag} = Cache.get(name)
     end
 
@@ -183,12 +183,12 @@ defmodule FunWithFlags.StoreTest do
       assert {:miss, :not_found, nil} = Cache.get(name)
       assert {:ok, ^flag} = Persistent.get(name)
 
-      assert ^flag = Store.lookup(name)
+      assert {:ok, ^flag} = Store.lookup(name)
       assert {:ok, ^flag} = Cache.get(name)
 
       timetravel by: (Config.cache_ttl + 1) do
         assert {:miss, :expired, ^flag} = Cache.get(name)
-        assert ^flag = Store.lookup(name)
+        assert {:ok, ^flag} = Store.lookup(name)
         assert {:ok, ^flag} = Cache.get(name)
       end
     end
@@ -205,7 +205,7 @@ defmodule FunWithFlags.StoreTest do
         {Persistent, [], get: fn(^name) -> {:error, "mocked error"} end},
         {Cache, [:passthrough], []}
       ]) do
-        assert ^flag = Store.lookup(name)
+        assert {:ok, ^flag} = Store.lookup(name)
         assert called(Cache.get(name))
         refute called(Persistent.get(name))
       end
@@ -214,7 +214,7 @@ defmodule FunWithFlags.StoreTest do
 
     test "if the Cached value is expired, it will still be used", %{name: name, gate: gate, flag: flag} do
       Persistent.put(name, gate)
-      assert ^flag = Store.lookup(name)
+      assert {:ok, ^flag} = Store.lookup(name)
 
       gate2 = %Gate{gate | enabled: false}
       flag2 = %Flag{name: name, gates: [gate2]}
@@ -224,7 +224,7 @@ defmodule FunWithFlags.StoreTest do
 
       timetravel by: (Config.cache_ttl + 1) do
         with_mock(Persistent, [], get: fn(^name) -> {:error, "mocked error"} end) do
-          assert ^flag2 = Store.lookup(name)
+          assert {:ok, ^flag2} = Store.lookup(name)
           assert {:miss, :expired, ^flag2} = Cache.get(name)
           assert called(Persistent.get(name))
           assert {:error, "mocked error"} = Persistent.get(name)
@@ -235,7 +235,7 @@ defmodule FunWithFlags.StoreTest do
 
     test "if there is no cached value, it raises an error", %{name: name, gate: gate, flag: flag} do
       Persistent.put(name, gate)
-      assert ^flag = Store.lookup(name)
+      assert {:ok, ^flag} = Store.lookup(name)
 
       Cache.flush()
       assert {:miss, :not_found, nil} = Cache.get(name)
