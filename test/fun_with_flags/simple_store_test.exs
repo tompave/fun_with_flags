@@ -1,6 +1,7 @@
 defmodule FunWithFlags.SimpleStoreTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   import FunWithFlags.TestUtils
+  import Mock
 
   alias FunWithFlags.SimpleStore
   alias FunWithFlags.{Flag, Gate}
@@ -65,6 +66,23 @@ defmodule FunWithFlags.SimpleStoreTest do
       name = unique_atom()
       FunWithFlags.enable(name)
       assert {:ok, %Flag{name: ^name, gates: [%Gate{type: :boolean, enabled: true}]}} = SimpleStore.lookup(name)
+    end
+  end
+
+
+  describe "in case of Persistent store failure" do
+    alias FunWithFlags.Store.Persistent
+
+    test "it raises an error" do
+      name = unique_atom()
+
+      with_mock(Persistent, [], get: fn(^name) -> {:error, "mocked error"} end) do
+        assert_raise RuntimeError, "Can't load feature flag", fn() ->
+          SimpleStore.lookup(name)
+        end
+        assert called(Persistent.get(name))
+        assert {:error, "mocked error"} = Persistent.get(name)
+      end
     end
   end
 end
