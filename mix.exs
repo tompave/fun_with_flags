@@ -40,7 +40,7 @@ defmodule FunWithFlags.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:ex_doc, "~> 0.14.5", only: :dev},
+      {:ex_doc, "~> 0.15", only: :dev},
       {:mock, "~> 0.2.1", only: [:test, :test_no_cache]},
       {:redix, "~> 0.5.1"},
       {:redix_pubsub, "~> 0.2.0"},
