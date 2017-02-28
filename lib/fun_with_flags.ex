@@ -21,7 +21,6 @@ defmodule FunWithFlags do
       {:ok, flag} -> Flag.enabled?(flag)
       _           -> false
     end
-    
   end
 
 
