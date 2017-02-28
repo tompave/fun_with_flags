@@ -82,12 +82,11 @@ A grab bag. I'll add more items as I get closer to a stable release.
 * In-process ETS cache. On lookup, the library checks the cache first. If the ETS table doesn't contain a flag, it falls back to Redis and copies the value into the cache. Subsequent lookups won't hit Redis. The ETS table is empty when the application starts. Writes to the ETS table are managed by a GenServer and are serial, while any other process can read from it concurrently.
 * Creating or toggling a flag will update both the ETS cache and Redis.
 * Both the ETS cache and the Redis connection are in a supervision tree. The [Redix](https://hex.pm/packages/redix) adapter will try to reconnect to Redis if the connection is lost.
-* If the connection to Redis is lost, the application will continue to work with the known values from the ETS cache, even if normally they might be considered expired (because of the TTL). If an unknown flag is looked up when Redis is unavailable it will default to the disabled state.
+* If the connection to Redis is lost, the application will continue to work with the known values from the ETS cache, even if normally they might be considered expired (because of the TTL). If an unknown flag is looked up when Redis is unavailable a runtime exception will be raised.
 * Several nodes can connect to the same Redis and share the flag settings. Each one will hit Redis the first time a flag is looked up, and then will populate its ETS cache.
 * The ETS cache is enabled by default, but it can be disabled to only use Redis.
 * The ETS cache supports a global TTL, expressed in seconds. It defaults to 900s (15 minutes). After expiration, flags are re-fetched from Redis. This allows multiple nodes to use the same redis, and slowly acquire and cache flags that have been changed by another node.
 * Distributed cache-busting. When a flag is persisted in Redis (created or updated), use Redis PubSub to notify all other Elixir nodes. When a node receives PubSub message it will reload the local cached copy of the flag. A node will ignore messages originated from the node itself (otherwise the originator node would reload the flag too).
-
 
 ### To do next
 
