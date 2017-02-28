@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.3.0
+
+Always raise exceptions if Redis becomes unavailable _and_ there is no cached value (expired or not). This means that both with or without cache, failures to load a flag's data will never be silently converted to the flag being disabled.
 
 ## v0.2.0
 
