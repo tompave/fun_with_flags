@@ -23,8 +23,8 @@ First usable release with the a stable initial feature set.
 * Supervision tree, embeddable in host applications
 * Persistence in Redis
 * ETS cache
-** Cache busting with TTLs
-** Cache busting with Redis PubSub
+    * Cache busting with TTLs
+    * Cache busting with Redis PubSub
 * Resistant to Redis connection issues if the values are cached
 * Option to disable the ETS cache (Redis-only mode)
 
