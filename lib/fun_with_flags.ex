@@ -7,22 +7,62 @@ defmodule FunWithFlags do
 
   @store FunWithFlags.Config.store_module
 
+  @type options :: Keyword.t
+
+
+
   @doc """
   Checks if a flag is enabled.
+
+  It can be invoked with just the flag name, as an atom,
+  to check the general staus of a flag (i.e. the boolean gate).
 
   ## Examples
 
       iex> FunWithFlags.enabled?(:new_homepage)
       false
+
+  ## Options
+
+    * `:for` - used to specify a term for which the flag could
+    have a specific rule.
+
+  ## Examples
+
+      iex> wizard = %{id: 42, name: "Harry Potter"}
+      iex> FunWithFlags.disable(:elder_wand)
+      iex> FunWithFlags.enable(:elder_want, for: wizard)
+      iex> FunWithFlags.enabled?(:elder_wand)
+      false
+      iex> FunWithFlags.enabled?(:elder_wand, for: wizard)
+      true
+      iex> other_wizard = %{id: 7, name: "Tom Riddle"}
+      iex> FunWithFlags.enabled?(:elder_wand, for: other_wizard)
+      false
+
   """
-  @spec enabled?(atom) :: boolean
-  def enabled?(flag_name) when is_atom(flag_name) do
+  @spec enabled?(atom, options) :: boolean
+
+  def enabled?(flag_name, options \\ [])
+
+
+  def enabled?(flag_name, []) when is_atom(flag_name) do
     case @store.lookup(flag_name) do
       {:ok, flag} -> Flag.enabled?(flag)
       _           -> false
     end
   end
 
+  def enabled?(flag_name, [for: nil]) do
+    enabled?(flag_name)
+  end
+
+  def enabled?(flag_name, [for: item]) when is_atom(flag_name) do
+    case @store.lookup(flag_name) do
+      {:ok, flag} -> Flag.enabled?(flag, for: item)
+      _           -> false
+    end
+  end
 
 
   @doc """
@@ -37,10 +77,38 @@ defmodule FunWithFlags do
       iex> FunWithFlags.enabled?(:super_shrink_ray)
       true
 
+  ## Options
+
+    * `:for_actor` - used to enable the flag for a specific
+    term only. This can be anything.
+
+  ## Examples
+
+      iex> FunWithFlags.disable(:warp_drive)
+      {:ok, false}
+      iex> FunWithFlags.enable(:warp_drive, for_actor: "Scotty")
+      {:ok, true}
+      iex> FunWithFlags.enabled?(:warp_drive)
+      false
+      iex> FunWithFlags.enabled?(:warp_drive, for: "Scotty")
+      true
+
   """
-  @spec enable(atom) :: {:ok, true}
-  def enable(flag_name) when is_atom(flag_name) do
+  @spec enable(atom, options) :: {:ok, true}
+  def enable(flag_name, options \\ [])
+
+  def enable(flag_name, []) when is_atom(flag_name) do
     {:ok, flag} = @store.put(flag_name, Gate.new(:boolean, true))
+    verify(flag)
+  end
+
+  def enable(flag_name, [for_actor: nil]) do
+    enable(flag_name)
+  end
+
+  def enable(flag_name, [for_actor: actor]) when is_atom(flag_name) do
+    gate = Gate.new(:actor, actor, true)
+    {:ok, flag} = @store.put(flag_name, gate)
     verify(flag)
   end
 
@@ -59,10 +127,39 @@ defmodule FunWithFlags do
       iex> FunWithFlags.enabled?(:random_koala_gifs)
       false
 
+  ## Options
+
+    * `:for_actor` - used to disable the flag for a specific
+    term only. This can be anything.
+
+  ## Examples
+
+      iex> FunWithFlags.enable(:spider_sense)
+      {:ok, true}
+      iex> villain = %{name: "Venom"}
+      iex> FunWithFlags.disable(:spider_sense, for_actor: villain)
+      {:ok, true}
+      iex> FunWithFlags.enabled?(:spider_sense)
+      true
+      iex> FunWithFlags.enabled?(:spider_sense, for: villain)
+      false
+
   """
-  @spec disable(atom) :: {:ok, false}
-  def disable(flag_name) when is_atom(flag_name) do
+  @spec disable(atom, options) :: {:ok, false}
+  def disable(flag_name, options \\ [])
+
+  def disable(flag_name, []) when is_atom(flag_name) do
     {:ok, flag} = @store.put(flag_name, Gate.new(:boolean, false))
+    verify(flag)
+  end
+
+  def disable(flag_name, [for_actor: nil]) do
+    disable(flag_name)
+  end
+
+  def disable(flag_name, [for_actor: actor]) when is_atom(flag_name) do
+    gate = Gate.new(:actor, actor, false)
+    {:ok, flag} = @store.put(flag_name, gate)
     verify(flag)
   end
 
