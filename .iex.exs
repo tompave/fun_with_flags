@@ -1,6 +1,7 @@
 import FunWithFlags
 alias FunWithFlags.{Store,Config,Flag,Gate}
 alias FunWithFlags.Store.{Cache,Persistent,Serializer}
+alias FunWithFlags.Actor
 
 {:ok, redis} =
   Redix.start_link(
