@@ -5,6 +5,7 @@ defmodule FunWithFlags.Flag do
 
   defstruct [name: nil, gates: []]
   @type t :: %FunWithFlags.Flag{name: atom, gates: [FunWithFlags.Gate.t]}
+  @type options :: Keyword.t
 
 
   def new(name, gates \\ []) when is_atom(name) do
@@ -22,9 +23,41 @@ defmodule FunWithFlags.Flag do
   end
 
 
-  @spec enabled?(t) :: boolean
-  def enabled?(%__MODULE__{gates: []}), do: false
-  def enabled?(%__MODULE__{gates: gates}) do
+  @spec enabled?(t, options) :: boolean
+  def enabled?(flag, options \\ [])
+
+  def enabled?(%__MODULE__{gates: []}, _), do: false
+
+  def enabled?(%__MODULE__{gates: gates}, []) do
+    check_boolean_gate(gates)
+  end
+
+
+  def enabled?(%__MODULE__{gates: gates}, opts = [for: _data]) do
+    case check_actor_gates(gates, opts) do
+      {:ok, bool} -> bool
+      :ignore     -> check_boolean_gate(gates)
+    end
+  end
+
+
+  defp check_actor_gates(gates, opts) do
+    gates
+    |> actor_gates()
+    |> do_check_actor_gates(opts)
+  end
+
+  defp do_check_actor_gates([], _), do: :ignore
+
+  defp do_check_actor_gates([gate|rest], [for: data]) do
+    case Gate.enabled?(gate, for: data) do
+      :ignore -> check_actor_gates(rest, [for: data])
+      result  -> result
+    end
+  end
+
+
+  defp check_boolean_gate(gates) do
     {:ok, bool} = 
       gates
       |> boolean_gate()
@@ -33,7 +66,12 @@ defmodule FunWithFlags.Flag do
   end
 
 
+
   defp boolean_gate(gates) do
     Enum.find(gates, &Gate.boolean?/1)
+  end
+
+  defp actor_gates(gates) do
+    Enum.filter(gates, &Gate.actor?/1)
   end
 end
