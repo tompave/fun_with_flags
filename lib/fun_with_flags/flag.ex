@@ -25,9 +25,11 @@ defmodule FunWithFlags.Flag do
   @spec enabled?(t) :: boolean
   def enabled?(%__MODULE__{gates: []}), do: false
   def enabled?(%__MODULE__{gates: gates}) do
-    gates
-    |> boolean_gate()
-    |> Gate.enabled?()
+    {:ok, bool} = 
+      gates
+      |> boolean_gate()
+      |> Gate.enabled?()
+    bool
   end
 
 

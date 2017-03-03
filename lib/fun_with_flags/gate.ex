@@ -36,16 +36,16 @@ defmodule FunWithFlags.Gate do
   def enabled?(gate, options \\ [])
 
   def enabled?(%__MODULE__{type: :boolean, enabled: enabled}, []) do
-    enabled
+    {:ok, enabled}
   end
   def enabled?(%__MODULE__{type: :boolean, enabled: enabled}, [for: _]) do
-    enabled
+    {:ok, enabled}
   end
 
   def enabled?(%__MODULE__{type: :actor, for: actor_id, enabled: enabled}, [for: actor]) do
     case Actor.id(actor) do
-      ^actor_id -> enabled
-      _ -> false
+      ^actor_id -> {:ok, enabled}
+      _         -> :ignore
     end
   end
 

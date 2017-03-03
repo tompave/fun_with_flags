@@ -45,20 +45,20 @@ defmodule FunWithFlags.GateTest do
   describe "enabled?(gate), for boolean gates" do
     test "without extra arguments, it simply checks the value of the gate" do
       gate = %Gate{type: :boolean, for: nil, enabled: true}
-      assert Gate.enabled?(gate)
+      assert {:ok, true} = Gate.enabled?(gate)
 
       gate = %Gate{type: :boolean, for: nil, enabled: false}
-      refute Gate.enabled?(gate)
+      assert {:ok, false} = Gate.enabled?(gate)
     end
 
     test "an optional [for: something] argument is ignored" do
       gandalf = %TestUser{id: 42, email: "gandalf@travels.com" }
 
       gate = %Gate{type: :boolean, for: nil, enabled: true}
-      assert Gate.enabled?(gate, for: gandalf)
+      assert {:ok, true} = Gate.enabled?(gate, for: gandalf)
 
       gate = %Gate{type: :boolean, for: nil, enabled: false}
-      refute Gate.enabled?(gate, for: gandalf)
+      assert {:ok, false} = Gate.enabled?(gate, for: gandalf)
     end
   end
 
@@ -77,16 +77,18 @@ defmodule FunWithFlags.GateTest do
       end
     end
 
-    test "for an enabled gate, it returns true for the associated actor", %{gate: gate, chip: chip, dale: dale} do
-      assert Gate.enabled?(gate, for: chip)
-      refute Gate.enabled?(gate, for: dale)
+    test "for an enabled gate, it returns {:ok, true} for the associated
+          actor and :ignore for other actors", %{gate: gate, chip: chip, dale: dale} do
+      assert {:ok, true} = Gate.enabled?(gate, for: chip)
+      assert :ignore = Gate.enabled?(gate, for: dale)
     end
 
-    test "for a disabled gate, it returns false for the associated actor", %{gate: gate, chip: chip, dale: dale} do
+    test "for a disabled gate, it returns {:ok, false} for the associated
+          actor and :ignore for other actors", %{gate: gate, chip: chip, dale: dale} do
       gate = %Gate{gate | enabled: false}
 
-      refute Gate.enabled?(gate, for: chip)
-      refute Gate.enabled?(gate, for: dale)
+      assert {:ok, false} = Gate.enabled?(gate, for: chip)
+      assert :ignore = Gate.enabled?(gate, for: dale)
     end
   end
 
