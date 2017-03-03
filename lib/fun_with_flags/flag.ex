@@ -58,13 +58,14 @@ defmodule FunWithFlags.Flag do
 
 
   defp check_boolean_gate(gates) do
-    {:ok, bool} = 
-      gates
-      |> boolean_gate()
-      |> Gate.enabled?()
-    bool
+    gate = boolean_gate(gates)
+    if gate do
+      {:ok, bool} = Gate.enabled?(gate)
+      bool
+    else
+      false
+    end
   end
-
 
 
   defp boolean_gate(gates) do

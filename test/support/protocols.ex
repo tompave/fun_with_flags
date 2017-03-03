@@ -11,3 +11,10 @@ defimpl FunWithFlags.Actor, for: Map do
     "map:#{id}"
   end
 end
+
+
+defimpl FunWithFlags.Actor, for: BitString do
+  def id(str) do
+    "string:#{str}"
+  end
+end

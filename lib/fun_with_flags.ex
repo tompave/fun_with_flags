@@ -31,7 +31,7 @@ defmodule FunWithFlags do
 
       iex> wizard = %{id: 42, name: "Harry Potter"}
       iex> FunWithFlags.disable(:elder_wand)
-      iex> FunWithFlags.enable(:elder_want, for: wizard)
+      iex> FunWithFlags.enable(:elder_wand, for_actor: wizard)
       iex> FunWithFlags.enabled?(:elder_wand)
       false
       iex> FunWithFlags.enabled?(:elder_wand, for: wizard)
@@ -109,7 +109,7 @@ defmodule FunWithFlags do
   def enable(flag_name, [for_actor: actor]) when is_atom(flag_name) do
     gate = Gate.new(:actor, actor, true)
     {:ok, flag} = @store.put(flag_name, gate)
-    verify(flag)
+    verify(flag, for: actor)
   end
 
 
@@ -138,7 +138,7 @@ defmodule FunWithFlags do
       {:ok, true}
       iex> villain = %{name: "Venom"}
       iex> FunWithFlags.disable(:spider_sense, for_actor: villain)
-      {:ok, true}
+      {:ok, false}
       iex> FunWithFlags.enabled?(:spider_sense)
       true
       iex> FunWithFlags.enabled?(:spider_sense, for: villain)
@@ -160,11 +160,14 @@ defmodule FunWithFlags do
   def disable(flag_name, [for_actor: actor]) when is_atom(flag_name) do
     gate = Gate.new(:actor, actor, false)
     {:ok, flag} = @store.put(flag_name, gate)
-    verify(flag)
+    verify(flag, for: actor)
   end
 
 
   defp verify(flag) do
     {:ok, Flag.enabled?(flag)}
+  end
+  defp verify(flag, [for: data]) do
+    {:ok, Flag.enabled?(flag, for: data)}
   end
 end
