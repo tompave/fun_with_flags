@@ -10,8 +10,7 @@ defmodule FunWithFlags.Store.Serializer do
     ["boolean", to_string(enabled)]
   end
 
-  # def to_redis(%Gate{type: type, for: for, enabled: enabled}) do
-  #   [serialize(type, for), enabled]
-  # end
-  # defp serialize(type, for), do: "#{type}/#{for}"
+  def to_redis(%Gate{type: :actor, for: actor_id, enabled: enabled}) do
+    ["actor/#{actor_id}", to_string(enabled)]
+  end
 end
