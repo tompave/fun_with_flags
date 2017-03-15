@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.0 (master)
+
+Added the `Actor` protocol and actor gates. It's not possible to implement `Actor` for some type ot struct and then enable or disable a flag for some specific values.
+
 ## v0.3.0
 
 Always raise exceptions if Redis becomes unavailable _and_ there is no cached value (expired or not). This means that both with or without cache, failures to load a flag's data will never be silently converted to the flag being disabled.

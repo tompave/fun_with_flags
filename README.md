@@ -16,7 +16,17 @@ It stores flag information in Redis for persistence and syncronization across di
 
 ## Usage
 
-Still a work in progress, expect breaking changes.
+FunWithFlags has a simple API to query and toggle feature flags. Most of the time, you'll call `FunWithFlags.enabled?/2` with the name of the flag and optional arguments.
+
+Different kinds of toggle gates are supported:
+
+* boolean (on, off);
+* actors (on or off for specific structs or data);
+* _soon_ ~~groups (or or off for structs or data that satisfy a condition).~~
+
+### Boolean Gate
+
+The boolean gate is the simplest one. It's either enabled or disabled, globally. It's also the gate with the lowest priority. If a flag is undefined, it defaults to be globally disabled.
 
 ```elixir
 FunWithFlags.enabled?(:cool_new_feature)
@@ -33,13 +43,65 @@ FunWithFlags.enabled?(:cool_new_feature)
 false
 ```
 
-## Types of flags
+### Actor Gate
 
-Different kind of feature flags are be supported:
+This allows you to enable or disable a flag for one or more specific entities. This can be useful to showcase a work-in-progress feature to someone, to gradually rollout a functionality (e.g. your actor could be a country), or to dynamically disable some features in some contexts (e.g. you realize that a critical error is raised in one specific country only).
 
-* boolean (on, off);
-* _soon_ ~~actors (on or off for specific structs or data);~~
-* _soon_ ~~groups (or or off for structs or data that satisfy a condition).~~
+Actor gates take precendence over the others, both when they're enabled and when they're disabled.
+
+In order to be used as an actor, an entity must implement the `FunWithFlags.Actor` protocol. This is a plain Elixir protocol and can be implemented for custom structs or literally any other type. An example is below, and more can be found in the [test support files](https://github.com/tompave/fun_with_flags/blob/master/test/support/protocols.ex).
+
+
+```elixir
+defmodule MyApp.User do
+  defstruct [:id, :name]
+end
+
+defimpl FunWithFlags.Actor, for: MyApp.User do
+  def id(user) do
+    "user:#{user.id}"
+  end
+end
+
+bruce = %User{id: 1, name: "Bruce"}
+alfred = %User{id: 1, name: "Alfred"}
+
+{:ok, true} = FunWithFlags.enable(:restful_nights)
+{:ok, false} = FunWithFlags.disable(:restful_nights, for_actor: bruce)
+{:ok, true} = FunWithFlags.enable(:batmobile, for_actor: bruce)
+
+FunWithFlags.enabled?(:restful_nights)
+true
+FunWithFlags.enabled?(:batmobile)
+false
+
+FunWithFlags.enabled?(:restful_nights, for: alfred)
+true
+FunWithFlags.enabled?(:batmobile, for: alfred)
+false
+
+FunWithFlags.enabled?(:restful_nights, for: bruce)
+false
+FunWithFlags.enabled?(:batmobile, for: bruce)
+true
+```
+
+Actor identifiers must be globally unique strings. A common technique to support multiple kinds of actors is to namespace the IDs:
+
+```elixir
+defimpl FunWithFlags.Actor, for: MyApp.User do
+  def id(user) do
+    "user:#{user.id}"
+  end
+end
+
+defimpl FunWithFlags.Actor, for: MyApp.Country do
+  def id(country) do
+    "country:#{country.iso3166}"
+  end
+end
+```
+
 
 ## Origin
 
@@ -52,7 +114,7 @@ Having used Flipper in production at scale, this project aims to improve in two 
 
 Just as Elixir and Phoenix are meant to scale better than Ruby on Rails with high levels of traffic and concurrency, FunWithFlags should aim to be more scalable and reliable than Flipper.
 
-## So, caching huh?
+## So, caching, huh?
 
 > There are only two hard things in Computer Science: cache invalidation and naming things.
 > 
@@ -87,10 +149,12 @@ A grab bag. I'll add more items as I get closer to a stable release.
 * The ETS cache is enabled by default, but it can be disabled to only use Redis.
 * The ETS cache supports a global TTL, expressed in seconds. It defaults to 900s (15 minutes). After expiration, flags are re-fetched from Redis. This allows multiple nodes to use the same redis, and slowly acquire and cache flags that have been changed by another node.
 * Distributed cache-busting. When a flag is persisted in Redis (created or updated), use Redis PubSub to notify all other Elixir nodes. When a node receives PubSub message it will reload the local cached copy of the flag. A node will ignore messages originated from the node itself (otherwise the originator node would reload the flag too).
+* Actor gates: enable or disable a flag for a specific data structure or primitive value.
 
 ### To do next
 
-* Implement other "gates": at least actors and groups.
+* Implement other "gates": at least ~~actors~~ (done) and groups.
+* Add logging with proper error reporting.
 * Add a web GUI, as a plug, ideally in another package.
 * Add some optional randomness to the TTL, so that Redis doesn't get hammered at constant intervals after a server restart.
 
