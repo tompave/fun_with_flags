@@ -10,7 +10,7 @@ defmodule FunWithFlagsTest do
     :ok
   end
 
-  describe "enabled?" do
+  describe "enabled?(name)" do
     test "it returns false for non existing feature flags" do
       flag_name = unique_atom()
       assert false == FunWithFlags.enabled?(flag_name)
@@ -54,27 +54,141 @@ defmodule FunWithFlagsTest do
   end
 
 
-  test "flags can be enabled and disabled" do
-    flag_name = unique_atom()
-    assert false == FunWithFlags.enabled?(flag_name)
-    FunWithFlags.enable(flag_name)
-    assert true == FunWithFlags.enabled?(flag_name)
-    FunWithFlags.disable(flag_name)
-    assert false == FunWithFlags.enabled?(flag_name)
+  describe "enabled?(name, for: actor)" do
+    setup do
+      scrooge = %FunWithFlags.TestUser{id: 1, email: "scrooge@mcduck.pdp"}
+      donald = %FunWithFlags.TestUser{id: 2, email: "donald@duck.db"}
+      {:ok, scrooge: scrooge, donald: donald, flag_name: unique_atom()}
+    end
+
+    test "it returns false for non existing feature flags", %{scrooge: scrooge, donald: donald, flag_name: flag_name} do
+      refute FunWithFlags.enabled?(flag_name)
+      refute FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+    end
+
+    test "it returns true for an enabled actor even though the flag doesn't have a general value,
+          while other actors fallback to the default (false)", %{scrooge: scrooge, donald: donald, flag_name: flag_name} do
+      FunWithFlags.enable(flag_name, for_actor: scrooge)
+      refute FunWithFlags.enabled?(flag_name)
+      assert FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+    end
+
+    test "it returns true for an enabled actor even though the flag is disabled, while other
+          actors fallback to the default (false)", %{scrooge: scrooge, donald: donald, flag_name: flag_name} do
+      FunWithFlags.enable(flag_name, for_actor: scrooge)
+      FunWithFlags.disable(flag_name)
+      refute FunWithFlags.enabled?(flag_name)
+      assert FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+    end
+
+    test "it returns false for a disabled actor even though the flag is enabled, while other
+          actors default to the default (true)", %{scrooge: scrooge, donald: donald, flag_name: flag_name} do
+      FunWithFlags.disable(flag_name, for_actor: donald)
+      FunWithFlags.enable(flag_name)
+      assert FunWithFlags.enabled?(flag_name)
+      assert FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+    end
+
+    test "more than one actor can be enabled", %{scrooge: scrooge, donald: donald, flag_name: flag_name} do
+      FunWithFlags.disable(flag_name)
+      FunWithFlags.enable(flag_name, for_actor: scrooge)
+      FunWithFlags.enable(flag_name, for_actor: donald)
+      refute FunWithFlags.enabled?(flag_name)
+      assert FunWithFlags.enabled?(flag_name, for: scrooge)
+      assert FunWithFlags.enabled?(flag_name, for: donald)
+    end
+
+    test "more than one actor can be disabled", %{scrooge: scrooge, donald: donald, flag_name: flag_name} do
+      FunWithFlags.enable(flag_name)
+      FunWithFlags.disable(flag_name, for_actor: scrooge)
+      FunWithFlags.disable(flag_name, for_actor: donald)
+      assert FunWithFlags.enabled?(flag_name)
+      refute FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+    end
   end
 
 
-  test "enabling always returns the tuple {:ok, true} on success" do
-    flag_name = unique_atom()
-    assert {:ok, true} = FunWithFlags.enable(flag_name)
-    assert {:ok, true} = FunWithFlags.enable(flag_name)
+  describe "enabling and disabling flags" do
+    setup do
+      scrooge = %FunWithFlags.TestUser{id: 1, email: "scrooge@mcduck.pdp"}
+      donald = %FunWithFlags.TestUser{id: 2, email: "donald@duck.db"}
+      {:ok, scrooge: scrooge, donald: donald, flag_name: unique_atom()}
+    end
+
+
+    test "flags can be enabled and disabled with simple boolean gates", %{flag_name: flag_name} do
+      refute FunWithFlags.enabled?(flag_name)
+
+      FunWithFlags.enable(flag_name)
+      assert FunWithFlags.enabled?(flag_name)
+
+      FunWithFlags.disable(flag_name)
+      refute FunWithFlags.enabled?(flag_name)
+    end
+
+
+    test "flags can be enabled for specific actors", %{scrooge: scrooge, donald: donald, flag_name: flag_name} do
+      refute FunWithFlags.enabled?(flag_name)
+      refute FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+
+      FunWithFlags.enable(flag_name, for_actor: scrooge)
+      refute FunWithFlags.enabled?(flag_name)
+      assert FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+
+      FunWithFlags.enable(flag_name)
+      assert FunWithFlags.enabled?(flag_name)
+      assert FunWithFlags.enabled?(flag_name, for: scrooge)
+      assert FunWithFlags.enabled?(flag_name, for: donald)
+    end
+
+
+    test "flags can be disabled for specific actors", %{scrooge: scrooge, donald: donald, flag_name: flag_name} do
+      refute FunWithFlags.enabled?(flag_name)
+      refute FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+
+      FunWithFlags.enable(flag_name)
+      assert FunWithFlags.enabled?(flag_name)
+      assert FunWithFlags.enabled?(flag_name, for: scrooge)
+      assert FunWithFlags.enabled?(flag_name, for: donald)
+
+      FunWithFlags.disable(flag_name, for_actor: donald)
+      assert FunWithFlags.enabled?(flag_name)
+      assert FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+
+      FunWithFlags.disable(flag_name)
+      refute FunWithFlags.enabled?(flag_name)
+      refute FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+
+      FunWithFlags.enable(flag_name, for_actor: scrooge)
+      refute FunWithFlags.enabled?(flag_name)
+      assert FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+    end
+
+
+    test "enabling always returns the tuple {:ok, true} on success", %{flag_name: flag_name} do
+      assert {:ok, true} = FunWithFlags.enable(flag_name)
+      assert {:ok, true} = FunWithFlags.enable(flag_name)
+      assert {:ok, true} = FunWithFlags.enable(flag_name, for_actor: "a string")
+    end
+
+    test "disabling always returns the tuple {:ok, false} on success", %{flag_name: flag_name} do
+      assert {:ok, false} = FunWithFlags.disable(flag_name)
+      assert {:ok, false} = FunWithFlags.disable(flag_name)
+      assert {:ok, false} = FunWithFlags.disable(flag_name, for_actor: "a string")
+    end
   end
 
-  test "disabling always returns the tuple {:ok, false} on success" do
-    flag_name = unique_atom()
-    assert {:ok, false} = FunWithFlags.disable(flag_name)
-    assert {:ok, false} = FunWithFlags.disable(flag_name)
-  end
 
   describe "looking up a flag after a delay (indirectly test the cache TTL, if present)" do
     alias FunWithFlags.Config
