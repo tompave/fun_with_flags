@@ -45,9 +45,9 @@ false
 
 ### Actor Gate
 
-This allows you to enable or disable a flag for one or more specific entities. This can be useful to showcase a work-in-progress feature to someone, to gradually rollout a functionality (e.g. your actor could be a country), or to dynamically disable some features in some contexts (e.g. you realize that a critical error is only raised in one specific country).
+This allows you to enable or disable a flag for one or more entities. This can be useful to showcase a work-in-progress feature to someone, to gradually rollout a functionality (e.g. your actor could be a country), or to dynamically disable some features in some contexts (e.g. you realize that a critical error is only raised in one specific country).
 
-Actor gates take precendence over the others, both when they're enabled and when they're disabled.
+Actor gates take precendence over the others, both when they're enabled and when they're disabled. They can be considered as toggle overrides.
 
 In order to be used as an actor, an entity must implement the `FunWithFlags.Actor` protocol. This is a plain Elixir protocol and can be implemented for custom structs or literally any other type. An example is below, and more can be found in the [test support files](https://github.com/tompave/fun_with_flags/blob/master/test/support/protocols.ex).
 
@@ -86,7 +86,7 @@ FunWithFlags.enabled?(:batmobile, for: bruce)
 true
 ```
 
-Actor identifiers must be globally unique strings. A common technique to support multiple kinds of actors is to namespace the IDs:
+Actor identifiers must be globally unique binaries. A common technique to support multiple kinds of actors is to namespace the IDs:
 
 ```elixir
 defimpl FunWithFlags.Actor, for: MyApp.User do

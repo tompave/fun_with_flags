@@ -4,11 +4,11 @@ defimpl FunWithFlags.Actor, for: Map do
   end
 
   def id(map) do
-    id =
-      map
-      |> inspect()
-      |> Base.encode32(padding: false, case: :lower)
-    "map:#{id}"
+    map
+    |> inspect()
+    |> (&:crypto.hash(:md5, &1)).()
+    |> Base.encode16
+    |> (&"map:#{&1}").()
   end
 end
 

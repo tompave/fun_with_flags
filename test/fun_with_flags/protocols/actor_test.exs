@@ -31,7 +31,7 @@ defmodule FunWithFlags.ActorTest do
 
     test "map without an id" do
       map = %{foo: 42}
-      assert "map:ev5wm33phiqdimt5" = Actor.id(map)
+      assert "map:F0107BBFB094FC97376CFC461E33ABF5" = Actor.id(map)
     end
   end
 end
