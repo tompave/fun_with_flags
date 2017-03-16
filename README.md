@@ -45,7 +45,7 @@ false
 
 ### Actor Gate
 
-This allows you to enable or disable a flag for one or more specific entities. This can be useful to showcase a work-in-progress feature to someone, to gradually rollout a functionality (e.g. your actor could be a country), or to dynamically disable some features in some contexts (e.g. you realize that a critical error is raised in one specific country only).
+This allows you to enable or disable a flag for one or more specific entities. This can be useful to showcase a work-in-progress feature to someone, to gradually rollout a functionality (e.g. your actor could be a country), or to dynamically disable some features in some contexts (e.g. you realize that a critical error is only raised in one specific country).
 
 Actor gates take precendence over the others, both when they're enabled and when they're disabled.
 

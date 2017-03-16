@@ -30,6 +30,12 @@ defmodule FunWithFlags.TestUtils do
   defp delete_keys([]), do: 0
   defp delete_keys(keys) do
     Redix.command!(@redis, ["DEL" | keys])
+
+    names = Enum.map(keys, fn(str) ->
+      String.split(str, ":") |> List.last()
+    end)
+
+    Redix.command!(@redis, ["SREM" | ["fun_with_flags" | names]])
   end
 
 
