@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.4.0 (master)
+## v0.4.0
 
 Added the `Actor` protocol and actor gates. It's not possible to implement `Actor` for some type ot struct and then enable or disable a flag for some specific values.
 
