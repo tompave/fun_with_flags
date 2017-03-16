@@ -1,6 +1,11 @@
 defmodule FunWithFlags do
   @moduledoc """
   FunWithFlags, the Elixir feature flag library.
+
+  See the [Usage](file:///Users/Tom/Documents/source/elixir/fun_with_flags/doc/readme.html#usage)
+  notes for a more detailed explanation, and the
+  [Actor protocol](file:///Users/Tom/Documents/source/elixir/fun_with_flags/doc/FunWithFlags.Actor.html)
+  documentation for more examples on how to work with Actor toggles.
   """
 
   alias FunWithFlags.{Flag, Gate}
