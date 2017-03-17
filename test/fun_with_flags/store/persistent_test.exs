@@ -21,22 +21,36 @@ defmodule FunWithFlags.Store.PersistentTest do
     end
 
 
-    test "put() can change the value of a flag", %{name: name, gate: gate} do
+    test "put() can change the value of a flag", %{name: name, gate: first_bool_gate} do
       assert {:ok, %Flag{name: ^name, gates: []}} = Persistent.get(name)
 
-      Persistent.put(name, gate)
-      assert {:ok, %Flag{name: ^name, gates: [^gate]}} = Persistent.get(name)
+      Persistent.put(name, first_bool_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^first_bool_gate]}} = Persistent.get(name)
 
-      gate2 = %Gate{gate | enabled: false}
-      Persistent.put(name, gate2)
-      assert {:ok, %Flag{name: ^name, gates: [^gate2]}} = Persistent.get(name)
-      refute match? {:ok, %Flag{name: ^name, gates: [^gate]}}, Persistent.get(name)
+      other_bool_gate = %Gate{first_bool_gate | enabled: false}
+      Persistent.put(name, other_bool_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^other_bool_gate]}} = Persistent.get(name)
+      refute match? {:ok, %Flag{name: ^name, gates: [^first_bool_gate]}}, Persistent.get(name)
+
+      actor_gate = %Gate{type: :actor, for: "string:qwerty", enabled: true}
+      Persistent.put(name, actor_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^other_bool_gate, ^actor_gate]}} = Persistent.get(name)
+
+      Persistent.put(name, first_bool_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^first_bool_gate, ^actor_gate]}} = Persistent.get(name)
     end
 
 
     test "put() returns the tuple {:ok, %Flag{}}", %{name: name, gate: gate, flag: flag} do
       assert {:ok, %Flag{name: ^name, gates: [^gate]}} = Persistent.put(name, gate)
       assert {:ok, ^flag} = Persistent.put(name, gate)
+    end
+
+    test "put()'ing more gates will return an increasily updated flag", %{name: name, gate: gate} do
+      assert {:ok, %Flag{name: ^name, gates: [^gate]}} = Persistent.put(name, gate)
+
+      other_gate = %Gate{type: :actor, for: "string:asdf", enabled: true}
+      assert {:ok, %Flag{name: ^name, gates: [^gate, ^other_gate]}} = Persistent.put(name, other_gate)
     end
 
 
@@ -108,7 +122,7 @@ defmodule FunWithFlags.Store.PersistentTest do
     end
 
 
-    test "when the cache is NOT enabled, put() will publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
+    test "when the cache is NOT enabled, put() will NOT publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
       with_mocks([
         {Config, [], [cache?: fn() -> false end]},
         {Notifications, [:passthrough], []},
