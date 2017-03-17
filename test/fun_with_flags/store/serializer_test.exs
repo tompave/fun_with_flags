@@ -21,5 +21,14 @@ defmodule FunWithFlags.Store.SerializerTest do
       gate = %Gate{type: :actor, for: "user:123", enabled: false}
       assert ["actor/user:123", "false"] = Serializer.to_redis(gate)
     end
+
+
+    test "with a group gate" do
+      gate = %Gate{type: :group, for: :runners, enabled: true}
+      assert ["group/runners", "true"] = Serializer.to_redis(gate)
+
+      gate = %Gate{type: :group, for: :swimmers, enabled: false}
+      assert ["group/swimmers", "false"] = Serializer.to_redis(gate)
+    end
   end
 end

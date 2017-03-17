@@ -26,6 +26,16 @@ defmodule FunWithFlags.GateTest do
         Gate.new(:actor, :not_a_valid_actor, true)
       end
     end
+
+    test "new(:group, group_name, true|false) returns a new Group Gate" do
+      assert %Gate{type: :group, for: :plants, enabled: true} = Gate.new(:group, :plants, true)
+      assert %Gate{type: :group, for: :animals, enabled: false} = Gate.new(:group, :animals, false)
+    end
+
+    test "new(:group, ...) with a name that is not an atom raises an exception" do
+      assert_raise FunWithFlags.Gate.InvalidGroupNameError, fn() -> Gate.new(:group, "a_binary", true) end
+      assert_raise FunWithFlags.Gate.InvalidGroupNameError, fn() -> Gate.new(:group, %{a: "map"}, false) end
+    end
   end
 
 
@@ -38,6 +48,11 @@ defmodule FunWithFlags.GateTest do
     test "with actor data" do
       assert %Gate{type: :actor, for: "anything", enabled: true} = Gate.from_redis(["actor/anything", "true"])
       assert %Gate{type: :actor, for: "really:123", enabled: false} = Gate.from_redis(["actor/really:123", "false"])
+    end
+
+    test "with group data" do
+      assert %Gate{type: :group, for: :fishes, enabled: true} = Gate.from_redis(["group/fishes", "true"])
+      assert %Gate{type: :group, for: :cetacea, enabled: false} = Gate.from_redis(["group/cetacea", "false"])
     end
   end
 
@@ -77,6 +92,12 @@ defmodule FunWithFlags.GateTest do
       end
     end
 
+    test "passing a nil actor option raises an exception (just because nil is not an Actor)", %{gate: gate} do
+      assert_raise Protocol.UndefinedError, fn() ->
+        Gate.enabled?(gate, for: nil)
+      end
+    end
+
     test "for an enabled gate, it returns {:ok, true} for the associated
           actor and :ignore for other actors", %{gate: gate, chip: chip, dale: dale} do
       assert {:ok, true} = Gate.enabled?(gate, for: chip)
@@ -93,6 +114,42 @@ defmodule FunWithFlags.GateTest do
   end
 
 
+  describe "enabled?(gate, for: item), for Group gates" do
+    setup do
+      bruce = %TestUser{id: 1, email: "bruce@wayne.com"}
+      clark = %TestUser{id: 2, email: "clark@kent.com"}
+      gate = Gate.new(:group, :admin, true)
+      {:ok, gate: gate, bruce: bruce, clark: clark}
+    end
+
+    test "without the [for: actor] option it raises an exception", %{gate: gate} do
+      assert_raise FunctionClauseError, fn() ->
+        Gate.enabled?(gate)
+      end
+    end
+
+    test "passing a nil actor option raises an exception (just because nil is not an Actor)", %{gate: gate} do
+      assert_raise Protocol.UndefinedError, fn() ->
+        Gate.enabled?(gate, for: nil)
+      end
+    end
+
+    test "for an enabled gate, it returns {:ok, true} for items that belongs to the group
+          and :ignore for other actors", %{gate: gate, bruce: bruce, clark: clark} do
+      assert {:ok, true} = Gate.enabled?(gate, for: bruce)
+      assert :ignore = Gate.enabled?(gate, for: clark)
+    end
+
+    test "for a disabled gate, it returns {:ok, false} for items that belongs to the group
+          and :ignore for other actors", %{gate: gate, bruce: bruce, clark: clark} do
+      gate = %Gate{gate | enabled: false}
+
+      assert {:ok, false} = Gate.enabled?(gate, for: bruce)
+      assert :ignore = Gate.enabled?(gate, for: clark)
+    end
+  end
+
+
   describe "boolean?(gate)" do
     test "with a boolean gate it returns true" do
       gate = %Gate{type: :boolean, for: nil, enabled: false}
@@ -101,6 +158,11 @@ defmodule FunWithFlags.GateTest do
 
     test "with an actor gate it returns false" do
       gate = %Gate{type: :actor, for: "salami", enabled: false}
+      refute Gate.boolean?(gate)
+    end
+
+    test "with a group gate it returns false" do
+      gate = %Gate{type: :group, for: "prosciutto", enabled: false}
       refute Gate.boolean?(gate)
     end
   end
@@ -114,6 +176,28 @@ defmodule FunWithFlags.GateTest do
     test "with a boolean gate it returns false" do
       gate = %Gate{type: :boolean, for: nil, enabled: false}
       refute Gate.actor?(gate)
+    end
+
+    test "with a group gate it returns false" do
+      gate = %Gate{type: :group, for: "prosciutto", enabled: false}
+      refute Gate.actor?(gate)
+    end
+  end
+
+  describe "group?(gate)" do
+    test "with a group gate it returns true" do
+      gate = %Gate{type: :group, for: "prosciutto", enabled: false}
+      assert Gate.group?(gate)
+    end
+
+    test "with a boolean gate it returns false" do
+      gate = %Gate{type: :boolean, for: nil, enabled: false}
+      refute Gate.group?(gate)
+    end
+
+    test "with an actor gate it returns false" do
+      gate = %Gate{type: :actor, for: "salami", enabled: false}
+      refute Gate.group?(gate)
     end
   end
 end
