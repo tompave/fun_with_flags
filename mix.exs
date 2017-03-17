@@ -83,7 +83,7 @@ defmodule FunWithFlags.Mixfile do
 
   defp description do
     """
-    FunWithFlags, the Elixir feature flag library.
+    FunWithFlags, a flexible and fast feature toggle library for Elixir.
     """
   end
 
