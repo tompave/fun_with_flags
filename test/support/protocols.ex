@@ -18,3 +18,10 @@ defimpl FunWithFlags.Actor, for: BitString do
     "string:#{str}"
   end
 end
+
+
+defimpl FunWithFlags.Group, for: Map do
+  def in?(%{group: group_name}, group_name), do: true
+  def in?(_, _), do: false
+end
+

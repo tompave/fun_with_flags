@@ -8,3 +8,11 @@ defimpl FunWithFlags.Actor, for: FunWithFlags.TestUser do
     "user:#{user.id}"
   end
 end
+
+
+defimpl FunWithFlags.Group, for: FunWithFlags.TestUser do
+  def in?(%{email: email}, :admin) do
+    String.contains?(email, "@wayne.com")
+  end
+  def in?(_, _), do: false
+end
