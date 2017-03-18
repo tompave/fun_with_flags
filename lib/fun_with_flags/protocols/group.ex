@@ -1,11 +1,19 @@
 defprotocol FunWithFlags.Group do
   @moduledoc """
   Implement this protocol to provide groups.
+
+  It comes with a fallback `Any` implementation, that defaults
+  to always return `false`. In other words, unless this protocol
+  is explicitly implemented nothing belongs to any group.
   """
 
-  @doc """
-  Should return a boolean
+  @fallback_to_any true
 
+  @doc """
+  Should return a boolean.
+
+  The default implementation will always return `false` for
+  any argument.
 
   ## Example
 
@@ -17,4 +25,9 @@ defprotocol FunWithFlags.Group do
   """
   @spec in?(term, atom) :: boolean
   def in?(item, group)
+end
+
+
+defimpl FunWithFlags.Group, for: Any do
+  def in?(_, _), do: false
 end

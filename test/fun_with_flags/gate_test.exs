@@ -122,30 +122,33 @@ defmodule FunWithFlags.GateTest do
       {:ok, gate: gate, bruce: bruce, clark: clark}
     end
 
-    test "without the [for: actor] option it raises an exception", %{gate: gate} do
+    test "without the [for: item] option it raises an exception", %{gate: gate} do
       assert_raise FunctionClauseError, fn() ->
         Gate.enabled?(gate)
       end
     end
 
-    test "passing a nil actor option raises an exception (just because nil is not an Actor)", %{gate: gate} do
-      assert_raise Protocol.UndefinedError, fn() ->
-        Gate.enabled?(gate, for: nil)
-      end
-    end
-
     test "for an enabled gate, it returns {:ok, true} for items that belongs to the group
-          and :ignore for other actors", %{gate: gate, bruce: bruce, clark: clark} do
+          and :ignore for the others", %{gate: gate, bruce: bruce, clark: clark} do
       assert {:ok, true} = Gate.enabled?(gate, for: bruce)
       assert :ignore = Gate.enabled?(gate, for: clark)
     end
 
     test "for a disabled gate, it returns {:ok, false} for items that belongs to the group
-          and :ignore for other actors", %{gate: gate, bruce: bruce, clark: clark} do
+          and :ignore for the others", %{gate: gate, bruce: bruce, clark: clark} do
       gate = %Gate{gate | enabled: false}
 
       assert {:ok, false} = Gate.enabled?(gate, for: bruce)
       assert :ignore = Gate.enabled?(gate, for: clark)
+    end
+
+
+    test "it always returns :ignore for items that do not implement the Group protocol
+          (because of the fallback to Any)", %{gate: gate} do
+      assert :ignore = Gate.enabled?(gate, for: nil)
+      assert :ignore = Gate.enabled?(gate, for: "pompelmo")
+      assert :ignore = Gate.enabled?(gate, for: [1,2,3])
+      assert :ignore = Gate.enabled?(gate, for: {:a, "tuple"})   
     end
   end
 

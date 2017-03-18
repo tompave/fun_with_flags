@@ -18,6 +18,7 @@ defmodule FunWithFlags.GroupTest do
     refute Group.in?(user1, :undefined_name)
   end
 
+
   describe "anything can be an actor, e.g. Maps" do
     test "a map that declares the right group" do
       map = %{group: :pug_lovers}
@@ -28,6 +29,15 @@ defmodule FunWithFlags.GroupTest do
       map = %{group: :cat_owner}
       refute Group.in?(map, :pug_lovers)
       refute Group.in?(%{}, :pug_lovers)
+    end
+  end
+
+
+  describe "the fallback Any implementation" do
+    test "returns false for any argument, so that nothing is in any group" do
+      refute Group.in? 123, :group_name
+      refute Group.in? "ciao", :group_name
+      refute Group.in? [], :group_name
     end
   end
 end

@@ -235,5 +235,54 @@ defmodule FunWithFlags.FlagTest do
       assert Flag.enabled?(flag, for: arya)
       refute Flag.enabled?(flag)
     end
+
+
+    test "checking a flag with a non-actor just fallsback to the boolean gate if there are no other gates" do
+      flag = %Flag{name: :strawberry, gates: [Gate.new(:boolean, true)]}
+      item = [1,2] # does not implement Actor nor Group
+      assert Flag.enabled?(flag, for: item)
+
+      flag = %Flag{name: :strawberry, gates: [Gate.new(:boolean, false)]}
+      refute Flag.enabled?(flag, for: item)
+    end
+
+    test "checking a flag with a non-actor just falls back to the boolean gate if there are group gates" do
+      flag = %Flag{name: :strawberry, gates: [
+        Gate.new(:boolean, true),
+        Gate.new(:group, :mammals, false),
+      ]}
+      item = [1,2] # does not implement Actor nor Group
+      assert Flag.enabled?(flag, for: item)
+    end
+
+    test "checking a flag with a non-actor raises an exception if there are actor gates" do
+      flag = %Flag{name: :strawberry, gates: [
+        Gate.new(:boolean, true),
+        Gate.new(:group, :mammals, false),
+        Gate.new(:actor, "strings are actors too", false),
+      ]}
+      item = [1,2] # does not implement Actor nor Group
+
+      assert_raise Protocol.UndefinedError, fn() ->
+        Flag.enabled?(flag, for: item)
+      end
+    end
+
+    test "checking a flag with an actor but non-group will just ignore the group gates, if present" do
+      flag = %Flag{name: :strawberry, gates: [
+        Gate.new(:boolean, true),
+        Gate.new(:actor, "strings are actors too", false),
+      ]}
+      item = "a binary" # does not implement Group, but it implements Actor
+      assert Flag.enabled?(flag, for: item)
+
+      flag = %Flag{name: :strawberry, gates: [
+        Gate.new(:boolean, true),
+        Gate.new(:group, :mammals, false),
+        Gate.new(:actor, "strings are actors too", false),
+      ]}
+
+      assert Flag.enabled?(flag, for: item)
+    end
   end
 end
