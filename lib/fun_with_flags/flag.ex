@@ -33,25 +33,25 @@ defmodule FunWithFlags.Flag do
   end
 
 
-  def enabled?(%__MODULE__{gates: gates}, opts = [for: _data]) do
-    case check_actor_gates(gates, opts) do
+  def enabled?(%__MODULE__{gates: gates}, [for: item]) do
+    case check_actor_gates(gates, item) do
       {:ok, bool} -> bool
       :ignore     -> check_boolean_gate(gates)
     end
   end
 
 
-  defp check_actor_gates(gates, opts) do
+  defp check_actor_gates(gates, item) do
     gates
     |> actor_gates()
-    |> do_check_actor_gates(opts)
+    |> do_check_actor_gates(item)
   end
 
   defp do_check_actor_gates([], _), do: :ignore
 
-  defp do_check_actor_gates([gate|rest], [for: data]) do
-    case Gate.enabled?(gate, for: data) do
-      :ignore -> check_actor_gates(rest, [for: data])
+  defp do_check_actor_gates([gate|rest], item) do
+    case Gate.enabled?(gate, for: item) do
+      :ignore -> do_check_actor_gates(rest, item)
       result  -> result
     end
   end

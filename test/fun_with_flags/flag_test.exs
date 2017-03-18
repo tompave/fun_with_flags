@@ -38,8 +38,16 @@ defmodule FunWithFlags.FlagTest do
         %Gate{type: :actor, for: "string:albicocca", enabled: true},
         %Gate{type: :boolean, enabled: false},
         %Gate{type: :actor, for: "user:123", enabled: false},
+        %Gate{type: :group, for: :penguins, enabled: true},
       ]}
-      assert ^flag = Flag.from_redis(:apricot, ["actor/string:albicocca", "true", "boolean", "false", "actor/user:123", "false"])
+
+      raw_redis_data = [
+        "actor/string:albicocca", "true",
+        "boolean", "false",
+        "actor/user:123", "false",
+        "group/penguins", "true"
+      ]
+      assert ^flag = Flag.from_redis(:apricot, raw_redis_data)
     end
   end
 
