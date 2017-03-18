@@ -70,7 +70,7 @@ defmodule FunWithFlags.FlagTest do
 
     test "other gates are ignored" do
       data = %{mario: "luigi", actor_id: "peach"}
-      gates = [Gate.new(:actor, data, false), Gate.new(:boolean, true)]
+      gates = [Gate.new(:actor, data, false), Gate.new(:boolean, true), Gate.new(:group, :parrots, false)]
       flag = %Flag{name: :banana, gates: gates}
       assert Flag.enabled?(flag)
     end
@@ -78,12 +78,12 @@ defmodule FunWithFlags.FlagTest do
 
 
 
-  describe "enabled?(flag, for: actor)" do
+  describe "enabled?(flag, for: item)" do
     alias FunWithFlags.TestUser
 
     setup do
-      john = %TestUser{id: 42, email: "john@snow.nw"}
-      arya = %TestUser{id: 151, email: "arya@stark.wf"}
+      john = %TestUser{id: 42, email: "john@snow.nw", groups: [:starks, :nights_watch]}
+      arya = %TestUser{id: 151, email: "arya@stark.wf", groups: [:starks, :nameless_men]}
       {:ok, john: john, arya: arya}
     end
 
@@ -97,7 +97,7 @@ defmodule FunWithFlags.FlagTest do
     end
 
 
-    test "with only boolean gates, checking for an actor falls back to the boolean gate", %{john: john, arya: arya} do
+    test "with only boolean gates, checking with an item falls back to the boolean gate", %{john: john, arya: arya} do
       flag = %Flag{name: :pear, gates: [Gate.new(:boolean, true)]}
 
       assert Flag.enabled?(flag, for: john)
@@ -125,6 +125,44 @@ defmodule FunWithFlags.FlagTest do
     end
 
 
+    test "with only group gates, the groups are checked and otherwise it defaults to false", %{john: john, arya: arya} do
+      flag = %Flag{name: :pear, gates: [Gate.new(:group, :nights_watch, true)]}
+      assert Flag.enabled?(flag, for: john)
+      refute Flag.enabled?(flag, for: arya)
+      refute Flag.enabled?(flag)
+
+      flag = %Flag{name: :pear, gates: [Gate.new(:group, :nights_watch, false)]}
+      refute Flag.enabled?(flag, for: john)
+      refute Flag.enabled?(flag, for: arya)
+      refute Flag.enabled?(flag)
+    end
+
+
+    test "when the checked item belongs to multiple conflicting group gates, DISABLED gates take precence", %{john: john, arya: arya} do
+      flag = %Flag{name: :pear, gates: [
+        Gate.new(:group, :nights_watch, false),
+        Gate.new(:group, :starks, true),
+      ]}
+
+      refute Flag.enabled?(flag, for: john)
+      assert Flag.enabled?(flag, for: arya)
+      refute Flag.enabled?(flag) # default
+
+
+      # invert the order
+      flag = %Flag{name: :pear, gates: [
+        Gate.new(:group, :starks, true),
+        Gate.new(:group, :nights_watch, false),
+      ]}
+
+      refute Flag.enabled?(flag, for: john)
+      assert Flag.enabled?(flag, for: arya)
+      refute Flag.enabled?(flag) # default
+    end
+
+
+    # precedence ----------------------------------------------------
+
     test "an actor gate takes precendence over the boolean gate, when enabling", %{john: john, arya: arya} do
       flag = %Flag{name: :pear, gates: [Gate.new(:boolean, false), Gate.new(:actor, john, true)]}
       assert Flag.enabled?(flag, for: john)
@@ -137,6 +175,65 @@ defmodule FunWithFlags.FlagTest do
       refute Flag.enabled?(flag, for: john)
       assert Flag.enabled?(flag, for: arya)
       assert Flag.enabled?(flag)
+    end
+
+
+    test "a group gate takes precendence over the boolean gate, when enabling", %{john: john, arya: arya} do
+      flag = %Flag{name: :pear, gates: [Gate.new(:boolean, false), Gate.new(:group, :nameless_men, true)]}
+      refute Flag.enabled?(flag, for: john)
+      assert Flag.enabled?(flag, for: arya)
+      refute Flag.enabled?(flag)
+    end
+
+    test "a group gate takes precendence over the boolean gate, when disabling", %{john: john, arya: arya} do
+      flag = %Flag{name: :pear, gates: [Gate.new(:boolean, true), Gate.new(:group, :nameless_men, false)]}
+      assert Flag.enabled?(flag, for: john)
+      refute Flag.enabled?(flag, for: arya)
+      assert Flag.enabled?(flag)
+    end
+
+
+    test "an actor gate takes precendence over a group gate, when enabling", %{john: john, arya: arya} do
+      flag = %Flag{name: :pear, gates: [
+        Gate.new(:group, :starks, false),
+        Gate.new(:actor, john, true)
+      ]}
+      assert Flag.enabled?(flag, for: john)
+      refute Flag.enabled?(flag, for: arya)
+      refute Flag.enabled?(flag)
+    end
+
+    test "an actor gate takes precendence over a group gate, when disabling", %{john: john, arya: arya} do
+      flag = %Flag{name: :pear, gates: [
+        Gate.new(:group, :starks, true),
+        Gate.new(:actor, john, false)
+      ]}
+      refute Flag.enabled?(flag, for: john)
+      assert Flag.enabled?(flag, for: arya)
+      refute Flag.enabled?(flag) # default
+    end
+
+
+    test "precedence order: actor, then groups, then booleans", %{john: john, arya: arya} do
+      flag = %Flag{name: :pear, gates: [
+        Gate.new(:boolean, true),
+        Gate.new(:actor, john, true),
+        Gate.new(:group, :starks, false),
+      ]}
+
+      assert Flag.enabled?(flag, for: john)
+      refute Flag.enabled?(flag, for: arya)
+      assert Flag.enabled?(flag)
+
+      flag = %Flag{name: :pear, gates: [
+        Gate.new(:boolean, false),
+        Gate.new(:actor, john, false),
+        Gate.new(:group, :starks, true),
+      ]}
+
+      refute Flag.enabled?(flag, for: john)
+      assert Flag.enabled?(flag, for: arya)
+      refute Flag.enabled?(flag)
     end
   end
 end
