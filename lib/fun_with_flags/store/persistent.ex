@@ -48,6 +48,25 @@ defmodule FunWithFlags.Store.Persistent do
   end
 
 
+  # Deletes one gate from the Flag's Redis hash.
+  # Deleting gates is idempotent and deleting unknown gates is safe.
+  # A flag will continue to exist even though it has no gates.
+  #
+  def delete(flag_name, gate = %Gate{}) do
+    hash_key = format(flag_name)
+    [field_key, _] = Serializer.to_redis(gate)
+
+    case Redix.command(@conn, ["HDEL", hash_key, field_key]) do
+      {:ok, _number} ->
+        {:ok, flag} = get(flag_name)
+        publish_change(flag_name)
+        {:ok, flag}
+      {:error, reason} ->
+        {:error, redis_error(reason)}
+    end
+  end
+
+
   def publish_change(flag_name) do
     if Config.cache? do
       Task.start fn() ->
