@@ -67,6 +67,33 @@ defmodule FunWithFlags.Store.Persistent do
   end
 
 
+  # Deletes an entire Flag's Redis hash and removes its name from the Redis set.
+  # Deleting flags is idempotent and deleting unknown flags is safe.
+  # After the operation fetching the now-deleted flag will return the default
+  # empty flag structure.
+  #
+  def delete(flag_name) do
+    result = Redix.pipeline(@conn, [
+      ["MULTI"],
+      ["SREM", @flags_set, flag_name],
+      ["DEL", format(flag_name)],
+      ["EXEC"]
+    ])
+
+
+    case result do
+      {:ok, ["OK", "QUEUED", "QUEUED", [a, b]]} when a in [0, 1] and b in [0, 1] ->
+        {:ok, flag} = get(flag_name)
+        publish_change(flag_name)
+        {:ok, flag}
+      {:error, reason} ->
+        {:error, redis_error(reason)}
+      {:ok, results} ->
+        {:error, redis_error("one of the commands failed: #{inspect(results)}")}
+    end
+  end
+
+
   def publish_change(flag_name) do
     if Config.cache? do
       Task.start fn() ->
