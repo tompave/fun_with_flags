@@ -14,15 +14,29 @@ FunWithFlags is an OTP application that provides a 2-level storage to save and r
 
 It stores flag information in Redis for persistence and syncronization across different nodes, but it also maintains a local cache in an ETS table for fast lookups. When flags are added or toggled on a node, the other nodes are notified via Redis PubSub and reload their local ETS caches.
 
+## What's a feature flag?
+
+Feature flags, or feature toggles, are boolean values associated to a name. They should be used to control whether some application feature is enabled or disabled, and they are meant to be modified at runtime while an application is running. This is usually done by the people who control the application.
+
+In their simplest form, flags can be toggled on and off globally. More advanced rules or "gates" allow a fine grained control over their status. For example, it's possible to toggle a flag on and off for specific entities or for groups.
+
+The goal is to have more granular and precise control over what is made available to which users, and when.
+A common use case, in web applications, is to enable a functionality without the need to deploy or restart the server, or to enable it only for internal users to test it before rolling it out to everyone. Another scenario is the ability to quickly disable a functionality if it's causing problems.
+They can also be used to implement a simple authorization system, for example to an admin area.
+
+
 ## Usage
 
 FunWithFlags has a simple API to query and toggle feature flags. Most of the time, you'll call `FunWithFlags.enabled?/2` with the name of the flag and optional arguments.
 
 Different kinds of toggle gates are supported:
 
-* boolean (on, off);
-* actors (on or off for specific structs or data);
-* _soon_ ~~groups (or or off for structs or data that satisfy a condition).~~
+* **Boolean**: globally on and off.
+* **Actors**: on or off for specific structs or data. The `FunWithFlags.Actor` protocol can be
+implemented for types and structs that should have specific rules. For example, in web applications it's common to use a `%User{}` struct or equivalent as an actor, or perhaps the current country of the request.
+* **Groups**: or or off for structs or data that belong to a category or satisfy a condition. The `FunWithFlags.Group` protocol can be implemented for types and structs that belong to groups for which a feature flag can be enabled or disabled. For example, one could implement the protocol for a `%User{}` struct to identify administrators.
+
+The priority order is from most to least specific: `Actors > Groups > Boolean`, and it applies to both enabled and disabled gates. For example, a disabled group gate takes precendence over an enabled boolean (global) gate for the entities in the group, and a further enabled actor gate overrides the disabled group gate for a specific entity. When an entity belongs to multiple groups with conflicting toggle status, the disabled group gates have precedence over the enabled ones.
 
 ### Boolean Gate
 
@@ -45,11 +59,11 @@ false
 
 ### Actor Gate
 
-This allows you to enable or disable a flag for one or more entities. This can be useful to showcase a work-in-progress feature to someone, to gradually rollout a functionality (e.g. your actor could be a country), or to dynamically disable some features in some contexts (e.g. you realize that a critical error is only raised in one specific country).
+This allows you to enable or disable a flag for one or more entities. For example, in web applications it's common to use a `%User{}` struct or equivalent as an actor, or perhaps the data used to represent the current country for an HTTP request. This can be useful to showcase a work-in-progress feature to someone, to gradually rollout a functionality by country, or to dynamically disable some features in some contexts.
 
 Actor gates take precendence over the others, both when they're enabled and when they're disabled. They can be considered as toggle overrides.
 
-In order to be used as an actor, an entity must implement the `FunWithFlags.Actor` protocol. This is a plain Elixir protocol and can be implemented for custom structs or literally any other type. An example is below, and more can be found in the [test support files](https://github.com/tompave/fun_with_flags/blob/master/test/support/protocols.ex).
+In order to be used as an actor, an entity must implement the `FunWithFlags.Actor` protocol. This can be implemented for custom structs or literally any other type.
 
 
 ```elixir
@@ -58,14 +72,42 @@ defmodule MyApp.User do
 end
 
 defimpl FunWithFlags.Actor, for: MyApp.User do
-  def id(user) do
-    "user:#{user.id}"
+  def id(%{id: id}) do
+    "user:#{id}"
   end
 end
 
 bruce = %User{id: 1, name: "Bruce"}
-alfred = %User{id: 1, name: "Alfred"}
+alfred = %User{id: 2, name: "Alfred"}
 
+FunWithFlags.Actor.id(bruce)
+"user:1"
+FunWithFlags.Actor.id(alfred)
+"user:2"
+
+defimpl FunWithFlags.Actor, for: Map do
+  def id(%{actor_id: actor_id}) do
+    "map:#{actor_id}"
+  end
+
+  def id(map) do
+    map
+    |> inspect()
+    |> (&:crypto.hash(:md5, &1)).()
+    |> Base.encode16
+    |> (&"map:#{&1}").()
+  end
+end
+
+FunWithFlags.Actor.id(%{actor_id: "bar"})
+"map:bar"
+FunWithFlags.Actor.id(%{foo: "bar"})
+"map:E0BB5BA6873E3AC34B0B6928190C1F2B"
+```
+
+With the protocol implemented, actors can be used with the library functions:
+
+```elixir
 {:ok, true} = FunWithFlags.enable(:restful_nights)
 {:ok, false} = FunWithFlags.disable(:restful_nights, for_actor: bruce)
 {:ok, true} = FunWithFlags.enable(:batmobile, for_actor: bruce)
@@ -86,7 +128,7 @@ FunWithFlags.enabled?(:batmobile, for: bruce)
 true
 ```
 
-Actor identifiers must be globally unique binaries. A common technique to support multiple kinds of actors is to namespace the IDs:
+Actor identifiers must be globally unique binaries. Since supporting multiple kinds of actors is a common requirement, all the examples use the common technique of namespacing the IDs:
 
 ```elixir
 defimpl FunWithFlags.Actor, for: MyApp.User do
@@ -100,6 +142,62 @@ defimpl FunWithFlags.Actor, for: MyApp.Country do
     "country:#{country.iso3166}"
   end
 end
+```
+
+### Group Gate
+
+Group gates are similar to actor gates, but they apply to a category of entities rather than specific ones. They can be toggled on or off for the _name of the group_ (as an atom) instead of a specific term.
+
+Group gates take precendence over boolean gates but are overridden by actor gates.
+
+The semantics to determine which entities belong to which groups are application specific.
+Entities could have an explicit list of groups they belong to, or the groups could be abstract and inferred from some other attribute. For example, an `:employee` group could comprise all `%User{}` structs with an email address matching the company domain, or an `:admin` group could be made of all users with `%User{admin: true}`.
+
+In order to be affected by a group gate, an entity should implement the `FunWithFlags.Group` protocol. The protocol automatically falls back to a default `Any` implementation, which states that any entity belongs to no group at all. This makes it possible to safely use "normal" actors when querying group gates, and to implement the protocol only for structs and types for which it matters.
+
+The protocol can be implemented for custom structs or literally any other type.
+
+
+```elixir
+defmodule MyApp.User do
+  defstruct [:email, admin: false, groups: []]
+end
+
+defimpl FunWithFlags.Group, for: MyApp.User do
+  def in?(%{email: email}, :employee),  do: Regex.match?(~r/@mycompany.com$/, email)
+  def in?(%{admin: is_admin}, :admin),  do: !!is_admin
+  def in?(%{groups: list}, group_name), do: group_name in list
+end
+
+elisabeth = %User{email: "elisabeth@mycompany.com", admin: true, groups: [:engineering, :product]}
+FunWithFlags.Group.in?(elisabeth, :employee)
+true
+FunWithFlags.Group.in?(elisabeth, :admin)
+true
+FunWithFlags.Group.in?(elisabeth, :engineering)
+true
+FunWithFlags.Group.in?(elisabeth, :marketing)
+false
+
+defimpl FunWithFlags.Group, for: Map do
+  def in?(%{group: group_name}, group_name), do: true
+  def in?(_, _), do: false
+end
+
+FunWithFlags.Group.in?(%{group: :dumb_tests}, :dumb_tests)
+true
+```
+
+With the protocol implemented, actors can be used with the library functions:
+
+```elixir
+FunWithFlags.disable(:database_access)
+FunWithFlags.enable(:database_access, for_group: :engineering)
+
+FunWithFlags.enabled?(:database_access)
+false
+FunWithFlags.enabled?(:database_access, for: elisabeth)
+true
 ```
 
 
@@ -150,10 +248,11 @@ A grab bag. I'll add more items as I get closer to a stable release.
 * The ETS cache supports a global TTL, expressed in seconds. It defaults to 900s (15 minutes). After expiration, flags are re-fetched from Redis. This allows multiple nodes to use the same redis, and slowly acquire and cache flags that have been changed by another node.
 * Distributed cache-busting. When a flag is persisted in Redis (created or updated), use Redis PubSub to notify all other Elixir nodes. When a node receives PubSub message it will reload the local cached copy of the flag. A node will ignore messages originated from the node itself (otherwise the originator node would reload the flag too).
 * Actor gates: enable or disable a flag for a specific data structure or primitive value.
+* Group gates: enable or disable a flag for a group, use your own logic to decide which data is in which group.
 
 ### To do next
 
-* Implement other "gates": at least ~~actors~~ (done) and groups.
+* Add a function to remove a specific gate and clear its rule.
 * Add logging with proper error reporting.
 * Add a web GUI, as a plug, ideally in another package.
 * Add some optional randomness to the TTL, so that Redis doesn't get hammered at constant intervals after a server restart.

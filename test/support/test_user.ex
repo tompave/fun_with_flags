@@ -4,15 +4,15 @@ defmodule FunWithFlags.TestUser do
 end
 
 defimpl FunWithFlags.Actor, for: FunWithFlags.TestUser do
-  def id(user) do
-    "user:#{user.id}"
+  def id(%{id: id}) do
+    "user:#{id}"
   end
 end
 
 
 defimpl FunWithFlags.Group, for: FunWithFlags.TestUser do
   def in?(%{email: email}, :admin) do
-    String.contains?(email, "@wayne.com")
+    Regex.match?(~r/@wayne.com$/, email)
   end
 
   def in?(%{groups: groups}, group) when is_list(groups) do

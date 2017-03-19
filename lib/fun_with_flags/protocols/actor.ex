@@ -17,8 +17,8 @@ defprotocol FunWithFlags.Actor do
 
 
   In order to be used as an actor, an entity must implement
-  the `FunWithFlags.Actor` protocol. This is a plain Elixir protocol and can
-  be implemented for custom structs or literally any other type.
+  the `FunWithFlags.Actor` protocol. This can be implemented for custom structs
+  or literally any other type.
 
 
   ## Examples
@@ -30,13 +30,19 @@ defprotocol FunWithFlags.Actor do
       end
 
       defimpl FunWithFlags.Actor, for: MyApp.User do
-        def id(user) do
-          "user:#{user.id}"
+        def id(%{id: id}) do
+          "user:#{id}"
         end
       end
 
-
       bruce = %User{id: 1, name: "Bruce"}
+      alfred = %User{id: 2, name: "Alfred"}
+
+      FunWithFlags.Actor.id(bruce)
+      "user:1"
+      FunWithFlags.Actor.id(alfred)
+      "user:2"
+
       FunWithFlags.enable(:batmobile, for_actor: bruce)
 
 
@@ -64,13 +70,21 @@ defprotocol FunWithFlags.Actor do
         end
       end
 
+      FunWithFlags.Actor.id(%{actor_id: "bar"})
+      "map:bar"
+      FunWithFlags.Actor.id(%{foo: "bar"})
+      "map:E0BB5BA6873E3AC34B0B6928190C1F2B"
+      FunWithFlags.Actor.id("foobar")
+      "string:foobar"
+
 
       FunWithFlags.disable(:foobar, for_actor: %{actor_id: "just a map"})
       FunWithFlags.enable(:foobar, for_actor: "just a string")
 
 
-  Actor identifiers must be globally unique binaries. A common technique to
-  support multiple kinds of actors is to namespace the IDs:
+  Actor identifiers must be globally unique binaries. Since supporting multiple
+  kinds of actors is a common requirement, all the examples use the common
+  technique of namespacing the IDs:
 
 
       defimpl FunWithFlags.Actor, for: MyApp.User do
