@@ -57,15 +57,10 @@ defmodule FunWithFlags.Store.PersistentTest do
     test "when the cache is enabled, put() will publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
       assert true == Config.cache?
 
+      u_id = Notifications.unique_id()
+
       with_mocks([
-        {Notifications, [], [
-          payload_for: fn(flag_name) ->
-            ["fun_with_flags_changes", "unique_id_foobar:#{flag_name}"]
-          end,
-          handle_info: fn(payload, state) ->
-            :meck.passthrough([payload, state])
-          end
-        ]},
+        {Notifications, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = Persistent.put(name, gate)
@@ -75,7 +70,7 @@ defmodule FunWithFlags.Store.PersistentTest do
         assert called(
           Redix.command(
             FunWithFlags.Store.Persistent,
-            ["PUBLISH", "fun_with_flags_changes", "unique_id_foobar:#{name}"]
+            ["PUBLISH", "fun_with_flags_changes", "#{u_id}:#{name}"]
           )
         )
       end
@@ -202,15 +197,10 @@ defmodule FunWithFlags.Store.PersistentTest do
     test "when the cache is enabled, delete(flag_name, gate) will publish a notification to Redis", %{name: name, group_gate: group_gate} do
       assert true == Config.cache?
 
+      u_id = Notifications.unique_id()
+
       with_mocks([
-        {Notifications, [], [
-          payload_for: fn(flag_name) ->
-            ["fun_with_flags_changes", "unique_id_foobar:#{flag_name}"]
-          end,
-          handle_info: fn(payload, state) ->
-            :meck.passthrough([payload, state])
-          end
-        ]},
+        {Notifications, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = Persistent.delete(name, group_gate)
@@ -220,7 +210,7 @@ defmodule FunWithFlags.Store.PersistentTest do
         assert called(
           Redix.command(
             FunWithFlags.Store.Persistent,
-            ["PUBLISH", "fun_with_flags_changes", "unique_id_foobar:#{name}"]
+            ["PUBLISH", "fun_with_flags_changes", "#{u_id}:#{name}"]
           )
         )
       end
