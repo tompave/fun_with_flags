@@ -1,8 +1,12 @@
 # Changelog
 
+## v0.5.0
+
+Added the `Group` protocol and group gates. It's now possible to enable or disable a flag for a group name and implement `Group` for types and structs that should belong to groups.
+
 ## v0.4.0
 
-Added the `Actor` protocol and actor gates. It's now possible to implement `Actor` for some type ot struct and then enable or disable a flag for some specific values.
+Added the `Actor` protocol and actor gates. It's now possible to implement `Actor` for some type or struct and then enable or disable a flag for some specific values.
 
 ## v0.3.0
 
