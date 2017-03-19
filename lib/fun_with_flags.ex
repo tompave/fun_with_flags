@@ -51,17 +51,17 @@ defmodule FunWithFlags do
   used in the tests.
 
       iex> alias FunWithFlags.TestUser, as: User
-      iex> harry = %User{name: "Harry Potter", groups: [:wizards, :gryffindor]}
+      iex> harry = %User{id: 1, name: "Harry Potter", groups: [:wizards, :gryffindor]}
       iex> FunWithFlags.disable(:elder_wand)
       iex> FunWithFlags.enable(:elder_wand, for_actor: harry)
       iex> FunWithFlags.enabled?(:elder_wand)
       false
       iex> FunWithFlags.enabled?(:elder_wand, for: harry)
       true
-      iex> voldemort = %User{name: "Tom Riddle", groups: [:wizards, :slytherin]}
+      iex> voldemort = %User{id: 7, name: "Tom Riddle", groups: [:wizards, :slytherin]}
       iex> FunWithFlags.enabled?(:elder_wand, for: voldemort)
       false
-      iex> filch = %User{name: "Argus Filch", groups: [:staff]}
+      iex> filch = %User{id: 88, name: "Argus Filch", groups: [:staff]}
       iex> FunWithFlags.enable(:magic_wands, for_group: :wizards)
       iex> FunWithFlags.enabled?(:magic_wands, for: harry)
       true
@@ -167,6 +167,17 @@ defmodule FunWithFlags do
   end
 
 
+  def enable(flag_name, [for_group: nil]) do
+    enable(flag_name)
+  end
+
+  def enable(flag_name, [for_group: group_name]) when is_atom(flag_name) do
+    gate = Gate.new(:group, group_name, true)
+    {:ok, _flag} = @store.put(flag_name, gate)
+    {:ok, true}
+  end
+
+
 
   @doc """
   Disables a feature flag.
@@ -210,13 +221,14 @@ defmodule FunWithFlags do
       
       iex> alias FunWithFlags.TestUser, as: User
       iex> harry = %User{name: "Harry Potter", groups: [:wizards, :gryffindor]}
-      iex> draco = %User{name: "Draco Malfoy", groups: [:wizards, :slytherin]}
       iex> dudley = %User{name: "Dudley Dursley", groups: [:muggles]}
       iex> FunWithFlags.enable(:hogwarts)
       {:ok, true}
       iex> FunWithFlags.disable(:hogwarts, for_group: :muggles)
       {:ok, false}
       iex> FunWithFlags.enabled?(:hogwarts)
+      true
+      iex> FunWithFlags.enabled?(:hogwarts, for: harry)
       true
       iex> FunWithFlags.enabled?(:hogwarts, for: dudley)
       false
@@ -238,6 +250,16 @@ defmodule FunWithFlags do
     gate = Gate.new(:actor, actor, false)
     {:ok, flag} = @store.put(flag_name, gate)
     verify(flag, for: actor)
+  end
+
+  def disable(flag_name, [for_group: nil]) do
+    disable(flag_name)
+  end
+
+  def disable(flag_name, [for_group: group_name]) when is_atom(flag_name) do
+    gate = Gate.new(:group, group_name, false)
+    {:ok, _flag} = @store.put(flag_name, gate)
+    {:ok, false}
   end
 
 
