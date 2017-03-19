@@ -2,9 +2,27 @@ defmodule FunWithFlags do
   @moduledoc """
   FunWithFlags, the Elixir feature flag library.
 
+  This module provides the public interface to the library and its API is
+  made of three simple methods to enable, disable and query feature flags.
+
+  In their simplest form, flags can be toggled on and off globally.
+
+  More advanced rules or "gates" are available, and they can be set and queried
+  for any term that implements these protocols:
+
+  * The `FunWithFlags.Actor` protocol can be
+  implemented for types and structs that should have specific rules. For
+  example, in web applications it's common to use a `%User{}` struct or
+  equivalent as an actor, or perhaps the current country of the request.
+
+  * The `FunWithFlags.Group` protocol can be
+  implemented for types and structs that should belong to groups for which
+  one wants to enable and disable some flags. For example, one could implement
+  the protocol for a `%User{}` struct to identify administrators.
+
+
   See the [Usage](/fun_with_flags/readme.html#usage) notes for a more detailed
-  explanation, and the [Actor protocol](/fun_with_flags/FunWithFlags.Actor.html)
-  documentation for more examples on how to work with Actor toggles.
+  explanation.
   """
 
   alias FunWithFlags.{Flag, Gate}
@@ -21,27 +39,35 @@ defmodule FunWithFlags do
   It can be invoked with just the flag name, as an atom,
   to check the general staus of a flag (i.e. the boolean gate).
 
-  ## Examples
-
-      iex> FunWithFlags.enabled?(:new_homepage)
-      false
-
   ## Options
 
-    * `:for` - used to specify a term for which the flag could
-    have a specific rule.
+  * `:for` - used to provide a term for which the flag could
+  have a specific value. The passed term should implement the
+  `Actor` or `Group` protocol, or both.
 
   ## Examples
 
-      iex> wizard = %{id: 42, name: "Harry Potter"}
+  This example relies on the [reference implementation](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_user.ex)
+  used in the tests.
+
+      iex> alias FunWithFlags.TestUser, as: User
+      iex> harry = %User{name: "Harry Potter", groups: [:wizards, :gryffindor]}
       iex> FunWithFlags.disable(:elder_wand)
-      iex> FunWithFlags.enable(:elder_wand, for_actor: wizard)
+      iex> FunWithFlags.enable(:elder_wand, for_actor: harry)
       iex> FunWithFlags.enabled?(:elder_wand)
       false
-      iex> FunWithFlags.enabled?(:elder_wand, for: wizard)
+      iex> FunWithFlags.enabled?(:elder_wand, for: harry)
       true
-      iex> other_wizard = %{id: 7, name: "Tom Riddle"}
-      iex> FunWithFlags.enabled?(:elder_wand, for: other_wizard)
+      iex> voldemort = %User{name: "Tom Riddle", groups: [:wizards, :slytherin]}
+      iex> FunWithFlags.enabled?(:elder_wand, for: voldemort)
+      false
+      iex> filch = %User{name: "Argus Filch", groups: [:staff]}
+      iex> FunWithFlags.enable(:magic_wands, for_group: :wizards)
+      iex> FunWithFlags.enabled?(:magic_wands, for: harry)
+      true
+      iex> FunWithFlags.enabled?(:magic_wands, for: voldemort)
+      true
+      iex> FunWithFlags.enabled?(:magic_wands, for: filch)
       false
 
   """
@@ -72,7 +98,16 @@ defmodule FunWithFlags do
   @doc """
   Enables a feature flag.
 
+  ## Options
+
+  * `:for_actor` - used to enable the flag for a specific term only.
+  The value can be any term that implements the `Actor` protocol.
+  * `:for_group` - used to enable the flag for a specific group only.
+  The value should be an atom.
+
   ## Examples
+
+  ### Enable globally
 
       iex> FunWithFlags.enabled?(:super_shrink_ray)
       false
@@ -81,12 +116,7 @@ defmodule FunWithFlags do
       iex> FunWithFlags.enabled?(:super_shrink_ray)
       true
 
-  ## Options
-
-    * `:for_actor` - used to enable the flag for a specific
-    term only. This can be anything.
-
-  ## Examples
+  ### Enable for an actor
 
       iex> FunWithFlags.disable(:warp_drive)
       {:ok, false}
@@ -95,6 +125,26 @@ defmodule FunWithFlags do
       iex> FunWithFlags.enabled?(:warp_drive)
       false
       iex> FunWithFlags.enabled?(:warp_drive, for: "Scotty")
+      true
+
+  ### Enable for a group
+
+  This example relies on the [reference implementation](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_user.ex)
+  used in the tests.
+      
+      iex> alias FunWithFlags.TestUser, as: User
+      iex> marty = %User{name: "Marty McFly", groups: [:students, :time_travelers]}
+      iex> doc = %User{name: "Emmet Brown", groups: [:scientists, :time_travelers]}
+      iex> buford = %User{name: "Buford Tannen", groups: [:gunmen, :bandits]}
+      iex> FunWithFlags.enable(:delorean, for_group: :time_travelers)
+      {:ok, true}
+      iex> FunWithFlags.enabled?(:delorean)
+      false
+      iex> FunWithFlags.enabled?(:delorean, for: buford)
+      false
+      iex> FunWithFlags.enabled?(:delorean, for: marty)
+      true
+      iex> FunWithFlags.enabled?(:delorean, for: doc)
       true
 
   """
@@ -121,7 +171,16 @@ defmodule FunWithFlags do
   @doc """
   Disables a feature flag.
 
+  ## Options
+
+  * `:for_actor` - used to disable the flag for a specific term only.
+  The value can be any term that implements the `Actor` protocol.
+  * `:for_group` - used to disable the flag for a specific group only.
+  The value should be an atom.
+
   ## Examples
+
+  ### Disable globally
 
       iex> FunWithFlags.enable(:random_koala_gifs)
       iex> FunWithFlags.enabled?(:random_koala_gifs)
@@ -131,12 +190,8 @@ defmodule FunWithFlags do
       iex> FunWithFlags.enabled?(:random_koala_gifs)
       false
 
-  ## Options
 
-    * `:for_actor` - used to disable the flag for a specific
-    term only. This can be anything.
-
-  ## Examples
+  ## Disable for an actor
 
       iex> FunWithFlags.enable(:spider_sense)
       {:ok, true}
@@ -146,6 +201,24 @@ defmodule FunWithFlags do
       iex> FunWithFlags.enabled?(:spider_sense)
       true
       iex> FunWithFlags.enabled?(:spider_sense, for: villain)
+      false
+
+  ### Disable for a group
+
+  This example relies on the [reference implementation](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_user.ex)
+  used in the tests.
+      
+      iex> alias FunWithFlags.TestUser, as: User
+      iex> harry = %User{name: "Harry Potter", groups: [:wizards, :gryffindor]}
+      iex> draco = %User{name: "Draco Malfoy", groups: [:wizards, :slytherin]}
+      iex> dudley = %User{name: "Dudley Dursley", groups: [:muggles]}
+      iex> FunWithFlags.enable(:hogwarts)
+      {:ok, true}
+      iex> FunWithFlags.disable(:hogwarts, for_group: :muggles)
+      {:ok, false}
+      iex> FunWithFlags.enabled?(:hogwarts)
+      true
+      iex> FunWithFlags.enabled?(:hogwarts, for: dudley)
       false
 
   """

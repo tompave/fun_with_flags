@@ -4,10 +4,13 @@ defprotocol FunWithFlags.Actor do
 
 
   Actor gates allows you to enable or disable a flag for one or more entities.
+  For example, in web applications it's common to use a `%User{}` struct or
+  equivalent as an actor, or perhaps the data used to represent the current
+  country for an HTTP request.
   This can be useful to showcase a work-in-progress feature to someone, to
-  gradually rollout a functionality (e.g. your actor could be a country), or
-  to dynamically disable some features in some contexts (e.g. you realize that
-  a critical error is only raised in one specific country).
+  gradually rollout a functionality by country, or to dynamically disable some
+  features in some contexts (e.g. a deploy introduces a critical error that
+  only happens in one specific country).
 
   Actor gates take precendence over the others, both when they're enabled and
   when they're disabled. They can be considered as toggle overrides.

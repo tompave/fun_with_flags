@@ -1,6 +1,6 @@
 defmodule FunWithFlags.TestUser do
   # A Test user
-  defstruct [:id, :email, groups: []]
+  defstruct [:id, :email, :name, groups: []]
 end
 
 defimpl FunWithFlags.Actor, for: FunWithFlags.TestUser do
@@ -18,5 +18,4 @@ defimpl FunWithFlags.Group, for: FunWithFlags.TestUser do
   def in?(%{groups: groups}, group) when is_list(groups) do
     group in groups
   end
-  def in?(_, _), do: false
 end
