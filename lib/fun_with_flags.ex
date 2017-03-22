@@ -263,6 +263,99 @@ defmodule FunWithFlags do
   end
 
 
+
+  @doc """
+  Clears the data of a feature flag.
+
+  Clears the data for an entire feature flag or for a specific
+  Actor or Group gate. Clearing a boolean gate is not supported
+  because a missing boolean gate is equivalent to a disabled boolean
+  gate.
+
+  Sometimes enabling or disabling a gate is not what you want, and you
+  need to remove that gate's rules instead. For example, if you don't need
+  anymore to explicitly enable or disable a flag for an actor, and the
+  default state should be used instead, you'll want to cleare the gate.
+
+  It's also possible to clear the entire flag, by not passing any option.
+
+  ## Options
+
+  * `:for_actor` - used to clear the flag for a specific term only.
+  The value can be any term that implements the `Actor` protocol.
+  * `:for_group` - used to clear the flag for a specific group only.
+  The value should be an atom.
+
+  ## Examples
+
+      iex> alias FunWithFlags.TestUser, as: User
+      iex> harry = %User{id: 1, name: "Harry Potter", groups: [:wizards, :gryffindor]}
+      iex> hagrid = %User{id: 2, name: "Rubeus Hagrid", groups: [:wizards, :gamekeeper]}
+      iex> dudley = %User{id: 3, name: "Dudley Dursley", groups: [:muggles]}
+      iex> FunWithFlags.disable(:wands)
+      iex> FunWithFlags.enable(:wands, for_group: :wizards)
+      iex> FunWithFlags.disable(:wands, for_actor: hagrid)
+      iex>
+      iex> FunWithFlags.enabled?(:wands)
+      false
+      iex> FunWithFlags.enabled?(:wands, for: harry)
+      true
+      iex> FunWithFlags.enabled?(:wands, for: hagrid)
+      false
+      iex> FunWithFlags.enabled?(:wands, for: dudley)
+      false
+      iex>
+      iex> FunWithFlags.clear(:wands, for_actor: hagrid)
+      :ok
+      iex> FunWithFlags.enabled?(:wands, for: hagrid)
+      true
+      iex>
+      iex> FunWithFlags.clear(:wands)
+      :ok
+      iex> FunWithFlags.enabled?(:wands)
+      false
+      iex> FunWithFlags.enabled?(:wands, for: harry)
+      false
+      iex> FunWithFlags.enabled?(:wands, for: hagrid)
+      false
+      iex> FunWithFlags.enabled?(:wands, for: dudley)
+      false
+
+
+  """
+  @spec clear(atom, options) :: {:ok, false}
+  def clear(flan_name, options \\ [])
+
+  def clear(flag_name, []) when is_atom(flag_name) do
+    {:ok, _flag} = @store.delete(flag_name)
+    :ok
+  end
+
+  def clear(flag_name, [for_actor: nil]) do
+    clear(flag_name)
+  end
+
+  def clear(flag_name, [for_actor: actor]) when is_atom(flag_name) do
+    gate = Gate.new(:actor, actor, false) # we only care about the gate id
+    _clear_gate(flag_name, gate)
+  end
+
+  def clear(flag_name, [for_group: nil]) do
+    clear(flag_name)
+  end
+
+  def clear(flag_name, [for_group: group_name]) when is_atom(flag_name) do
+    gate = Gate.new(:group, group_name, false) # we only care about the gate id
+    _clear_gate(flag_name, gate)
+  end
+
+  defp _clear_gate(flag_name, gate) do
+    {:ok, _flag} = @store.delete(flag_name, gate)
+    :ok
+  end
+
+
+
   defp verify(flag) do
     {:ok, Flag.enabled?(flag)}
   end
