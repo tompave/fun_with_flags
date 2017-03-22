@@ -38,6 +38,26 @@ defmodule FunWithFlags.Store do
   end
 
 
+  def delete(flag_name, gate) do
+    case Persistent.delete(flag_name, gate) do
+      {:ok, flag} ->
+        Cache.put(flag)
+      {:error, _reason} = error ->
+        error
+    end
+  end
+
+
+  def delete(flag_name) do
+    case Persistent.delete(flag_name) do
+      {:ok, flag} ->
+        Cache.put(flag)
+      {:error, _reason} = error ->
+        error
+    end
+  end
+
+
   def reload(flag_name) do
     # IO.puts "reloading #{flag_name}"
     case Persistent.get(flag_name) do

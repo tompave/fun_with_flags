@@ -34,7 +34,7 @@ defmodule FunWithFlags.StoreTest do
   end
 
 
-  describe "put(flag_name, value)" do
+  describe "put(flag_name, gate)" do
     test "put() can change the value of a flag", %{name: name, gate: gate, flag: flag} do
       assert {:ok, %Flag{name: ^name, gates: []}} = Store.lookup(name)
 
@@ -49,6 +49,74 @@ defmodule FunWithFlags.StoreTest do
 
     test "put() returns the tuple {:ok, %Flag{}}", %{name: name, gate: gate, flag: flag} do
       assert {:ok, ^flag} = Store.put(name, gate)
+    end
+  end
+
+
+  describe "delete(flag_name, gate)" do
+    setup data do
+      group_gate = %Gate{type: :group, for: :muggles, enabled: false}
+      bool_gate = data[:gate]
+      name = data[:name]
+
+      Store.put(name, bool_gate)
+      Store.put(name, group_gate)
+      {:ok, flag} = Store.lookup(name)
+      assert %Flag{name: ^name, gates: [^bool_gate, ^group_gate]} = flag
+
+      {:ok, bool_gate: bool_gate, group_gate: group_gate}
+    end
+
+    test "delete(flag_name, gate) can change the value of a flag", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = Store.lookup(name)
+
+      Store.delete(name, bool_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^group_gate]}} = Store.lookup(name)
+      Store.delete(name, group_gate)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Store.lookup(name)
+    end
+
+    test "delete(flag_name, gate) returns the tuple {:ok, %Flag{}}", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
+      assert {:ok, %Flag{name: ^name, gates: [^group_gate]}} = Store.delete(name, bool_gate)
+    end
+
+    test "deleting is safe and idempotent", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
+      assert {:ok, %Flag{name: ^name, gates: [^group_gate]}} = Store.delete(name, bool_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^group_gate]}} = Store.delete(name, bool_gate)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name, group_gate)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name, group_gate)
+    end
+  end
+
+
+  describe "delete(flag_name)" do
+    setup data do
+      group_gate = %Gate{type: :group, for: :muggles, enabled: false}
+      bool_gate = data[:gate]
+      name = data[:name]
+
+      Store.put(name, bool_gate)
+      Store.put(name, group_gate)
+      {:ok, flag} = Store.lookup(name)
+      assert %Flag{name: ^name, gates: [^bool_gate, ^group_gate]} = flag
+
+      {:ok, bool_gate: bool_gate, group_gate: group_gate}
+    end
+
+    test "delete(flag_name) will reset all the flag gates", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = Store.lookup(name)
+
+      Store.delete(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Store.lookup(name)
+    end
+
+    test "delete(flag_name, gate) returns the tuple {:ok, %Flag{}}", %{name: name} do
+      assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
+    end
+
+    test "deleting is safe and idempotent", %{name: name} do
+      assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
     end
   end
 
@@ -109,6 +177,13 @@ defmodule FunWithFlags.StoreTest do
 
 
   describe "integration: Cache and Persistence" do
+    setup data do
+      group_gate = %Gate{type: :group, for: :muggles, enabled: false}
+      bool_gate = data[:gate]
+      {:ok, bool_gate: bool_gate, group_gate: group_gate}
+    end
+
+
     test "if we have a Cached value, the Persistent store is not touched at all", %{name: name, flag: flag} do
       Cache.put(flag)
 
@@ -122,8 +197,6 @@ defmodule FunWithFlags.StoreTest do
       end
     end
 
-
-
     test "setting a value will update both the cache and the persistent store", %{name: name, gate: gate, flag: flag} do
       empty_flag = %Flag{name: name, gates: []}
 
@@ -134,6 +207,46 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, ^flag} = Cache.get(name)
       assert {:ok, ^flag} = Persistent.get(name)
     end
+
+    test "deleting a gate will update both the cache and the persistent store", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
+      Store.put(name, bool_gate)
+      Store.put(name, group_gate)
+
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = Cache.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = Persistent.get(name)
+
+      Store.delete(name, group_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = Cache.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = Persistent.get(name)
+
+      # repeat. check it's safe and idempotent
+      Store.delete(name, group_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = Cache.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = Persistent.get(name)
+
+      Store.delete(name, bool_gate)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Cache.get(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Persistent.get(name)
+    end
+
+
+    test "deleting a flag will reset both the cache and the persistent store", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
+      Store.put(name, bool_gate)
+      Store.put(name, group_gate)
+
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = Cache.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = Persistent.get(name)
+
+      Store.delete(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Cache.get(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Persistent.get(name)
+
+      # repeat. check it's safe and idempotent
+      Store.delete(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Cache.get(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = Persistent.get(name)
+    end
+
 
     test "when the value is initially not in the cache but set in redis,
           looking it up will populate the cache", %{name: name, gate: gate, flag: flag} do
