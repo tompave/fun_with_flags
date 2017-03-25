@@ -355,6 +355,10 @@ defmodule FunWithFlags do
   end
 
 
+  @doc false
+  @spec all_flags() :: [FunWithFlags.Flag.t]
+  defdelegate all_flags(), to: @store
+
 
   defp verify(flag) do
     {:ok, Flag.enabled?(flag)}

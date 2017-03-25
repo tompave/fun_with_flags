@@ -53,6 +53,9 @@ defmodule FunWithFlags.Store do
   end
 
 
+  defdelegate all_flags(), to: Persistent
+
+
   defp cache_persistence_result(result) do
     case result do
       {:ok, flag} ->

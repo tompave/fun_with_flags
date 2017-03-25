@@ -14,4 +14,5 @@ defmodule FunWithFlags.SimpleStore do
   defdelegate put(flag_name, gate), to: Persistent
   defdelegate delete(flag_name, gate), to: Persistent
   defdelegate delete(flag_name), to: Persistent
+  defdelegate all_flags(), to: Persistent
 end

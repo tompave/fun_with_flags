@@ -94,7 +94,20 @@ defmodule FunWithFlags.Store.Persistent do
   end
 
 
-  def publish_change(flag_name) do
+  def all_flags do
+    {:ok, flag_names} = saved_flag_names()
+    Enum.map(flag_names, fn(name)->
+      {:ok, flag} = String.to_atom(name) |> get()
+      flag
+    end)
+  end
+
+
+  def saved_flag_names do
+    Redix.command(@conn, ["SMEMBERS", @flags_set])
+  end
+
+  defp publish_change(flag_name) do
     if Config.cache? do
       Task.start fn() ->
         Redix.command(@conn, ["PUBLISH" | Notifications.payload_for(flag_name)])
