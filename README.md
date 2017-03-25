@@ -200,6 +200,55 @@ FunWithFlags.enabled?(:database_access, for: elisabeth)
 true
 ```
 
+### Clearing a feature flag's rules
+
+Sometimes enabling or disabling a gate is not what you want, and removing that gate's rules would be more correct. For example, if you don't need anymore to explicitly enable or disable a flag for an actor or for a group, and the default state should be used instead, clearing the gate is the right choice.
+
+More examples:
+
+```elixir
+alias FunWithFlags.TestUser, as: User
+harry = %User{id: 1, name: "Harry Potter", groups: [:wizards, :gryffindor]}
+hagrid = %User{id: 2, name: "Rubeus Hagrid", groups: [:wizards, :gamekeeper]}
+dudley = %User{id: 3, name: "Dudley Dursley", groups: [:muggles]}
+FunWithFlags.disable(:wands)
+FunWithFlags.enable(:wands, for_group: :wizards)
+FunWithFlags.disable(:wands, for_actor: hagrid)
+
+FunWithFlags.enabled?(:wands)
+false
+FunWithFlags.enabled?(:wands, for: harry)
+true
+FunWithFlags.enabled?(:wands, for: hagrid)
+false
+FunWithFlags.enabled?(:wands, for: dudley)
+false
+
+FunWithFlags.clear(:wands, for_actor: hagrid)
+FunWithFlags.enabled?(:wands, for: hagrid)
+true
+
+FunWithFlags.clear(:wands, for_group: :wizards)
+FunWithFlags.enabled?(:wands, for: hagrid)
+false
+FunWithFlags.enabled?(:wands, for: harry)
+false
+```
+
+It's also possible to clear an entire flag.
+
+```elixir
+FunWithFlags.clear(:wands)
+FunWithFlags.enabled?(:wands)
+false
+FunWithFlags.enabled?(:wands, for: harry)
+false
+FunWithFlags.enabled?(:wands, for: hagrid)
+false
+FunWithFlags.enabled?(:wands, for: dudley)
+false
+```
+
 
 ## Origin
 
@@ -249,6 +298,7 @@ A grab bag. I'll add more items as I get closer to a stable release.
 * Distributed cache-busting. When a flag is persisted in Redis (created or updated), use Redis PubSub to notify all other Elixir nodes. When a node receives PubSub message it will reload the local cached copy of the flag. A node will ignore messages originated from the node itself (otherwise the originator node would reload the flag too).
 * Actor gates: enable or disable a flag for a specific data structure or primitive value.
 * Group gates: enable or disable a flag for a group, use your own logic to decide which data is in which group.
+* Ability to clear flag and gate data, to reset some rules.
 
 ### To do next
 

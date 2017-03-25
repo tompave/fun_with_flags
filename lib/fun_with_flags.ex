@@ -323,7 +323,7 @@ defmodule FunWithFlags do
 
 
   """
-  @spec clear(atom, options) :: {:ok, false}
+  @spec clear(atom, options) :: :ok
   def clear(flan_name, options \\ [])
 
   def clear(flag_name, []) when is_atom(flag_name) do
