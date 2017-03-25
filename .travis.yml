@@ -5,7 +5,9 @@ otp_release:
   - 19.2
 services:
   - redis-server
-script: mix test.all
+script:
+  - mix test.integration_no_cache
+  - mix test
 notifications:
   email:
     on_success: never
