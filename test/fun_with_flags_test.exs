@@ -295,6 +295,115 @@ defmodule FunWithFlagsTest do
   end
 
 
+  describe "clearing flags" do
+    setup do
+      scrooge = %FunWithFlags.TestUser{id: 1, email: "scrooge@mcduck.pdp", groups: [:ducks, :billionaires]}
+      donald = %FunWithFlags.TestUser{id: 2, email: "donald@duck.db", groups: [:ducks, :super_heroes]}
+      mickey = %FunWithFlags.TestUser{id: 3, email: "mickey@mouse.tp", groups: [:mice]}
+      {:ok, scrooge: scrooge, donald: donald, mickey: mickey, name: unique_atom()}
+    end
+
+    test "clearing an enabled global flag will remove its rules and make it disabled", %{name: name} do
+      FunWithFlags.enable(name)
+      assert FunWithFlags.enabled?(name)
+      :ok = FunWithFlags.clear(name)
+      refute FunWithFlags.enabled?(name)
+    end
+
+    test "clearing a flag with different gates will remove its rules and make it disabled", %{scrooge: scrooge, donald: donald, mickey: mickey, name: name} do
+      FunWithFlags.disable(name)
+      FunWithFlags.enable(name, for_actor: mickey)
+      FunWithFlags.enable(name, for_group: :ducks)
+
+      refute FunWithFlags.enabled?(name)
+      assert FunWithFlags.enabled?(name, for: scrooge)
+      assert FunWithFlags.enabled?(name, for: donald)
+      assert FunWithFlags.enabled?(name, for: mickey)
+
+      :ok = FunWithFlags.clear(name)
+
+      refute FunWithFlags.enabled?(name)
+      refute FunWithFlags.enabled?(name, for: scrooge)
+      refute FunWithFlags.enabled?(name, for: donald)
+      refute FunWithFlags.enabled?(name, for: mickey)
+    end
+  end
+
+
+  describe "clearing gates" do
+    setup do
+      scrooge = %FunWithFlags.TestUser{id: 1, email: "scrooge@mcduck.pdp", groups: [:ducks, :billionaires]}
+      donald = %FunWithFlags.TestUser{id: 2, email: "donald@duck.db", groups: [:ducks, :super_heroes]}
+      mickey = %FunWithFlags.TestUser{id: 3, email: "mickey@mouse.tp", groups: [:mice]}
+      {:ok, scrooge: scrooge, donald: donald, mickey: mickey, name: unique_atom()}
+    end
+
+    test "clearing an enabled actor gate will remove its rule", %{donald: donald, mickey: mickey, name: name} do
+      FunWithFlags.disable(name)
+      FunWithFlags.enable(name, for_actor: donald)
+
+      refute FunWithFlags.enabled?(name)
+      assert FunWithFlags.enabled?(name, for: donald)
+      refute FunWithFlags.enabled?(name, for: mickey)
+
+      :ok = FunWithFlags.clear(name, for_actor: donald)
+
+      refute FunWithFlags.enabled?(name)
+      refute FunWithFlags.enabled?(name, for: donald)
+      refute FunWithFlags.enabled?(name, for: mickey)
+    end
+
+    test "clearing a disabled actor gate will remove its rule", %{donald: donald, mickey: mickey, name: name} do
+      FunWithFlags.enable(name)
+      FunWithFlags.disable(name, for_actor: donald)
+
+      assert FunWithFlags.enabled?(name)
+      refute FunWithFlags.enabled?(name, for: donald)
+      assert FunWithFlags.enabled?(name, for: mickey)
+
+      :ok = FunWithFlags.clear(name, for_actor: donald)
+
+      assert FunWithFlags.enabled?(name)
+      assert FunWithFlags.enabled?(name, for: donald)
+      assert FunWithFlags.enabled?(name, for: mickey)
+    end
+
+    test "clearing an enabled group gate will remove its rule", %{scrooge: scrooge, donald: donald, mickey: mickey, name: name} do
+      FunWithFlags.disable(name)
+      FunWithFlags.enable(name, for_group: :ducks)
+
+      refute FunWithFlags.enabled?(name)
+      assert FunWithFlags.enabled?(name, for: donald)
+      assert FunWithFlags.enabled?(name, for: scrooge)
+      refute FunWithFlags.enabled?(name, for: mickey)
+
+      :ok = FunWithFlags.clear(name, for_group: :ducks)
+
+      refute FunWithFlags.enabled?(name)
+      refute FunWithFlags.enabled?(name, for: donald)
+      refute FunWithFlags.enabled?(name, for: scrooge)
+      refute FunWithFlags.enabled?(name, for: mickey)
+    end
+
+    test "clearing a disabled group gate will remove its rule", %{scrooge: scrooge, donald: donald, mickey: mickey, name: name} do
+      FunWithFlags.enable(name)
+      FunWithFlags.disable(name, for_group: :ducks)
+
+      assert FunWithFlags.enabled?(name)
+      refute FunWithFlags.enabled?(name, for: donald)
+      refute FunWithFlags.enabled?(name, for: scrooge)
+      assert FunWithFlags.enabled?(name, for: mickey)
+
+      :ok = FunWithFlags.clear(name, for_group: :ducks)
+
+      assert FunWithFlags.enabled?(name)
+      assert FunWithFlags.enabled?(name, for: donald)
+      assert FunWithFlags.enabled?(name, for: scrooge)
+      assert FunWithFlags.enabled?(name, for: mickey)
+    end
+  end
+
+
   describe "gate interactions" do
     alias FunWithFlags.TestUser, as: User
     setup do
