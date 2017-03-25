@@ -1,6 +1,6 @@
 # Changelog
 
-## master
+## v0.6.0
 
 New features:
 
