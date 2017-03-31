@@ -8,3 +8,5 @@ config :fun_with_flags, :redis,
 config :fun_with_flags, :cache,
   enabled: true,
   ttl: 60
+
+config :logger, level: :error

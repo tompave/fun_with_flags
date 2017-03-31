@@ -302,7 +302,6 @@ A grab bag. I'll add more items as I get closer to a stable release.
 
 ### To do next
 
-* Add logging with proper error reporting.
 * Add a web GUI, as a plug, ideally in another package.
 * Add some optional randomness to the TTL, so that Redis doesn't get hammered at constant intervals after a server restart.
 
