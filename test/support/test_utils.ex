@@ -23,6 +23,7 @@ defmodule FunWithFlags.TestUtils do
   def clear_redis_test_db do
     use_redis_test_db()
 
+    Redix.command!(@redis, ["DEL", "fun_with_flags"])
     Redix.command!(@redis, ["KEYS", "fun_with_flags:*"])
     |> delete_keys()
   end
@@ -30,7 +31,6 @@ defmodule FunWithFlags.TestUtils do
   defp delete_keys([]), do: 0
   defp delete_keys(keys) do
     Redix.command!(@redis, ["DEL" | keys])
-    Redix.command!(@redis, ["DEL", "fun_with_flags"])
   end
 
 
