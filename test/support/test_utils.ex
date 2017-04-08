@@ -1,6 +1,6 @@
 defmodule FunWithFlags.TestUtils do
   @test_db 5
-  @redis FunWithFlags.Store.Persistent
+  @redis FunWithFlags.Store.Persistent.Redis
 
   # Since the flags are saved on shared storage (ETS and
   # Redis), in order to keep the tests isolated _and_ async

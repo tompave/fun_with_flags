@@ -2,7 +2,8 @@ defmodule FunWithFlags.Store do
   @moduledoc false
 
   require Logger
-  alias FunWithFlags.Store.{Cache, Persistent}
+  alias FunWithFlags.Store.Cache
+  @persistence FunWithFlags.Store.Persistent.adapter
 
 
   def lookup(flag_name) do
@@ -10,7 +11,7 @@ defmodule FunWithFlags.Store do
       {:ok, flag} ->
         {:ok, flag}
       {:miss, reason, stale_value_or_nil} ->
-        case Persistent.get(flag_name) do
+        case @persistence.get(flag_name) do
           {:ok, flag} ->
             Cache.put(flag) 
             {:ok, flag}
@@ -31,31 +32,31 @@ defmodule FunWithFlags.Store do
 
 
   def put(flag_name, gate) do
-    Persistent.put(flag_name, gate)
+    @persistence.put(flag_name, gate)
     |> cache_persistence_result()
   end
 
 
   def delete(flag_name, gate) do
-    Persistent.delete(flag_name, gate)
+    @persistence.delete(flag_name, gate)
     |> cache_persistence_result()
   end
 
 
   def delete(flag_name) do
-    Persistent.delete(flag_name)
+    @persistence.delete(flag_name)
     |> cache_persistence_result()
   end
 
 
   def reload(flag_name) do
     Logger.debug("FunWithFlags: reloading cached flag '#{flag_name}' from Redis")
-    Persistent.get(flag_name)
+    @persistence.get(flag_name)
     |> cache_persistence_result()
   end
 
 
-  defdelegate all_flags(), to: Persistent
+  defdelegate all_flags(), to: @persistence
 
 
   defp cache_persistence_result(result) do
