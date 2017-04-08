@@ -1,8 +1,8 @@
 defmodule FunWithFlags.Store.PersistentTest do
-  use ExUnit.Case, async: false
-  # import FunWithFlags.TestUtils
-  # import Mock
+  use ExUnit.Case, async: true
+  alias FunWithFlags.Store.Persistent
 
-  # alias FunWithFlags.Store.Persistent
-  # alias FunWithFlags.{Config, Notifications, Flag, Gate}
+  test "adapter() returns the Redis adapter" do
+    assert FunWithFlags.Store.Persistent.Redis = Persistent.adapter
+  end
 end

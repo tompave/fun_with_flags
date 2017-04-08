@@ -47,6 +47,11 @@ defmodule FunWithFlags.Config do
   end
 
 
+  def persistence_adapter do
+    FunWithFlags.Store.Persistent.Redis
+  end
+
+
   # I can't use Kernel.make_ref/0 because this needs to be
   # serializable to a string and sent via Redis.
   # Erlang References lose a lot of "uniqueness" when

@@ -83,6 +83,11 @@ defmodule FunWithFlags.ConfigTest do
   end
 
 
+  test "persistence_adapter() returns a module" do
+    assert FunWithFlags.Store.Persistent.Redis = Config.persistence_adapter
+  end
+
+
   defp configure_redis_with(conf) do
     Mix.Config.persist(fun_with_flags: [redis: conf])
     assert ^conf = Application.get_env(:fun_with_flags, :redis)
