@@ -47,8 +47,14 @@ defmodule FunWithFlags.Config do
   end
 
 
+  # Defaults to FunWithFlags.Store.Persistent.Redis
+  #
   def persistence_adapter do
-    FunWithFlags.Store.Persistent.Redis
+    Application.get_env(
+      :fun_with_flags,
+      :persistence_adapter,
+      FunWithFlags.Store.Persistent.Redis
+    )
   end
 
   # Defaults to true for the Redis adapters
