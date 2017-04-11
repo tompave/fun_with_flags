@@ -12,15 +12,21 @@ defmodule FunWithFlags.Application do
   defp children do
     import Supervisor.Spec, warn: false
 
-    if FunWithFlags.Config.cache? do
+    if with_cache_bust_notifications?() do
       [
         supervisor(FunWithFlags.Store.Supervisor, [], restart: :permanent),
-        worker(FunWithFlags.Notifications, [], restart: :permanent),
+        worker(FunWithFlags.Config.notifications_adapter(), [], restart: :permanent),
       ]
     else
       [
         supervisor(FunWithFlags.Store.Supervisor, [], restart: :permanent),
       ]
     end
+  end
+
+
+  defp with_cache_bust_notifications? do
+    FunWithFlags.Config.cache? &&
+      FunWithFlags.Config.change_notifications_supported?
   end
 end
