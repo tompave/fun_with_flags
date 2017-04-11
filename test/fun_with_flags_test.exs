@@ -520,4 +520,87 @@ defmodule FunWithFlagsTest do
       end
     end
   end
+
+
+  describe "all_flags() returns the tuple {:ok, list} with all the flags" do
+    alias FunWithFlags.{Flag, Gate}
+    test "with no saved flags it returns an empty list" do
+      clear_redis_test_db()
+      assert {:ok, []} = FunWithFlags.all_flags()
+    end
+
+    test "with saved flags it returns a list of flags" do
+      clear_redis_test_db()
+
+      name1 = unique_atom()
+      FunWithFlags.enable(name1)
+
+      name2 = unique_atom()
+      FunWithFlags.disable(name2)
+
+      name3 = unique_atom()
+      actor = %{actor_id: "I'm an actor"}
+      FunWithFlags.enable(name3, for_actor: actor)
+
+      {:ok, result} = FunWithFlags.all_flags()
+      assert 3 = length(result)
+
+      for flag <- [
+        %Flag{name: name1, gates: [Gate.new(:boolean, true)]},
+        %Flag{name: name2, gates: [Gate.new(:boolean, false)]},
+        %Flag{name: name3, gates: [Gate.new(:actor, actor, true)]}
+      ] do
+        assert flag in result
+      end
+
+      FunWithFlags.clear(name1)
+
+      {:ok, result} = FunWithFlags.all_flags()
+      assert 2 = length(result)
+
+      for flag <- [
+        %Flag{name: name2, gates: [Gate.new(:boolean, false)]},
+        %Flag{name: name3, gates: [Gate.new(:actor, actor, true)]}
+      ] do
+        assert flag in result
+      end
+    end
+  end
+
+
+  describe "all_flag_names() returns the tuple {:ok, list}, with the names of all the flags" do
+    test "with no saved flags it returns an empty list" do
+      clear_redis_test_db()
+      assert {:ok, []} = FunWithFlags.all_flag_names()
+    end
+
+    test "with saved flags it returns a list of flag names" do
+      clear_redis_test_db()
+
+      name1 = unique_atom()
+      FunWithFlags.enable(name1)
+
+      name2 = unique_atom()
+      FunWithFlags.disable(name2)
+
+      name3 = unique_atom()
+      FunWithFlags.enable(name3, for_actor: %{hello: "I'm an actor"})
+
+      {:ok, result} = FunWithFlags.all_flag_names()
+      assert 3 = length(result)
+
+      for name <- [name1, name2, name3] do
+        assert name in result
+      end
+
+      FunWithFlags.clear(name1)
+
+      {:ok, result} = FunWithFlags.all_flag_names()
+      assert 2 = length(result)
+
+      for name <- [name2, name3] do
+        assert name in result
+      end
+    end
+  end
 end

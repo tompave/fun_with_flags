@@ -99,17 +99,21 @@ defmodule FunWithFlags.Store.Persistent.Redis do
 
 
   def all_flags do
-    {:ok, flag_names} = saved_flag_names()
-    Enum.map(flag_names, fn(name)->
-      {:ok, flag} = String.to_atom(name) |> get()
+    {:ok, flag_names} = all_flag_names()
+    flags = Enum.map(flag_names, fn(name)->
+      {:ok, flag} = get(name)
       flag
     end)
+    {:ok, flags}
   end
 
 
-  def saved_flag_names do
-    Redix.command(@conn, ["SMEMBERS", @flags_set])
+  def all_flag_names do
+    {:ok, strings} = Redix.command(@conn, ["SMEMBERS", @flags_set])
+    atoms = Enum.map(strings, &String.to_atom(&1))
+    {:ok, atoms}
   end
+
 
   defp publish_change(flag_name) do
     if Config.cache? do

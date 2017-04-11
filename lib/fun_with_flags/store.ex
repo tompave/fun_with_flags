@@ -57,6 +57,7 @@ defmodule FunWithFlags.Store do
 
 
   defdelegate all_flags(), to: @persistence
+  defdelegate all_flag_names(), to: @persistence
 
 
   defp cache_persistence_result(result) do

@@ -123,13 +123,13 @@ defmodule FunWithFlags.SimpleStoreTest do
   end
 
 
-  describe "all_flags() returns all the flags" do
+  describe "all_flags() returns the tuple {:ok, list} with all the flags" do
     test "with no saved flags it returns an empty list" do
       clear_redis_test_db()
-      assert [] = SimpleStore.all_flags()
+      assert {:ok, []} = SimpleStore.all_flags()
     end
 
-    test "with saved flags in returns a list of flags" do
+    test "with saved flags it returns a list of flags" do
       clear_redis_test_db()
 
       name1 = unique_atom()
@@ -150,7 +150,7 @@ defmodule FunWithFlags.SimpleStoreTest do
       g_3a = Gate.new(:boolean, true)
       SimpleStore.put(name3, g_3a)
 
-      result = SimpleStore.all_flags()
+      {:ok, result} = SimpleStore.all_flags()
       assert 3 = length(result)
 
       for flag <- [
@@ -159,6 +159,43 @@ defmodule FunWithFlags.SimpleStoreTest do
         %Flag{name: name3, gates: [g_3a]}
       ] do
         assert flag in result
+      end
+    end
+  end
+
+
+  describe "all_flag_names() returns the tuple {:ok, list}, with the names of all the flags" do
+    test "with no saved flags it returns an empty list" do
+      clear_redis_test_db()
+      assert {:ok, []} = SimpleStore.all_flag_names()
+    end
+
+    test "with saved flags it returns a list of flag names" do
+      clear_redis_test_db()
+
+      name1 = unique_atom()
+      g_1a = Gate.new(:boolean, false)
+      g_1b = Gate.new(:actor, "the actor", true)
+      g_1c = Gate.new(:group, :horses, true)
+      SimpleStore.put(name1, g_1a)
+      SimpleStore.put(name1, g_1b)
+      SimpleStore.put(name1, g_1c)
+
+      name2 = unique_atom()
+      g_2a = Gate.new(:boolean, false)
+      g_2b = Gate.new(:actor, "another actor", true)
+      SimpleStore.put(name2, g_2a)
+      SimpleStore.put(name2, g_2b)
+
+      name3 = unique_atom()
+      g_3a = Gate.new(:boolean, true)
+      SimpleStore.put(name3, g_3a)
+
+      {:ok, result} = SimpleStore.all_flag_names()
+      assert 3 = length(result)
+
+      for name <- [name1, name2, name3] do
+        assert name in result
       end
     end
   end

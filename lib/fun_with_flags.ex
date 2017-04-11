@@ -355,8 +355,26 @@ defmodule FunWithFlags do
   end
 
 
-  @doc false
-  @spec all_flags() :: [FunWithFlags.Flag.t]
+  @doc """
+  Returns a list of all flag names currently configured, as atoms.
+
+  This can be useful for debugging or for display purposes,
+  but it's not meant to be used at runtime. Undefined flags,
+  for example, will be considered disabled.
+  """
+  @spec all_flag_names() :: {:ok, [atom]} | {:ok, []}
+  defdelegate all_flag_names(), to: @store
+
+  @doc """
+  Returns a list of all the flags currently configured, as data structures.
+
+  This function is provided for debugging and to build more complex
+  functionality (e.g. it's used in the web GUI), but it is not meant to be
+  used at runtime to check if a flag is enabled.
+
+  To query the value of a flag, please use the `enabled?2` function instead.
+  """
+  @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]} | {:ok, []}
   defdelegate all_flags(), to: @store
 
 
