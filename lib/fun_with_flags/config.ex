@@ -47,6 +47,29 @@ defmodule FunWithFlags.Config do
   end
 
 
+  # Defaults to FunWithFlags.Store.Persistent.Redis
+  #
+  def persistence_adapter do
+    Application.get_env(
+      :fun_with_flags,
+      :persistence_adapter,
+      FunWithFlags.Store.Persistent.Redis
+    )
+  end
+
+  # Defaults to true for the Redis adapters
+  #
+  def change_notifications_supported? do
+    persistence_adapter().supports_change_notifications?
+  end
+
+  # Defaults to FunWithFlags.Notifications.Redis
+  #
+  def notifications_adapter do
+    persistence_adapter().change_notifications_listener()
+  end
+
+
   # I can't use Kernel.make_ref/0 because this needs to be
   # serializable to a string and sent via Redis.
   # Erlang References lose a lot of "uniqueness" when

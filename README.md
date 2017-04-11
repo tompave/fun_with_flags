@@ -322,6 +322,13 @@ config :fun_with_flags, :redis,
   database: 0
 ```
 
+It's also possible to configure different persistence adapters (The default is the provided Redis adapter. There is no need to explicitly set this option):
+
+```elixir
+config :fun_with_flags, :persistence_adapter, FunWithFlags.Store.Persistent.MySpecialAdapter
+```
+
+No official support for other adapters is planned at the moment, but the internal API allows the development of 3rd party adapters.
 
 
 ## Installation

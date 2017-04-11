@@ -16,11 +16,11 @@ defmodule FunWithFlags.Store.Supervisor do
     if Config.cache? do
       [
         worker(FunWithFlags.Store.Cache, [], restart: :permanent),
-        FunWithFlags.Store.Persistent.worker_spec,
+        FunWithFlags.Store.Persistent.adapter.worker_spec,
       ]
     else
       [
-        FunWithFlags.Store.Persistent.worker_spec,
+        FunWithFlags.Store.Persistent.adapter.worker_spec,
       ]
     end
   end
