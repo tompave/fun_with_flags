@@ -16,6 +16,9 @@ defmodule FunWithFlags.Store.Persistent.Redis do
     worker(Redix, [Config.redis_config, @conn_options], [restart: :permanent])
   end
 
+  def supports_change_notifications?, do: true
+  def change_notifications_listener, do: NotifiRedis
+
 
   def get(flag_name) do
     case Redix.command(@conn, ["HGETALL", format(flag_name)]) do

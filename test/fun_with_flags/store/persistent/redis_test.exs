@@ -12,6 +12,14 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     :ok
   end
 
+  test "supports_change_notifications? returns true" do
+    assert PersiRedis.supports_change_notifications?
+  end
+
+  test "change_notifications_listener() returns the Redis Notifications handler" do
+    assert FunWithFlags.Notifications.Redis = PersiRedis.change_notifications_listener
+  end
+
 
   describe "put(flag_name, %Gate{})" do
     setup do
