@@ -14,6 +14,24 @@ FunWithFlags is an OTP application that provides a 2-level storage to save and r
 
 It stores flag information in Redis for persistence and syncronization across different nodes, but it also maintains a local cache in an ETS table for fast lookups. When flags are added or toggled on a node, the other nodes are notified via Redis PubSub and reload their local ETS caches.
 
+## Content
+
+* [Whats a feature flag](#whats-a-feature-flag)
+* [Usage](#usage)
+  - [Boolean Gate](#boolean-gate)
+  - [Actor Gate](#actor-gate)
+  - [Group Gate](#group-gate)
+  - [Clearing a feature flag's rules](#clearing-a-feature-flags-rules)
+* [Origin](#origin)
+* [So, caching, huh?](#so-caching-huh)
+* [Features](#features)
+  - [To do next](#to-do-next)
+* [Configuration](#configuration)
+  - [Alternative adapters](#alternative-adapters)
+* [Installation](#installation)
+* [Testing](#testing)
+* [Why not Distributed Erlang?](#why-not-distributed-erlang)
+
 ## What's a feature flag?
 
 Feature flags, or feature toggles, are boolean values associated to a name. They should be used to control whether some application feature is enabled or disabled, and they are meant to be modified at runtime while an application is running. This is usually done by the people who control the application.
@@ -299,6 +317,7 @@ A grab bag. I'll add more items as I get closer to a stable release.
 * Actor gates: enable or disable a flag for a specific data structure or primitive value.
 * Group gates: enable or disable a flag for a group, use your own logic to decide which data is in which group.
 * Ability to clear flag and gate data, to reset some rules.
+* Support for alternative persistence and notification adapters.
 
 ### To do next
 
@@ -321,6 +340,8 @@ config :fun_with_flags, :redis,
   port: 6379,
   database: 0
 ```
+
+### Alternative adapters
 
 It's also possible to configure different persistence adapters (The default is the provided Redis adapter. There is no need to explicitly set this option):
 
