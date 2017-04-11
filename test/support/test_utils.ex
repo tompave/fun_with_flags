@@ -1,6 +1,6 @@
 defmodule FunWithFlags.TestUtils do
   @test_db 5
-  @redis FunWithFlags.Store.Persistent
+  @redis FunWithFlags.Store.Persistent.Redis
 
   # Since the flags are saved on shared storage (ETS and
   # Redis), in order to keep the tests isolated _and_ async
@@ -23,6 +23,7 @@ defmodule FunWithFlags.TestUtils do
   def clear_redis_test_db do
     use_redis_test_db()
 
+    Redix.command!(@redis, ["DEL", "fun_with_flags"])
     Redix.command!(@redis, ["KEYS", "fun_with_flags:*"])
     |> delete_keys()
   end
@@ -30,7 +31,6 @@ defmodule FunWithFlags.TestUtils do
   defp delete_keys([]), do: 0
   defp delete_keys(keys) do
     Redix.command!(@redis, ["DEL" | keys])
-    Redix.command!(@redis, ["DEL", "fun_with_flags"])
   end
 
 

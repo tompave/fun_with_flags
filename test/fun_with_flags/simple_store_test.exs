@@ -180,17 +180,17 @@ defmodule FunWithFlags.SimpleStoreTest do
 
 
   describe "in case of Persistent store failure" do
-    alias FunWithFlags.Store.Persistent
+    alias FunWithFlags.Store.Persistent.Redis, as: PersiRedis
 
     test "it raises an error" do
       name = unique_atom()
 
-      with_mock(Persistent, [], get: fn(^name) -> {:error, "mocked error"} end) do
+      with_mock(PersiRedis, [], get: fn(^name) -> {:error, "mocked error"} end) do
         assert_raise RuntimeError, "Can't load feature flag", fn() ->
           SimpleStore.lookup(name)
         end
-        assert called(Persistent.get(name))
-        assert {:error, "mocked error"} = Persistent.get(name)
+        assert called(PersiRedis.get(name))
+        assert {:error, "mocked error"} = PersiRedis.get(name)
       end
     end
   end

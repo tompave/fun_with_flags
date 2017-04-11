@@ -1,6 +1,7 @@
-defmodule FunWithFlags.Notifications do
+defmodule FunWithFlags.Notifications.Redis do
   @moduledoc false
   use GenServer
+  require Logger
   alias FunWithFlags.{Config, Store}
 
   @conn :fun_with_flags_notifications
@@ -68,7 +69,6 @@ defmodule FunWithFlags.Notifications do
   # We react to it by validating the unique_id in the message.
   #
   def handle_info({:redix_pubsub, _from, :message, %{channel: @channel, payload: msg}}, unique_id) do
-    # IO.puts "Received PubSub message: #{inspect(msg)}"
     validate_message(msg, unique_id)
     {:noreply, unique_id}
   end
@@ -79,12 +79,13 @@ defmodule FunWithFlags.Notifications do
   # If it doesn't match, on the other hand, we need to reload it.
   #
   defp validate_message(msg, unique_id) do
-    # IO.puts "validating the message. My own id is: #{unique_id}"
     case String.split(msg, ":") do
       [^unique_id, _name] ->
-        # IO.puts "received my own message, doing nothing"
+        # received my own message, doing nothing
         nil
       [_id, name] ->
+        # received message from another node, reload the flag
+        Logger.debug("FunWithFlags: received change notifiation for flag '#{name}'")
         Task.start(Store, :reload, [String.to_atom(name)])
       _ ->
         # invalid message, ignore

@@ -1,25 +1,25 @@
-defmodule FunWithFlags.NotificationsTest do
+defmodule FunWithFlags.Notifications.RedisTest do
   use ExUnit.Case, async: false
   import FunWithFlags.TestUtils
   import Mock
 
-  alias FunWithFlags.Notifications
+  alias FunWithFlags.Notifications.Redis, as: NotifiRedis
 
 
   describe "unique_id()" do
     test "it returns a string" do
-      assert is_binary(Notifications.unique_id())
+      assert is_binary(NotifiRedis.unique_id())
     end
 
     test "it always returns the same ID for the GenServer" do
-      assert Notifications.unique_id() == Notifications.unique_id()
+      assert NotifiRedis.unique_id() == NotifiRedis.unique_id()
     end
 
     test "the ID changes if the GenServer restarts" do
-      a = Notifications.unique_id()
-      kill_process(Notifications)
+      a = NotifiRedis.unique_id()
+      kill_process(NotifiRedis)
       :timer.sleep(1)
-      refute a == Notifications.unique_id()
+      refute a == NotifiRedis.unique_id()
     end
   end
 
@@ -28,7 +28,7 @@ defmodule FunWithFlags.NotificationsTest do
     test "it returns a 2 item list" do
       flag_name = unique_atom()
 
-      output = Notifications.payload_for(flag_name)
+      output = NotifiRedis.payload_for(flag_name)
       assert is_list(output)
       assert 2 == length(output)
     end
@@ -36,10 +36,10 @@ defmodule FunWithFlags.NotificationsTest do
     test "the first one is the channel name, the second one is the flag
           name plus the unique_id for the GenServer" do
       flag_name = unique_atom()
-      u_id = Notifications.unique_id()
+      u_id = NotifiRedis.unique_id()
       channel = "fun_with_flags_changes"
 
-      assert [^channel, << blob :: binary >>] = Notifications.payload_for(flag_name)
+      assert [^channel, << blob :: binary >>] = NotifiRedis.payload_for(flag_name)
       assert [^u_id, string] = String.split(blob, ":")
       assert ^flag_name = String.to_atom(string)
     end
@@ -47,19 +47,19 @@ defmodule FunWithFlags.NotificationsTest do
 
 
   test "it receives messages if something is published on Redis" do
-    alias FunWithFlags.Store.Persistent
+    alias FunWithFlags.Store.Persistent.Redis, as: PersiRedis
 
-    u_id = Notifications.unique_id()
+    u_id = NotifiRedis.unique_id()
     channel = "fun_with_flags_changes"
     pubsub_receiver_pid = GenServer.whereis(:fun_with_flags_notifications)
     message = "foobar"
 
-    with_mock(Notifications, [:passthrough], []) do
-      Redix.command(Persistent, ["PUBLISH", channel, message])
+    with_mock(NotifiRedis, [:passthrough], []) do
+      Redix.command(PersiRedis, ["PUBLISH", channel, message])
       :timer.sleep(1)
 
       assert called(
-        Notifications.handle_info(
+        NotifiRedis.handle_info(
           {
             :redix_pubsub,
             pubsub_receiver_pid,
@@ -74,7 +74,7 @@ defmodule FunWithFlags.NotificationsTest do
 
 
   describe "integration: message handling" do
-    alias FunWithFlags.Store.Persistent
+    alias FunWithFlags.Store.Persistent.Redis, as: PersiRedis
     alias FunWithFlags.{Store, Config}
 
 
@@ -82,7 +82,7 @@ defmodule FunWithFlags.NotificationsTest do
       channel = "fun_with_flags_changes"
       
       with_mock(Store, [:passthrough], []) do
-        Redix.command(Persistent, ["PUBLISH", channel, "foobar"])
+        Redix.command(PersiRedis, ["PUBLISH", channel, "foobar"])
         :timer.sleep(30)
         refute called(Store.reload(:foobar))
       end
@@ -90,12 +90,12 @@ defmodule FunWithFlags.NotificationsTest do
 
 
     test "when the message comes from this same process, it is ignored" do
-      u_id = Notifications.unique_id()
+      u_id = NotifiRedis.unique_id()
       channel = "fun_with_flags_changes"
       message = "#{u_id}:foobar"
       
       with_mock(Store, [:passthrough], []) do
-        Redix.command(Persistent, ["PUBLISH", channel, message])
+        Redix.command(PersiRedis, ["PUBLISH", channel, message])
         :timer.sleep(30)
         refute called(Store.reload(:foobar))
       end
@@ -104,13 +104,13 @@ defmodule FunWithFlags.NotificationsTest do
 
     test "when the message comes from another process, it reloads the flag" do
       another_u_id = Config.build_unique_id()
-      refute another_u_id == Notifications.unique_id()
+      refute another_u_id == NotifiRedis.unique_id()
 
       channel = "fun_with_flags_changes"
       message = "#{another_u_id}:foobar"
       
       with_mock(Store, [:passthrough], []) do
-        Redix.command(Persistent, ["PUBLISH", channel, message])
+        Redix.command(PersiRedis, ["PUBLISH", channel, message])
         :timer.sleep(30)
         assert called(Store.reload(:foobar))
       end
@@ -119,7 +119,8 @@ defmodule FunWithFlags.NotificationsTest do
 
 
   describe "integration: side effects" do
-    alias FunWithFlags.Store.{Cache,Persistent}
+    alias FunWithFlags.Store.Cache
+    alias FunWithFlags.Store.Persistent.Redis, as: PersiRedis
     alias FunWithFlags.{Store, Config, Gate, Flag}
 
     setup do
@@ -130,11 +131,11 @@ defmodule FunWithFlags.NotificationsTest do
       gate2 = %Gate{type: :boolean, enabled: false}
       cached_flag = %Flag{name: name, gates: [gate2]}
 
-      {:ok, ^stored_flag} = Persistent.put(name, gate)
+      {:ok, ^stored_flag} = PersiRedis.put(name, gate)
       :timer.sleep(10)
       {:ok, ^cached_flag} = Cache.put(cached_flag)
 
-      assert {:ok, ^stored_flag} = Persistent.get(name)
+      assert {:ok, ^stored_flag} = PersiRedis.get(name)
       assert {:ok, ^cached_flag} = Cache.get(name)
 
       refute match? ^stored_flag, cached_flag
@@ -146,18 +147,18 @@ defmodule FunWithFlags.NotificationsTest do
     test "when the message is not valid, the Cached value is not changed", %{name: name, cached_flag: cached_flag} do
       channel = "fun_with_flags_changes"
       
-      Redix.command(Persistent, ["PUBLISH", channel, to_string(name)])
+      Redix.command(PersiRedis, ["PUBLISH", channel, to_string(name)])
       :timer.sleep(30)
       assert {:ok, ^cached_flag} = Cache.get(name)
     end
 
 
     test "when the message comes from this same process, the Cached value is not changed", %{name: name, cached_flag: cached_flag} do
-      u_id = Notifications.unique_id()
+      u_id = NotifiRedis.unique_id()
       channel = "fun_with_flags_changes"
       message = "#{u_id}:#{to_string(name)}"
       
-      Redix.command(Persistent, ["PUBLISH", channel, message])
+      Redix.command(PersiRedis, ["PUBLISH", channel, message])
       :timer.sleep(30)
       assert {:ok, ^cached_flag} = Cache.get(name)
     end
@@ -165,13 +166,13 @@ defmodule FunWithFlags.NotificationsTest do
 
     test "when the message comes from another process, the Cached value is reloaded", %{name: name, cached_flag: cached_flag, stored_flag: stored_flag} do
       another_u_id = Config.build_unique_id()
-      refute another_u_id == Notifications.unique_id()
+      refute another_u_id == NotifiRedis.unique_id()
 
       channel = "fun_with_flags_changes"
       message = "#{another_u_id}:#{to_string(name)}"
       
       assert {:ok, ^cached_flag} = Cache.get(name)
-      Redix.command(Persistent, ["PUBLISH", channel, message])
+      Redix.command(PersiRedis, ["PUBLISH", channel, message])
       :timer.sleep(30)
       assert {:ok, ^stored_flag} = Cache.get(name)
     end

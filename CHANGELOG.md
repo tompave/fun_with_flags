@@ -1,5 +1,10 @@
 # Changelog
 
+## unreleased
+
+* Added proper log statements via the Elixir `Logger`. Setting the log level to `debug` will print cache busting info, for example.
+* Extracted the private persistence and notifications modules into a redis-specific namespace. Added a config option to customize the adapters on startup, and an internal API that allows to develop other adapters to use alternative persistence and notification layers. The persistence adapters are responsible for declaring their own notifications module (if any). The provided default ones keep using Redis, and they work in tandem. At the moment, no official support for other adapters is planned, `redix` stays as a dependency.
+
 ## v0.6.0
 
 New features:

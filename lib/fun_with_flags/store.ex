@@ -1,7 +1,9 @@
 defmodule FunWithFlags.Store do
   @moduledoc false
 
-  alias FunWithFlags.Store.{Cache, Persistent}
+  require Logger
+  alias FunWithFlags.Store.Cache
+  @persistence FunWithFlags.Store.Persistent.adapter
 
 
   def lookup(flag_name) do
@@ -9,51 +11,52 @@ defmodule FunWithFlags.Store do
       {:ok, flag} ->
         {:ok, flag}
       {:miss, reason, stale_value_or_nil} ->
-        case Persistent.get(flag_name) do
+        case @persistence.get(flag_name) do
           {:ok, flag} ->
             Cache.put(flag) 
             {:ok, flag}
           {:error, _reason} ->
-            try_to_use_the_cached_value(reason, stale_value_or_nil)
+            try_to_use_the_cached_value(reason, stale_value_or_nil, flag_name)
         end
     end
   end
 
 
-  defp try_to_use_the_cached_value(:expired, value) do
+  defp try_to_use_the_cached_value(:expired, value, flag_name) do
+    Logger.warn "FunWithFlags: coulnd't load flag '#{flag_name}' from Redis, falling back to stale cached value from ETS"
     {:ok, value}
   end
-  defp try_to_use_the_cached_value(_, _) do
-    raise "Can't load feature flag"
+  defp try_to_use_the_cached_value(_, _, flag_name) do
+    raise "Can't load feature flag '#{flag_name}' from neither Redis nor the cache"
   end
 
 
   def put(flag_name, gate) do
-    Persistent.put(flag_name, gate)
+    @persistence.put(flag_name, gate)
     |> cache_persistence_result()
   end
 
 
   def delete(flag_name, gate) do
-    Persistent.delete(flag_name, gate)
+    @persistence.delete(flag_name, gate)
     |> cache_persistence_result()
   end
 
 
   def delete(flag_name) do
-    Persistent.delete(flag_name)
+    @persistence.delete(flag_name)
     |> cache_persistence_result()
   end
 
 
   def reload(flag_name) do
-    # IO.puts "reloading #{flag_name}"
-    Persistent.get(flag_name)
+    Logger.debug("FunWithFlags: reloading cached flag '#{flag_name}' from Redis")
+    @persistence.get(flag_name)
     |> cache_persistence_result()
   end
 
 
-  defdelegate all_flags(), to: Persistent
+  defdelegate all_flags(), to: @persistence
 
 
   defp cache_persistence_result(result) do
