@@ -1,5 +1,9 @@
 # Changelog
 
+## unreleased
+
+* Added proper log statements via the Elixir `Logger`. Setting the log level to `debug` will print cache busting info, for example.
+
 ## v0.6.0
 
 New features:
