@@ -1,7 +1,8 @@
 defmodule FunWithFlags.Store.Persistent.Redis do
   @moduledoc false
 
-  alias FunWithFlags.{Config, Notifications, Flag, Gate}
+  alias FunWithFlags.{Config, Flag, Gate}
+  alias FunWithFlags.Notifications.Redis, as: NotifiRedis
   alias FunWithFlags.Store.Serializer
 
   @conn __MODULE__
@@ -110,7 +111,7 @@ defmodule FunWithFlags.Store.Persistent.Redis do
   defp publish_change(flag_name) do
     if Config.cache? do
       Task.start fn() ->
-        Redix.command(@conn, ["PUBLISH" | Notifications.payload_for(flag_name)])
+        Redix.command(@conn, ["PUBLISH" | NotifiRedis.payload_for(flag_name)])
       end
     end
   end

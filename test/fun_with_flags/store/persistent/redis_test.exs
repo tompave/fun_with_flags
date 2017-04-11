@@ -4,7 +4,8 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
   import Mock
 
   alias FunWithFlags.Store.Persistent.Redis, as: PersiRedis
-  alias FunWithFlags.{Config, Notifications, Flag, Gate}
+  alias FunWithFlags.{Config, Flag, Gate}
+  alias FunWithFlags.Notifications.Redis, as: NotifiRedis
 
   setup_all do
     on_exit(__MODULE__, fn() -> clear_redis_test_db() end)
@@ -57,15 +58,15 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     test "when the cache is enabled, put() will publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
       assert true == Config.cache?
 
-      u_id = Notifications.unique_id()
+      u_id = NotifiRedis.unique_id()
 
       with_mocks([
-        {Notifications, [:passthrough], []},
+        {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = PersiRedis.put(name, gate)
         :timer.sleep(10)
-        assert called Notifications.payload_for(name)
+        assert called NotifiRedis.payload_for(name)
 
         assert called(
           Redix.command(
@@ -80,7 +81,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     test "when the cache is enabled, put() will cause other subscribers to receive a Redis notification", %{name: name, gate: gate, flag: flag} do
       assert true == Config.cache?
       channel = "fun_with_flags_changes"
-      u_id = Notifications.unique_id()
+      u_id = NotifiRedis.unique_id()
 
       # Subscribe to the notifications
 
@@ -120,12 +121,12 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     test "when the cache is NOT enabled, put() will NOT publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
       with_mocks([
         {Config, [], [cache?: fn() -> false end]},
-        {Notifications, [:passthrough], []},
+        {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = PersiRedis.put(name, gate)
         :timer.sleep(10)
-        refute called Notifications.payload_for(name)
+        refute called NotifiRedis.payload_for(name)
 
         refute called(
           Redix.command(
@@ -198,15 +199,15 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     test "when the cache is enabled, delete(flag_name, gate) will publish a notification to Redis", %{name: name, group_gate: group_gate} do
       assert true == Config.cache?
 
-      u_id = Notifications.unique_id()
+      u_id = NotifiRedis.unique_id()
 
       with_mocks([
-        {Notifications, [:passthrough], []},
+        {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiRedis.delete(name, group_gate)
         :timer.sleep(10)
-        assert called Notifications.payload_for(name)
+        assert called NotifiRedis.payload_for(name)
 
         assert called(
           Redix.command(
@@ -221,7 +222,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     test "when the cache is enabled, delete(flag_name, gate) will cause other subscribers to receive a Redis notification", %{name: name, group_gate: group_gate} do
       assert true == Config.cache?
       channel = "fun_with_flags_changes"
-      u_id = Notifications.unique_id()
+      u_id = NotifiRedis.unique_id()
 
       # Subscribe to the notifications
 
@@ -261,12 +262,12 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     test "when the cache is NOT enabled, delete(flag_name, gate) will NOT publish a notification to Redis", %{name: name, group_gate: group_gate} do
       with_mocks([
         {Config, [], [cache?: fn() -> false end]},
-        {Notifications, [:passthrough], []},
+        {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiRedis.delete(name, group_gate)
         :timer.sleep(10)
-        refute called Notifications.payload_for(name)
+        refute called NotifiRedis.payload_for(name)
 
         refute called(
           Redix.command(
@@ -325,15 +326,15 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     test "when the cache is enabled, delete(flag_name) will publish a notification to Redis", %{name: name} do
       assert true == Config.cache?
 
-      u_id = Notifications.unique_id()
+      u_id = NotifiRedis.unique_id()
 
       with_mocks([
-        {Notifications, [:passthrough], []},
+        {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name, gates: []}} = PersiRedis.delete(name)
         :timer.sleep(10)
-        assert called Notifications.payload_for(name)
+        assert called NotifiRedis.payload_for(name)
 
         assert called(
           Redix.command(
@@ -348,7 +349,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     test "when the cache is enabled, delete(flag_name) will cause other subscribers to receive a Redis notification", %{name: name} do
       assert true == Config.cache?
       channel = "fun_with_flags_changes"
-      u_id = Notifications.unique_id()
+      u_id = NotifiRedis.unique_id()
 
       # Subscribe to the notifications
 
@@ -388,12 +389,12 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     test "when the cache is NOT enabled, delete(flag_name) will NOT publish a notification to Redis", %{name: name} do
       with_mocks([
         {Config, [], [cache?: fn() -> false end]},
-        {Notifications, [:passthrough], []},
+        {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name, gates: []}} = PersiRedis.delete(name)
         :timer.sleep(10)
-        refute called Notifications.payload_for(name)
+        refute called NotifiRedis.payload_for(name)
 
         refute called(
           Redix.command(
