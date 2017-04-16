@@ -64,6 +64,12 @@ defmodule FunWithFlags.Notifications.Redis do
     {:noreply, unique_id}
   end
 
+  def handle_info({:redix_pubsub, _from, :disconnected, %{reason: reason}}, unique_id) do
+    Logger.error("FunWithFlags: Redis pub-sub connection interrupted, reason: '#{inspect(reason)}'.")
+    {:noreply, unique_id}
+  end
+
+
   # 1/2
   # Another node has updated a flag and published an event.
   # We react to it by validating the unique_id in the message.
