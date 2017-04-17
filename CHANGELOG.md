@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.1
+
+Bug fixes:
+
+* Resolved an issue with the PubSub connection process that would crash the entire supervision tree in case of abrupt disconnection from Redis. Ops!
+
 ## v0.7.0
 
 New Features:
