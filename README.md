@@ -16,7 +16,7 @@ It stores flag information in Redis for persistence and syncronization across di
 
 ## Content
 
-* [Whats a feature flag](#whats-a-feature-flag)
+* [What's a feature flag](#whats-a-feature-flag)
 * [Usage](#usage)
   - [Boolean Gate](#boolean-gate)
   - [Actor Gate](#actor-gate)
@@ -361,6 +361,8 @@ def deps do
   [{:fun_with_flags, "~> 0.7.1"}]
 end
 ```
+
+Since it depends on Elixir `1.4`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
 
 ## Testing
 
