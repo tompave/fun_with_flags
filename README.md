@@ -323,11 +323,13 @@ A grab bag. I'll add more items as I get closer to a stable release.
 * Group gates: enable or disable a flag for a group, use your own logic to decide which data is in which group.
 * Ability to clear flag and gate data, to reset some rules.
 * Support for alternative persistence and notification adapters.
+* A web GUI, as a plug, available in a separate optional package.
 
 ### To do next
 
-* Add a web GUI, as a plug, ideally in another package.
 * Add some optional randomness to the TTL, so that Redis doesn't get hammered at constant intervals after a server restart.
+* % of actors gate.
+* % of time gate.
 
 
 ## Configuration
