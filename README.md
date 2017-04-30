@@ -10,7 +10,7 @@ This readme refers to the `master` branch. For the latest version released on He
 
 ---
 
-FunWithFlags is an OTP application that provides a 2-level storage to save and retrieve feature flags and an Elixir API to toggle and query them.
+FunWithFlags is an OTP application that provides a 2-level storage to save and retrieve feature flags, an Elixir API to toggle and query them, and a [web dashboard](#web-dashboard) as control panel.
 
 It stores flag information in Redis for persistence and syncronization across different nodes, but it also maintains a local cache in an ETS table for fast lookups. When flags are added or toggled on a node, the other nodes are notified via Redis PubSub and reload their local ETS caches.
 
@@ -22,6 +22,7 @@ It stores flag information in Redis for persistence and syncronization across di
   - [Actor Gate](#actor-gate)
   - [Group Gate](#group-gate)
   - [Clearing a feature flag's rules](#clearing-a-feature-flags-rules)
+* [Web Dashboard](#web-dashboard)
 * [Origin](#origin)
 * [So, caching, huh?](#so-caching-huh)
 * [Features](#features)
@@ -266,6 +267,10 @@ false
 FunWithFlags.enabled?(:wands, for: dudley)
 false
 ```
+
+## Web Dashboard
+
+An optional extension of this library is [`FunWithFlags.UI`](https://github.com/tompave/fun_with_flags_ui), a web graphical control panel. It's a Plug, so it can be embedded in a host Phoenix or Plug application or served standalone.
 
 
 ## Origin
