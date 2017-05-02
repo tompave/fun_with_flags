@@ -397,7 +397,7 @@ Another reason is that Redis is already a dependency for data persistence across
 
 Also, a lot of people approaching Elixir come from a Rails background, and in this case my priority is to make this library work on setups that are familiar to Rails developers. The goal is to facilitate the adoption of Elixir and Phoenix by growing a familiar ecosystem.
 
-One of the reasons why Rails has become popular is its ease of use and deplployment. Of course it hasn't always been like that, and at the beginning it required complex setups with Capistrano, Mongrels and reverse proxys. In the meantime, however, the ecosystem has matured and PaaS have become a thing. Some of today's most popular frameworks, too, have been built to leverage the ease of deployment provided by PaaS vendors.
+One of the reasons why Rails has become popular is its ease of use and deployment. Of course it hasn't always been like that, and at the beginning it required complex setups with Capistrano, Mongrels and reverse proxys. In the meantime, however, the ecosystem has matured and PaaS have become a thing. Some of today's most popular frameworks, too, have been built to leverage the ease of deployment provided by PaaS vendors.
 
 I have a feeling that the adoption of Phoenix will grow faster if the ecosystem supports the techniques that developers are already familiar with. Distributed Erlang can be seen as the next level of deployment and setup.
 
