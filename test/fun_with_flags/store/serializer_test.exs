@@ -3,7 +3,7 @@ defmodule FunWithFlags.Store.SerializerTest do
 
   alias FunWithFlags.Flag
   alias FunWithFlags.Gate
-  alias FunWithFlags.Store.Serializer
+  alias FunWithFlags.Store.Serializer.Redis, as: Serializer
 
   describe "to_redis(gate) returns a List ready to be saved in Redis" do
     test "with a boolean gate" do
