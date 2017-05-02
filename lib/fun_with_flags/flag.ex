@@ -13,16 +13,6 @@ defmodule FunWithFlags.Flag do
   end
 
 
-  def from_redis(name, []), do: new(name, [])
-  def from_redis(name, list) when is_list(list) do
-    gates =
-      list
-      |> Enum.chunk(2)
-      |> Enum.map(&Gate.from_redis/1)
-    new(name, gates)
-  end
-
-
   @spec enabled?(t, options) :: boolean
   def enabled?(flag, options \\ [])
 

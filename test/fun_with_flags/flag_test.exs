@@ -10,48 +10,6 @@ defmodule FunWithFlags.FlagTest do
   end
 
 
-  describe "from_redis(name, [gate, data])" do
-    test "with empty data it returns an empty flag" do
-      assert %Flag{name: :kiwi, gates: []} = Flag.from_redis(:kiwi, [])
-    end
-
-    test "with boolean gate data it returns a simple boolean flag" do
-      assert(
-        %Flag{name: :kiwi, gates: [%Gate{type: :boolean, enabled: true}]} =
-          Flag.from_redis(:kiwi, ["boolean", "true"])
-      )
-
-      assert(
-        %Flag{name: :kiwi, gates: [%Gate{type: :boolean, enabled: false}]} =
-          Flag.from_redis(:kiwi, ["boolean", "false"])
-      )
-    end
-
-    test "with more than one gate it returns a composite flag" do
-      flag = %Flag{name: :peach, gates: [
-        %Gate{type: :boolean, enabled: true},
-        %Gate{type: :actor, for: "user:123", enabled: false},
-      ]}
-      assert ^flag = Flag.from_redis(:peach, ["boolean", "true", "actor/user:123", "false"])
-
-      flag = %Flag{name: :apricot, gates: [
-        %Gate{type: :actor, for: "string:albicocca", enabled: true},
-        %Gate{type: :boolean, enabled: false},
-        %Gate{type: :actor, for: "user:123", enabled: false},
-        %Gate{type: :group, for: :penguins, enabled: true},
-      ]}
-
-      raw_redis_data = [
-        "actor/string:albicocca", "true",
-        "boolean", "false",
-        "actor/user:123", "false",
-        "group/penguins", "true"
-      ]
-      assert ^flag = Flag.from_redis(:apricot, raw_redis_data)
-    end
-  end
-
-
   describe "enabled?(flag) - only flag parameter, no options" do
     test "it returns true if the flag has a boolean value = true" do
       flag = %Flag{name: :banana, gates: [Gate.new(:boolean, true)]}
