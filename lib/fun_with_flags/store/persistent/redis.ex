@@ -3,7 +3,7 @@ defmodule FunWithFlags.Store.Persistent.Redis do
 
   alias FunWithFlags.{Config, Flag, Gate}
   alias FunWithFlags.Notifications.Redis, as: NotifiRedis
-  alias FunWithFlags.Store.Serializer
+  alias FunWithFlags.Store.Serializer.Redis, as: Serializer
 
   @conn __MODULE__
   @conn_options [name: @conn, sync_connect: false]

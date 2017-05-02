@@ -1,4 +1,4 @@
-defmodule FunWithFlags.Store.Serializer do
+defmodule FunWithFlags.Store.Serializer.Redis do
   @moduledoc false
   alias FunWithFlags.Gate
   alias FunWithFlags.Flag
