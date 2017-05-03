@@ -431,7 +431,7 @@ defmodule FunWithFlags.StoreTest do
       assert {:miss, :not_found, nil} = Cache.get(name)
 
       with_mock(PersiRedis, [], get: fn(^name) -> {:error, "mocked error"} end) do
-        assert_raise RuntimeError, "Can't load feature flag '#{name}' from neither Redis nor the cache", fn() ->
+        assert_raise RuntimeError, "Can't load feature flag '#{name}' from neither storage nor the cache", fn() ->
           Store.lookup(name)
         end
         assert called(PersiRedis.get(name))
