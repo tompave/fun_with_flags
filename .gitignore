@@ -21,3 +21,6 @@ erl_crash.dump
 
 # Redis db
 dump.rdb
+
+# swp files
+.*.swp
