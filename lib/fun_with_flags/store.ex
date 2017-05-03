@@ -23,11 +23,11 @@ defmodule FunWithFlags.Store do
 
 
   defp try_to_use_the_cached_value(:expired, value, flag_name) do
-    Logger.warn "FunWithFlags: coulnd't load flag '#{flag_name}' from Redis, falling back to stale cached value from ETS"
+    Logger.warn "FunWithFlags: coulnd't load flag '#{flag_name}' from storage, falling back to stale cached value from ETS"
     {:ok, value}
   end
   defp try_to_use_the_cached_value(_, _, flag_name) do
-    raise "Can't load feature flag '#{flag_name}' from neither Redis nor the cache"
+    raise "Can't load feature flag '#{flag_name}' from neither storage nor the cache"
   end
 
 
@@ -50,7 +50,7 @@ defmodule FunWithFlags.Store do
 
 
   def reload(flag_name) do
-    Logger.debug("FunWithFlags: reloading cached flag '#{flag_name}' from Redis")
+    Logger.debug("FunWithFlags: reloading cached flag '#{flag_name}' from storage ")
     @persistence.get(flag_name)
     |> cache_persistence_result()
   end
