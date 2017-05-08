@@ -23,7 +23,7 @@ defmodule FunWithFlags.Store do
 
 
   defp try_to_use_the_cached_value(:expired, value, flag_name) do
-    Logger.warn "FunWithFlags: coulnd't load flag '#{flag_name}' from storage, falling back to stale cached value from ETS"
+    Logger.warn "FunWithFlags: couldn't load flag '#{flag_name}' from storage, falling back to stale cached value from ETS"
     {:ok, value}
   end
   defp try_to_use_the_cached_value(_, _, flag_name) do
