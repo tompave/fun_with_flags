@@ -1,7 +1,7 @@
 defmodule FunWithFlags.Store.Persistent.Redis do
   @moduledoc false
 
-  alias FunWithFlags.{Config, Flag, Gate}
+  alias FunWithFlags.{Config, Gate}
   alias FunWithFlags.Notifications.Redis, as: NotifiRedis
   alias FunWithFlags.Store.Serializer.Redis, as: Serializer
 
