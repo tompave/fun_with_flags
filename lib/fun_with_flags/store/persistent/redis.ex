@@ -3,7 +3,7 @@ defmodule FunWithFlags.Store.Persistent.Redis do
 
   alias FunWithFlags.{Config, Flag, Gate}
   alias FunWithFlags.Notifications.Redis, as: NotifiRedis
-  alias FunWithFlags.Store.Serializer
+  alias FunWithFlags.Store.Serializer.Redis, as: Serializer
 
   @conn __MODULE__
   @conn_options [name: @conn, sync_connect: false]
@@ -22,7 +22,7 @@ defmodule FunWithFlags.Store.Persistent.Redis do
 
   def get(flag_name) do
     case Redix.command(@conn, ["HGETALL", format(flag_name)]) do
-      {:ok, data}   -> {:ok, Flag.from_redis(flag_name, data)}
+      {:ok, data}   -> {:ok, Serializer.flag_from_redis(flag_name, data)}
       {:error, why} -> {:error, redis_error(why)}
       _             -> {:error, :unknown}
     end

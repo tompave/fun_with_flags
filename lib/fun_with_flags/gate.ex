@@ -29,19 +29,6 @@ defmodule FunWithFlags.Gate do
   end
 
 
-  def from_redis(["boolean", enabled]) do
-    %__MODULE__{type: :boolean, for: nil, enabled: parse_bool(enabled)}
-  end
-
-  def from_redis(["actor/" <> actor_id, enabled]) do
-    %__MODULE__{type: :actor, for: actor_id, enabled: parse_bool(enabled)}
-  end
-
-  def from_redis(["group/" <> group_name, enabled]) do
-    %__MODULE__{type: :group, for: String.to_atom(group_name), enabled: parse_bool(enabled)}
-  end
-
-
   def boolean?(%__MODULE__{type: :boolean}), do: true
   def boolean?(%__MODULE__{type: _}),        do: false
 
@@ -78,7 +65,4 @@ defmodule FunWithFlags.Gate do
     end
   end
 
-
-  def parse_bool("true"), do: true
-  def parse_bool(_), do: false
 end

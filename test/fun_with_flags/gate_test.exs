@@ -39,24 +39,6 @@ defmodule FunWithFlags.GateTest do
   end
 
 
-  describe "from_redis() returns a Gate struct" do
-    test "with boolean data" do
-      assert %Gate{type: :boolean, for: nil, enabled: true} = Gate.from_redis(["boolean", "true"])
-      assert %Gate{type: :boolean, for: nil, enabled: false} = Gate.from_redis(["boolean", "false"])
-    end
-
-    test "with actor data" do
-      assert %Gate{type: :actor, for: "anything", enabled: true} = Gate.from_redis(["actor/anything", "true"])
-      assert %Gate{type: :actor, for: "really:123", enabled: false} = Gate.from_redis(["actor/really:123", "false"])
-    end
-
-    test "with group data" do
-      assert %Gate{type: :group, for: :fishes, enabled: true} = Gate.from_redis(["group/fishes", "true"])
-      assert %Gate{type: :group, for: :cetacea, enabled: false} = Gate.from_redis(["group/cetacea", "false"])
-    end
-  end
-
-
   describe "enabled?(gate), for boolean gates" do
     test "without extra arguments, it simply checks the value of the gate" do
       gate = %Gate{type: :boolean, for: nil, enabled: true}
