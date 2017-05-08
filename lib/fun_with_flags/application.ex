@@ -3,30 +3,25 @@ defmodule FunWithFlags.Application do
 
   use Application
 
+  import Supervisor.Spec
+
+  alias FunWithFlags.Store.Persistent
+  alias FunWithFlags.Config
+
   def start(_type, _args) do
     opts = [strategy: :one_for_one, name: FunWithFlags.Supervisor]
-    Supervisor.start_link(children(), opts)
+    IO.puts "Caching: #{inspect Config.cache?}"
+    IO.puts "Our children will be: #{inspect worker_spec_with_caching(Config.cache?)}"
+    Supervisor.start_link(worker_spec_with_caching(Config.cache?), opts)
   end
 
 
-  defp children do
-    import Supervisor.Spec, warn: false
-
-    if with_cache_bust_notifications?() do
-      [
-        supervisor(FunWithFlags.Store.Supervisor, [], restart: :permanent),
-        worker(FunWithFlags.Config.notifications_adapter(), [], restart: :permanent),
-      ]
-    else
-      [
-        supervisor(FunWithFlags.Store.Supervisor, [], restart: :permanent),
-      ]
-    end
+  defp worker_spec_with_caching(true) do
+    [ worker(FunWithFlags.Store.Cache, [], restart: :permanent) ]
+    ++ Persistent.adapter.worker_spec(:with_notifications)
   end
 
-
-  defp with_cache_bust_notifications? do
-    FunWithFlags.Config.cache? &&
-      FunWithFlags.Config.change_notifications_supported?
+  defp worker_spec_with_caching(_) do
+    Persistent.adapter.worker_spec(:without_notifications)
   end
 end

@@ -87,15 +87,6 @@ defmodule FunWithFlags.ConfigTest do
     assert FunWithFlags.Store.Persistent.Redis = Config.persistence_adapter
   end
 
-  test "change_notifications_supported?() returns a boolean (true)" do
-    assert Config.change_notifications_supported?
-  end
-
-  test "notifications_adapter() returns a module" do
-    assert FunWithFlags.Notifications.Redis = Config.notifications_adapter
-  end
-
-
   defp configure_redis_with(conf) do
     Mix.Config.persist(fun_with_flags: [redis: conf])
     assert ^conf = Application.get_env(:fun_with_flags, :redis)
