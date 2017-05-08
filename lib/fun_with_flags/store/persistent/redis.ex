@@ -22,7 +22,7 @@ defmodule FunWithFlags.Store.Persistent.Redis do
 
   def get(flag_name) do
     case Redix.command(@conn, ["HGETALL", format(flag_name)]) do
-      {:ok, data}   -> {:ok, Serializer.flag_from_redis(flag_name, data)}
+      {:ok, data}   -> {:ok, Serializer.deserialize_flag(flag_name, data)}
       {:error, why} -> {:error, redis_error(why)}
       _             -> {:error, :unknown}
     end
@@ -30,7 +30,7 @@ defmodule FunWithFlags.Store.Persistent.Redis do
 
 
   def put(flag_name, gate = %Gate{}) do
-    data = Serializer.to_redis(gate)
+    data = Serializer.serialize(gate)
 
     result = Redix.pipeline(@conn, [
       ["MULTI"],
@@ -58,7 +58,7 @@ defmodule FunWithFlags.Store.Persistent.Redis do
   #
   def delete(flag_name, gate = %Gate{}) do
     hash_key = format(flag_name)
-    [field_key, _] = Serializer.to_redis(gate)
+    [field_key, _] = Serializer.serialize(gate)
 
     case Redix.command(@conn, ["HDEL", hash_key, field_key]) do
       {:ok, _number} ->

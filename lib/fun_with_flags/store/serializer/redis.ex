@@ -5,39 +5,39 @@ defmodule FunWithFlags.Store.Serializer.Redis do
 
   @type redis_hash_pair :: [String.t]
 
-  @spec to_redis(FunWithFlags::Gate.t) :: redis_hash_pair
+  @spec serialize(FunWithFlags::Gate.t) :: redis_hash_pair
 
-  def to_redis(%Gate{type: :boolean, for: nil, enabled: enabled}) do
+  def serialize(%Gate{type: :boolean, for: nil, enabled: enabled}) do
     ["boolean", to_string(enabled)]
   end
 
-  def to_redis(%Gate{type: :actor, for: actor_id, enabled: enabled}) do
+  def serialize(%Gate{type: :actor, for: actor_id, enabled: enabled}) do
     ["actor/#{actor_id}", to_string(enabled)]
   end
 
-  def to_redis(%Gate{type: :group, for: group, enabled: enabled}) do
+  def serialize(%Gate{type: :group, for: group, enabled: enabled}) do
     ["group/#{group}", to_string(enabled)]
   end
 
 
-  def gate_from_redis(["boolean", enabled]) do
+  def deserialize_gate(["boolean", enabled]) do
     %Gate{type: :boolean, for: nil, enabled: parse_bool(enabled)}
   end
 
-  def gate_from_redis(["actor/" <> actor_id, enabled]) do
+  def deserialize_gate(["actor/" <> actor_id, enabled]) do
     %Gate{type: :actor, for: actor_id, enabled: parse_bool(enabled)}
   end
 
-  def gate_from_redis(["group/" <> group_name, enabled]) do
+  def deserialize_gate(["group/" <> group_name, enabled]) do
     %Gate{type: :group, for: String.to_atom(group_name), enabled: parse_bool(enabled)}
   end
 
-  def flag_from_redis(name, []), do: Flag.new(name, [])
-  def flag_from_redis(name, list) when is_list(list) do
+  def deserialize_flag(name, []), do: Flag.new(name, [])
+  def deserialize_flag(name, list) when is_list(list) do
     gates =
       list
       |> Enum.chunk(2)
-      |> Enum.map(&__MODULE__.gate_from_redis/1)
+      |> Enum.map(&deserialize_gate/1)
     Flag.new(name, gates)
   end
 
