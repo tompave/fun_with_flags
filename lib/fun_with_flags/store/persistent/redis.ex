@@ -1,6 +1,8 @@
 defmodule FunWithFlags.Store.Persistent.Redis do
   @moduledoc false
 
+  import Supervisor.Spec, only: [worker: 3]
+
   alias FunWithFlags.{Config, Gate}
   alias FunWithFlags.Notifications.Redis, as: NotifiRedis
   alias FunWithFlags.Store.Serializer.Redis, as: Serializer
@@ -9,7 +11,6 @@ defmodule FunWithFlags.Store.Persistent.Redis do
   @conn_options [name: @conn, sync_connect: false]
   @prefix "fun_with_flags:"
   @flags_set "fun_with_flags"
-
 
   def worker_spec(:with_notifications) do
     worker_spec(:without_notifications) ++ [ worker(NotifiRedis, [], restart: :permanent) ]
