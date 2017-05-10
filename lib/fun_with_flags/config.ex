@@ -1,7 +1,7 @@
 defmodule FunWithFlags.Config do
   @moduledoc false
   @default_redis_config [
-    host: 'localhost',
+    host: "localhost",
     port: 6379,
     database: 0,
   ]

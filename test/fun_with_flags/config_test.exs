@@ -14,7 +14,7 @@ defmodule FunWithFlags.ConfigTest do
   test "the redis configuration" do
     # without configuration, it returns the defaults
     ensure_no_redis_config()
-    defaults = [host: 'localhost', port: 6379, database: 5]
+    defaults = [host: "localhost", port: 6379, database: 5]
     assert ^defaults = Config.redis_config
 
     # when configured to use a URL string, it returns the string and ignores the defaults
