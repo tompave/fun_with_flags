@@ -3,11 +3,14 @@ elixir:
   - 1.4
 otp_release:
   - 19.2
+  - 19.1
+env:
+  - CACHE_ENABLED=true
+  - CACHE_ENABLED=false TEST_OPTS='--only integration'
 services:
   - redis-server
 script:
-  - mix test.integration_no_cache
-  - mix test
+  - mix test --force $TEST_OPTS
 notifications:
   email:
     on_success: never

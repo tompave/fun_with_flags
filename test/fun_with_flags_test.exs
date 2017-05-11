@@ -3,6 +3,7 @@ defmodule FunWithFlagsTest do
   import FunWithFlags.TestUtils
   import Mock
 
+  @moduletag :integration
   doctest FunWithFlags
 
   setup_all do

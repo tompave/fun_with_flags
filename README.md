@@ -385,7 +385,7 @@ Then:
 $ mix test.all
 ```
 
-The `test.all` task will run the default `mix test` task with `MIX_ENV=test`, and then will switch to a custom `MIX_ENV=test_no_cache` environment where the ETS cache is disabled and re-run the integration tests.
+The `test.all` task will first run the default `mix test` task, then re-run the integration tests only, with the ETS cache disabled.
 
 ## Why not Distributed Erlang?
 
