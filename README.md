@@ -346,14 +346,22 @@ config :fun_with_flags, :redis,
   host: 'localhost',
   port: 6379,
   database: 0
+
+# a URL string can be used instead
+config :fun_with_flags, :redis, "redis://locahost:6379/0"
+
+# this can be disabled if you are running on a single node and don't need to
+# sync different ETS caches. It won't have any effect if the cache is disabled.
+config :fun_with_flags, cache_bust_notifications: true
 ```
 
 ### Alternative adapters
 
-It's also possible to configure different persistence adapters (The default is the provided Redis adapter. There is no need to explicitly set this option):
+It's also possible to configure different persistence and notification adapters. The defaults are the provided Redis adapters. There is no need to explicitly set these options.
 
 ```elixir
-config :fun_with_flags, :persistence_adapter, MyCustomAdapter
+config :fun_with_flags, :persistence_adapter, MyCustomPersistenceModule
+config :fun_with_flags, :notifications_adapter, MyCustomNotificationsModule
 ```
 
 No official support for other adapters is planned at the moment, but the internal API allows the development of 3rd party adapters.
