@@ -1,3 +1,5 @@
+if Code.ensure_loaded?(Redix.PubSub) do
+
 defmodule FunWithFlags.Notifications.Redis do
   @moduledoc false
   use GenServer
@@ -118,3 +120,5 @@ defmodule FunWithFlags.Notifications.Redis do
 
   end
 end
+
+end # Code.ensure_loaded?
