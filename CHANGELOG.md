@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+* Internal changes to better support different adapters.
+* More rationale test setup.
+
 ## v0.7.1
 
 Bug fixes:
