@@ -12,6 +12,11 @@ defmodule FunWithFlags.Notifications.Redis do
   @conn_options [name: @conn, sync_connect: false]
   @channel "fun_with_flags_changes"
 
+  def worker_spec do
+    import Supervisor.Spec, only: [worker: 3]
+    worker(__MODULE__, [], [restart: :permanent])
+  end
+
 
   # Initialize the Genserver with a unique id (binary).
   # This id will stay with the genserver until it's terminated, and is

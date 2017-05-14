@@ -2,6 +2,7 @@ defmodule FunWithFlags.Application do
   @moduledoc false
 
   use Application
+  alias FunWithFlags.Config
 
   def start(_type, _args) do
     opts = [strategy: :one_for_one, name: FunWithFlags.Supervisor]
@@ -10,21 +11,28 @@ defmodule FunWithFlags.Application do
 
 
   defp children do
-    import Supervisor.Spec, warn: false
-
-    if with_cache_bust_notifications?() do
-      [
-        supervisor(FunWithFlags.Store.Supervisor, [], restart: :permanent),
-        worker(FunWithFlags.Config.notifications_adapter(), [], restart: :permanent),
-      ]
-    else
-      [
-        supervisor(FunWithFlags.Store.Supervisor, [], restart: :permanent),
-      ]
-    end
+    [
+      FunWithFlags.Store.Persistent.adapter.worker_spec,
+      cache_spec(),
+      notifications_spec(),
+    ]
+    |> Enum.reject(&(!&1))
   end
 
-  defp with_cache_bust_notifications? do
-    FunWithFlags.Config.change_notifications_enabled?
+  # Are the change notifications enabled AND can the notifications
+  # adapter be supervised?
+  #
+  defp notifications_spec do
+    Config.change_notifications_enabled? &&
+      Config.notifications_adapter.worker_spec
+  end
+
+
+  defp cache_spec do
+    import Supervisor.Spec, only: [worker: 3]
+
+    if Config.cache? do
+      worker(FunWithFlags.Store.Cache, [], restart: :permanent)
+    end
   end
 end
