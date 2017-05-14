@@ -11,6 +11,11 @@ defmodule FunWithFlags.Config do
     ttl: 900 # in seconds, 15 minutes
   ]
 
+  @default_notifications_config [
+    enabled: true,
+    adapter: FunWithFlags.Notifications.Redis
+  ]
+
   def redis_config do
     case Application.get_env(:fun_with_flags, :redis, []) do
       uri  when is_binary(uri) ->
@@ -56,8 +61,17 @@ defmodule FunWithFlags.Config do
   def persistence_adapter do
     Application.get_env(
       :fun_with_flags,
-      :persistence_adapter,
-      FunWithFlags.Store.Persistent.Redis
+      :persistence,
+      [adapter: FunWithFlags.Store.Persistent.Redis]
+    )
+    |> Keyword.get(:adapter)
+  end
+
+
+  defp notifications_config do
+    Keyword.merge(
+      @default_notifications_config,
+      Application.get_env(:fun_with_flags, :cache_bust_notifications, [])
     )
   end
 
@@ -65,11 +79,7 @@ defmodule FunWithFlags.Config do
   # Defaults to FunWithFlags.Notifications.Redis
   #
   def notifications_adapter do
-    Application.get_env(
-      :fun_with_flags,
-      :notifications_adapter,
-      FunWithFlags.Notifications.Redis
-    )
+    Keyword.get(notifications_config(), :adapter)
   end
 
 
@@ -80,7 +90,7 @@ defmodule FunWithFlags.Config do
   def change_notifications_enabled? do
     cache?() &&
     notifications_adapter() &&
-    Application.get_env(:fun_with_flags, :cache_bust_notifications, true)
+    Keyword.get(notifications_config(), :enabled)
   end
 
 

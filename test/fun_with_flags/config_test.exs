@@ -108,20 +108,20 @@ defmodule FunWithFlags.ConfigTest do
     end
 
     test "returns false if no notification adapter is configured" do
-      Mix.Config.persist(fun_with_flags: [notifications_adapter: nil])
+      Mix.Config.persist(fun_with_flags: [cache_bust_notifications: [adapter: nil]])
       refute Config.change_notifications_enabled?
 
       # cleanup
-      Mix.Config.persist(fun_with_flags: [notifications_adapter: FunWithFlags.Notifications.Redis])
+      reset_notifications_defaults()
       assert Config.change_notifications_enabled?
     end
 
     test "returns false if it's explicitly disabled" do
-      Mix.Config.persist(fun_with_flags: [cache_bust_notifications: false])
+      Mix.Config.persist(fun_with_flags: [cache_bust_notifications: [enabled: false]])
       refute Config.change_notifications_enabled?
 
       # cleanup
-      Mix.Config.persist(fun_with_flags: [cache_bust_notifications: true])
+      reset_notifications_defaults()
       assert Config.change_notifications_enabled?
     end
   end
@@ -137,5 +137,13 @@ defmodule FunWithFlags.ConfigTest do
 
   defp reset_cache_defaults do
     Mix.Config.persist(fun_with_flags: [cache: [enabled: true, ttl: 60]])
+  end
+
+  defp reset_notifications_defaults do
+    Mix.Config.persist(fun_with_flags: [
+      cache_bust_notifications: [
+        enabled: true, adapter: FunWithFlags.Notifications.Redis
+      ]
+    ])
   end
 end
