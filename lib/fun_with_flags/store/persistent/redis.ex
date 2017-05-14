@@ -2,7 +2,6 @@ defmodule FunWithFlags.Store.Persistent.Redis do
   @moduledoc false
 
   alias FunWithFlags.{Config, Gate}
-  alias FunWithFlags.Notifications.Redis, as: NotifiRedis
   alias FunWithFlags.Store.Serializer.Redis, as: Serializer
 
   @conn __MODULE__
@@ -15,9 +14,6 @@ defmodule FunWithFlags.Store.Persistent.Redis do
     import Supervisor.Spec, only: [worker: 3]
     worker(Redix, [Config.redis_config, @conn_options], [restart: :permanent])
   end
-
-  def supports_change_notifications?, do: true
-  def change_notifications_listener, do: NotifiRedis
 
 
   def get(flag_name) do
@@ -115,8 +111,8 @@ defmodule FunWithFlags.Store.Persistent.Redis do
 
 
   defp publish_change(flag_name) do
-    if Config.cache? do
-      NotifiRedis.publish_change(flag_name)
+    if Config.change_notifications_enabled? do
+      Config.notifications_adapter.publish_change(flag_name)
     end
   end
 

@@ -12,14 +12,6 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     :ok
   end
 
-  test "supports_change_notifications? returns true" do
-    assert PersiRedis.supports_change_notifications?
-  end
-
-  test "change_notifications_listener() returns the Redis Notifications handler" do
-    assert FunWithFlags.Notifications.Redis = PersiRedis.change_notifications_listener
-  end
-
 
   describe "put(flag_name, %Gate{})" do
     setup do
@@ -63,8 +55,8 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     end
 
 
-    test "when the cache is enabled, put() will publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
-      assert true == Config.cache?
+    test "when change notifications are enabled, put() will publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
+      assert Config.change_notifications_enabled?
 
       u_id = NotifiRedis.unique_id()
 
@@ -84,8 +76,8 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     end
 
 
-    test "when the cache is enabled, put() will cause other subscribers to receive a Redis notification", %{name: name, gate: gate, flag: flag} do
-      assert true == Config.cache?
+    test "when change notifications are enabled, put() will cause other subscribers to receive a Redis notification", %{name: name, gate: gate, flag: flag} do
+      assert Config.change_notifications_enabled?
       channel = "fun_with_flags_changes"
       u_id = NotifiRedis.unique_id()
 
@@ -124,9 +116,9 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     end
 
 
-    test "when the cache is NOT enabled, put() will NOT publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
+    test "when change notifications are NOT enabled, put() will NOT publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
       with_mocks([
-        {Config, [], [cache?: fn() -> false end]},
+        {Config, [], [change_notifications_enabled?: fn() -> false end]},
         {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
@@ -202,8 +194,8 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     end
 
 
-    test "when the cache is enabled, delete(flag_name, gate) will publish a notification to Redis", %{name: name, group_gate: group_gate} do
-      assert true == Config.cache?
+    test "when change notifications are enabled, delete(flag_name, gate) will publish a notification to Redis", %{name: name, group_gate: group_gate} do
+      assert Config.change_notifications_enabled?
 
       u_id = NotifiRedis.unique_id()
 
@@ -223,8 +215,8 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     end
 
 
-    test "when the cache is enabled, delete(flag_name, gate) will cause other subscribers to receive a Redis notification", %{name: name, group_gate: group_gate} do
-      assert true == Config.cache?
+    test "when change notifications are enabled, delete(flag_name, gate) will cause other subscribers to receive a Redis notification", %{name: name, group_gate: group_gate} do
+      assert Config.change_notifications_enabled?
       channel = "fun_with_flags_changes"
       u_id = NotifiRedis.unique_id()
 
@@ -263,9 +255,9 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     end
 
 
-    test "when the cache is NOT enabled, delete(flag_name, gate) will NOT publish a notification to Redis", %{name: name, group_gate: group_gate} do
+    test "when change notifications are NOT enabled, delete(flag_name, gate) will NOT publish a notification to Redis", %{name: name, group_gate: group_gate} do
       with_mocks([
-        {Config, [], [cache?: fn() -> false end]},
+        {Config, [], [change_notifications_enabled?: fn() -> false end]},
         {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
@@ -327,8 +319,8 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     end
 
 
-    test "when the cache is enabled, delete(flag_name) will publish a notification to Redis", %{name: name} do
-      assert true == Config.cache?
+    test "when change notifications are enabled, delete(flag_name) will publish a notification to Redis", %{name: name} do
+      assert Config.change_notifications_enabled?
 
       u_id = NotifiRedis.unique_id()
 
@@ -348,8 +340,8 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     end
 
 
-    test "when the cache is enabled, delete(flag_name) will cause other subscribers to receive a Redis notification", %{name: name} do
-      assert true == Config.cache?
+    test "when change notifications are enabled, delete(flag_name) will cause other subscribers to receive a Redis notification", %{name: name} do
+      assert Config.change_notifications_enabled?
       channel = "fun_with_flags_changes"
       u_id = NotifiRedis.unique_id()
 
@@ -388,9 +380,9 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     end
 
 
-    test "when the cache is NOT enabled, delete(flag_name) will NOT publish a notification to Redis", %{name: name} do
+    test "when change notifications are NOT enabled, delete(flag_name) will NOT publish a notification to Redis", %{name: name} do
       with_mocks([
-        {Config, [], [cache?: fn() -> false end]},
+        {Config, [], [change_notifications_enabled?: fn() -> false end]},
         {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do

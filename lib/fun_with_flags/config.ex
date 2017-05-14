@@ -25,6 +25,7 @@ defmodule FunWithFlags.Config do
     Keyword.get(ets_cache_config(), :enabled)
   end
 
+
   def cache_ttl do
     Keyword.get(ets_cache_config(), :ttl)
   end
@@ -38,6 +39,9 @@ defmodule FunWithFlags.Config do
   end
 
 
+  # If we're not using the cache, then don't bother with
+  # the 2-level logic in the default Store module.
+  #
   def store_module do
     if __MODULE__.cache? do
       FunWithFlags.Store
@@ -57,16 +61,26 @@ defmodule FunWithFlags.Config do
     )
   end
 
-  # Defaults to true for the Redis adapters
-  #
-  def change_notifications_supported? do
-    persistence_adapter().supports_change_notifications?
-  end
 
   # Defaults to FunWithFlags.Notifications.Redis
   #
   def notifications_adapter do
-    persistence_adapter().change_notifications_listener()
+    Application.get_env(
+      :fun_with_flags,
+      :notifications_adapter,
+      FunWithFlags.Notifications.Redis
+    )
+  end
+
+
+  # Should the application emir cache busting/syncing notifications?
+  # Defaults to false if we are not using a cache and if there is no
+  # notifications adapter configured. Else, it defaults to true.
+  #
+  def change_notifications_enabled? do
+    cache?() &&
+    notifications_adapter() &&
+    Application.get_env(:fun_with_flags, :cache_bust_notifications, true)
   end
 
 

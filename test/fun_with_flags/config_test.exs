@@ -87,14 +87,44 @@ defmodule FunWithFlags.ConfigTest do
     assert FunWithFlags.Store.Persistent.Redis = Config.persistence_adapter
   end
 
-  test "change_notifications_supported?() returns a boolean (true)" do
-    assert Config.change_notifications_supported?
-  end
 
   test "notifications_adapter() returns a module" do
     assert FunWithFlags.Notifications.Redis = Config.notifications_adapter
   end
 
+
+  describe "change_notifications_enabled?()" do
+    test "returns true by default" do
+      assert Config.change_notifications_enabled?
+    end
+
+    test "returns false if the cache is disabled" do
+      Mix.Config.persist(fun_with_flags: [cache: [enabled: false]])
+      refute Config.change_notifications_enabled?
+
+      # cleanup
+      reset_cache_defaults()
+      assert Config.change_notifications_enabled?
+    end
+
+    test "returns false if no notification adapter is configured" do
+      Mix.Config.persist(fun_with_flags: [notifications_adapter: nil])
+      refute Config.change_notifications_enabled?
+
+      # cleanup
+      Mix.Config.persist(fun_with_flags: [notifications_adapter: FunWithFlags.Notifications.Redis])
+      assert Config.change_notifications_enabled?
+    end
+
+    test "returns false if it's explicitly disabled" do
+      Mix.Config.persist(fun_with_flags: [cache_bust_notifications: false])
+      refute Config.change_notifications_enabled?
+
+      # cleanup
+      Mix.Config.persist(fun_with_flags: [cache_bust_notifications: true])
+      assert Config.change_notifications_enabled?
+    end
+  end
 
   defp configure_redis_with(conf) do
     Mix.Config.persist(fun_with_flags: [redis: conf])

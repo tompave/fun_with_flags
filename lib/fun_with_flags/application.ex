@@ -24,9 +24,7 @@ defmodule FunWithFlags.Application do
     end
   end
 
-
   defp with_cache_bust_notifications? do
-    FunWithFlags.Config.cache? &&
-      FunWithFlags.Config.change_notifications_supported?
+    FunWithFlags.Config.change_notifications_enabled?
   end
 end
