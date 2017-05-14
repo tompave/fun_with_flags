@@ -69,12 +69,10 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       u_id = NotifiRedis.unique_id()
 
       with_mocks([
-        {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = PersiRedis.put(name, gate)
         :timer.sleep(10)
-        assert called NotifiRedis.payload_for(name)
 
         assert called(
           Redix.command(
@@ -210,12 +208,10 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       u_id = NotifiRedis.unique_id()
 
       with_mocks([
-        {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiRedis.delete(name, group_gate)
         :timer.sleep(10)
-        assert called NotifiRedis.payload_for(name)
 
         assert called(
           Redix.command(
@@ -337,12 +333,10 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       u_id = NotifiRedis.unique_id()
 
       with_mocks([
-        {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name, gates: []}} = PersiRedis.delete(name)
         :timer.sleep(10)
-        assert called NotifiRedis.payload_for(name)
 
         assert called(
           Redix.command(

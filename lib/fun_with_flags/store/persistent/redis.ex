@@ -84,7 +84,6 @@ defmodule FunWithFlags.Store.Persistent.Redis do
       ["EXEC"]
     ])
 
-
     case result do
       {:ok, ["OK", "QUEUED", "QUEUED", [a, b]]} when a in [0, 1] and b in [0, 1] ->
         {:ok, flag} = get(flag_name)
@@ -117,9 +116,7 @@ defmodule FunWithFlags.Store.Persistent.Redis do
 
   defp publish_change(flag_name) do
     if Config.cache? do
-      Task.start fn() ->
-        Redix.command(@conn, ["PUBLISH" | NotifiRedis.payload_for(flag_name)])
-      end
+      NotifiRedis.publish_change(flag_name)
     end
   end
 

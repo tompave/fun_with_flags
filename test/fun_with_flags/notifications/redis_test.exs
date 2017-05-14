@@ -46,6 +46,72 @@ defmodule FunWithFlags.Notifications.RedisTest do
   end
 
 
+  describe "publish_change(flag_name)" do
+    setup do
+      {:ok, name: unique_atom()}
+    end
+
+    test "returns a PID (it starts a Task)", %{name: name} do
+      assert {:ok, pid} = NotifiRedis.publish_change(name)
+      assert is_pid(pid)
+    end
+
+    test "publishes a notification to Redis", %{name: name} do
+      u_id = NotifiRedis.unique_id()
+
+      with_mocks([
+        {Redix, [:passthrough], []}
+      ]) do
+        assert {:ok, _pid} = NotifiRedis.publish_change(name)
+        :timer.sleep(10)
+
+        assert called(
+          Redix.command(
+            FunWithFlags.Store.Persistent.Redis,
+            ["PUBLISH", "fun_with_flags_changes", "#{u_id}:#{name}"]
+          )
+        )
+      end
+    end
+
+    test "causes other subscribers to receive a Redis notification", %{name: name} do
+      channel = "fun_with_flags_changes"
+      u_id = NotifiRedis.unique_id()
+
+      {:ok, receiver} = Redix.PubSub.start_link(FunWithFlags.Config.redis_config, [sync_connect: true])
+      :ok = Redix.PubSub.subscribe(receiver, channel, self())
+
+      receive do
+        {:redix_pubsub, ^receiver, :subscribed, %{channel: ^channel}} -> :ok
+      after
+        500 -> flunk "Subscribe didn't work"
+      end
+
+      assert {:ok, _pid} = NotifiRedis.publish_change(name)
+
+      payload = "#{u_id}:#{to_string(name)}"
+      
+      receive do
+        {:redix_pubsub, ^receiver, :message, %{channel: ^channel, payload: ^payload}} -> :ok
+      after
+        500 -> flunk "Haven't received any message after 0.5 seconds"
+      end
+
+      # cleanup
+
+      Redix.PubSub.unsubscribe(receiver, channel, self())
+
+      receive do
+        {:redix_pubsub, ^receiver, :unsubscribed, %{channel: ^channel}} -> :ok
+      after
+        500 -> flunk "Unsubscribe didn't work"
+      end
+
+      Process.exit(receiver, :kill)
+    end
+  end
+
+
   test "it receives messages if something is published on Redis" do
     alias FunWithFlags.Store.Persistent.Redis, as: PersiRedis
 

@@ -4,6 +4,10 @@ defmodule FunWithFlags.Notifications.Redis do
   require Logger
   alias FunWithFlags.{Config, Store}
 
+  # Use the Redis conn from the persistence module to
+  # issue redis commands (to publish notification).
+  @write_conn FunWithFlags.Store.Persistent.Redis
+
   @conn :fun_with_flags_notifications
   @conn_options [name: @conn, sync_connect: false]
   @channel "fun_with_flags_changes"
@@ -37,6 +41,15 @@ defmodule FunWithFlags.Notifications.Redis do
     [@channel, "#{unique_id()}:#{to_string(flag_name)}"]
   end
 
+
+  def publish_change(flag_name) do
+    Task.start fn() ->
+      Redix.command(
+        @write_conn,
+        ["PUBLISH" | payload_for(flag_name)]
+      )
+    end
+  end
 
   # ------------------------------------------------------------
   # GenServer callbacks
