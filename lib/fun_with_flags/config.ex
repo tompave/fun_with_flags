@@ -83,6 +83,11 @@ defmodule FunWithFlags.Config do
   end
 
 
+  def pubsub_client do
+    Keyword.get(notifications_config(), :client)
+  end
+
+
   # Should the application emir cache busting/syncing notifications?
   # Defaults to false if we are not using a cache and if there is no
   # notifications adapter configured. Else, it defaults to true.
