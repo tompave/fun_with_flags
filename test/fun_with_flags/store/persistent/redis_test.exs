@@ -7,6 +7,8 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
   alias FunWithFlags.{Config, Flag, Gate}
   alias FunWithFlags.Notifications.Redis, as: NotifiRedis
 
+  @moduletag :redis_persistence
+
   setup_all do
     on_exit(__MODULE__, fn() -> clear_redis_test_db() end)
     :ok
@@ -55,6 +57,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     end
 
 
+    @tag :redis_pubsub
     test "when change notifications are enabled, put() will publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
       assert Config.change_notifications_enabled?
 
@@ -75,7 +78,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       end
     end
 
-
+    @tag :redis_pubsub
     test "when change notifications are enabled, put() will cause other subscribers to receive a Redis notification", %{name: name, gate: gate, flag: flag} do
       assert Config.change_notifications_enabled?
       channel = "fun_with_flags_changes"
@@ -115,7 +118,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       Process.exit(receiver, :kill)
     end
 
-
+    @tag :redis_pubsub
     test "when change notifications are NOT enabled, put() will NOT publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
       with_mocks([
         {Config, [], [change_notifications_enabled?: fn() -> false end]},
@@ -193,7 +196,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = PersiRedis.delete(name, %Gate{type: :actor, for: "I'm not really there", enabled: false})
     end
 
-
+    @tag :redis_pubsub
     test "when change notifications are enabled, delete(flag_name, gate) will publish a notification to Redis", %{name: name, group_gate: group_gate} do
       assert Config.change_notifications_enabled?
 
@@ -214,7 +217,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       end
     end
 
-
+    @tag :redis_pubsub
     test "when change notifications are enabled, delete(flag_name, gate) will cause other subscribers to receive a Redis notification", %{name: name, group_gate: group_gate} do
       assert Config.change_notifications_enabled?
       channel = "fun_with_flags_changes"
@@ -254,7 +257,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       Process.exit(receiver, :kill)
     end
 
-
+    @tag :redis_pubsub
     test "when change notifications are NOT enabled, delete(flag_name, gate) will NOT publish a notification to Redis", %{name: name, group_gate: group_gate} do
       with_mocks([
         {Config, [], [change_notifications_enabled?: fn() -> false end]},
@@ -318,7 +321,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = PersiRedis.delete(name)
     end
 
-
+    @tag :redis_pubsub
     test "when change notifications are enabled, delete(flag_name) will publish a notification to Redis", %{name: name} do
       assert Config.change_notifications_enabled?
 
@@ -339,7 +342,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       end
     end
 
-
+    @tag :redis_pubsub
     test "when change notifications are enabled, delete(flag_name) will cause other subscribers to receive a Redis notification", %{name: name} do
       assert Config.change_notifications_enabled?
       channel = "fun_with_flags_changes"
@@ -379,7 +382,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       Process.exit(receiver, :kill)
     end
 
-
+    @tag :redis_pubsub
     test "when change notifications are NOT enabled, delete(flag_name) will NOT publish a notification to Redis", %{name: name} do
       with_mocks([
         {Config, [], [change_notifications_enabled?: fn() -> false end]},

@@ -5,6 +5,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
 
   alias FunWithFlags.Notifications.Redis, as: NotifiRedis
 
+  @moduletag :redis_pubsub
 
   describe "unique_id()" do
     test "it returns a string" do

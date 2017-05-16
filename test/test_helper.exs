@@ -1,4 +1,5 @@
-IO.puts "System.get_env(\"PUBSUB_BROKER\") -> #{System.get_env("PUBSUB_BROKER") }"
+IO.puts "$PUBSUB_BROKER=#{System.get_env("PUBSUB_BROKER") }"
+
 if System.get_env("PUBSUB_BROKER") == "phoenix_pubsub" do
   # Start a Phoenix.PubSub process for the tests.
   # The `:fwf_test` connection name will be injected into this
@@ -11,5 +12,7 @@ end
 Application.ensure_all_started(:fun_with_flags)
 
 IO.puts "Running tests with $TEST_OPTS='#{System.get_env("TEST_OPTS")}'"
+IO.puts "Notifications adapter: #{inspect(FunWithFlags.Config.notifications_adapter())}"
+
 FunWithFlags.TestUtils.use_redis_test_db()
 ExUnit.start()

@@ -3,10 +3,10 @@ elixir:
   - 1.4
 otp_release:
   - 19.3
-  - 19.2
   - 18.3
 env:
   - CACHE_ENABLED=true
+  - CACHE_ENABLED=true TEST_OPTS='--exclude redis_pubsub --no-start' PUBSUB_BROKER=phoenix_pubsub
   - CACHE_ENABLED=false TEST_OPTS='--only integration'
 services:
   - redis-server
