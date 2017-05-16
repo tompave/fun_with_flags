@@ -52,9 +52,24 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
   # The unique_id will become the state of the GenServer
   #
   def init(unique_id) do
-    :ok = Phoenix.PubSub.subscribe(@conn, @channel)
+    subscribe()
     {:ok, unique_id}
   end
+
+
+  defp subscribe do
+    try do
+      case Phoenix.PubSub.subscribe(@conn, @channel) do
+        :ok -> :ok
+        {:error, reason} ->
+          Logger.error "FunWithFlags: Cannot subscribe to Phoenix.PubSub process #{inspect(@conn)} ({:error, #{inspect(reason)}})."
+      end
+    rescue
+      e ->
+        Logger.error "FunWithFlags: Cannot subscribe to Phoenix.PubSub process #{inspect(@conn)} (exception: #{inspect(e)})."
+    end
+  end
+
 
   def handle_call(:get_unique_id, _from, unique_id) do
     {:reply, {:ok, unique_id}, unique_id}

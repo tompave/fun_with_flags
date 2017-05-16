@@ -18,8 +18,6 @@ config :fun_with_flags, :cache,
 config :logger, level: :error
 
 
-
-
 if System.get_env("PUBSUB_BROKER") == "phoenix_pubsub" do
   config :fun_with_flags, :cache_bust_notifications, [
     adapter: FunWithFlags.Notifications.PhoenixPubSub,
