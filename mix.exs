@@ -52,6 +52,7 @@ defmodule FunWithFlags.Mixfile do
   defp aliases do
     [
       {:"test.all", [&run_tests/1, &run_integration_tests_no_cache/1]},
+      {:"test.phx", [&run_tests_phoenix_pubsub/1]},
     ]
   end
 
@@ -73,6 +74,18 @@ defmodule FunWithFlags.Mixfile do
     Mix.shell.cmd(
       "mix test --color --force --only integration",
       env: [{"CACHE_ENABLED", "false"}]
+    )
+  end
+
+  # PUBSUB_BROKER=phoenix_pubsub iex -S mix test --force --no-start --exclude redis_pubsub --include phoenix_pubsub
+  #
+  defp run_tests_phoenix_pubsub(_) do
+    Mix.shell.cmd(
+      "mix test --color --force --no-start --exclude redis_pubsub --include phoenix_pubsub", 
+      env: [
+        {"CACHE_ENABLED", "true"},
+        {"PUBSUB_BROKER", "phoenix_pubsub"},
+      ]
     )
   end
 
