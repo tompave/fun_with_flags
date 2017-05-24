@@ -6,7 +6,7 @@ otp_release:
   - 18.3
 env:
   - CACHE_ENABLED=true
-  - CACHE_ENABLED=true TEST_OPTS='--exclude redis_pubsub --no-start' PUBSUB_BROKER=phoenix_pubsub
+  - CACHE_ENABLED=true TEST_OPTS='--exclude redis_pubsub --include phoenix_pubsub --no-start' PUBSUB_BROKER=phoenix_pubsub
   - CACHE_ENABLED=false TEST_OPTS='--only integration'
 services:
   - redis-server

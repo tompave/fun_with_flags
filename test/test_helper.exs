@@ -1,5 +1,10 @@
 IO.puts "$PUBSUB_BROKER=#{System.get_env("PUBSUB_BROKER") }"
 
+# By default exclude the phoenix pubsub tests.
+ExUnit.configure exclude: [
+  :phoenix_pubsub,
+]
+
 if System.get_env("PUBSUB_BROKER") == "phoenix_pubsub" do
   # Start a Phoenix.PubSub process for the tests.
   # The `:fwf_test` connection name will be injected into this
