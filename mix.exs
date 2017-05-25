@@ -42,8 +42,8 @@ defmodule FunWithFlags.Mixfile do
     [
       {:ex_doc, "~> 0.15", only: :dev},
       {:mock, "~> 0.2.1", only: [:test, :test_no_cache]},
-      {:redix, "~> 0.5.2"},
-      {:redix_pubsub, "~> 0.3.0", optional: true},
+      {:redix, "~> 0.6.1"},
+      {:redix_pubsub, "~> 0.4.1"},
       {:phoenix_pubsub, "~> 1.0", optional: true},
     ]
   end

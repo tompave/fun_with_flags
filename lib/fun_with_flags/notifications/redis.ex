@@ -84,8 +84,8 @@ defmodule FunWithFlags.Notifications.Redis do
     {:noreply, unique_id}
   end
 
-  def handle_info({:redix_pubsub, _from, :disconnected, %{reason: reason}}, unique_id) do
-    Logger.error("FunWithFlags: Redis pub-sub connection interrupted, reason: '#{inspect(reason)}'.")
+  def handle_info({:redix_pubsub, _from, :disconnected, %{error: error}}, unique_id) do
+    Logger.error("FunWithFlags: Redis pub-sub connection interrupted, reason: '#{Redix.ConnectionError.message(error)}'.")
     {:noreply, unique_id}
   end
 
