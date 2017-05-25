@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Upgraded `redix` and `redix_pubsub` dependencies.
 * Added ability to enable the ETS cache but disable the cache-busting notifications, as it can be useful when running on a single node. Updated available Mix config options.
 * Internal changes to better support different adapters.
 * More rational test setup.
