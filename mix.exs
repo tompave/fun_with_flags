@@ -77,7 +77,7 @@ defmodule FunWithFlags.Mixfile do
     )
   end
 
-  # PUBSUB_BROKER=phoenix_pubsub mix test --force --no-start --exclude redis_pubsub --include phoenix_pubsub
+  # PUBSUB_BROKER=phoenix_pubsub iex -S mix test --force --no-start --exclude redis_pubsub --include phoenix_pubsub
   #
   defp run_tests_phoenix_pubsub(_) do
     Mix.shell.cmd(
