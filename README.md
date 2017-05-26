@@ -25,14 +25,12 @@ It stores flag information in Redis for persistence and syncronization across di
 * [Web Dashboard](#web-dashboard)
 * [Origin](#origin)
 * [So, caching, huh?](#so-caching-huh)
-* [Features](#features)
-  - [To do next](#to-do-next)
+* [To Do](#to-do)
 * [Configuration](#configuration)
-  - [Persistence Adapters](#alternative-persistence-adapters)
-  - [PubSub Adapters](#alternative-pubsub-adapters)
+  - [Persistence Adapters](#persistence-adapters)
+  - [PubSub Adapters](#pubsub-adapters)
 * [Installation](#installation)
 * [Testing](#testing)
-* [Why not Distributed Erlang?](#why-not-distributed-erlang)
 
 ## What's a feature flag?
 
@@ -306,28 +304,7 @@ FunWithFlags uses three mechanisms to deal with the problem:
 3. If that doesn't work, it's possible to disable the cache and just read from Redis all the time. That's what Flipper does.
 
 
-## Features
-
-A grab bag. I'll add more items as I get closer to a stable release.
-
-* Simple boolean flags: either ON or OFF.
-* Flags are persisted in Redis and available on application restart.
-* In-process ETS cache. On lookup, the library checks the cache first. If the ETS table doesn't contain a flag, it falls back to Redis and copies the value into the cache. Subsequent lookups won't hit Redis. The ETS table is empty when the application starts. Writes to the ETS table are managed by a GenServer and are serial, while any other process can read from it concurrently.
-* Creating or toggling a flag will update both the ETS cache and Redis.
-* Both the ETS cache and the Redis connection are in a supervision tree. The [Redix](https://hex.pm/packages/redix) adapter will try to reconnect to Redis if the connection is lost.
-* If the connection to Redis is lost, the application will continue to work with the known values from the ETS cache, even if normally they might be considered expired (because of the TTL). If an unknown flag is looked up when Redis is unavailable a runtime exception will be raised.
-* Several nodes can connect to the same Redis and share the flag settings. Each one will hit Redis the first time a flag is looked up, and then will populate its ETS cache.
-* The ETS cache is enabled by default, but it can be disabled to only use Redis.
-* The ETS cache supports a global TTL, expressed in seconds. It defaults to 900s (15 minutes). After expiration, flags are re-fetched from Redis. This allows multiple nodes to use the same redis, and slowly acquire and cache flags that have been changed by another node.
-* Distributed cache-busting. When a flag is persisted in Redis (created or updated), use Redis PubSub to notify all other Elixir nodes. When a node receives PubSub message it will reload the local cached copy of the flag. A node will ignore messages originated from the node itself (otherwise the originator node would reload the flag too).
-* Actor gates: enable or disable a flag for a specific data structure or primitive value.
-* Group gates: enable or disable a flag for a group, use your own logic to decide which data is in which group.
-* Ability to clear flag and gate data, to reset some rules.
-* Support for alternative persistence and notification adapters.
-* A web GUI, as a plug, available in a separate optional package.
-* Support for using `Phoenix.PubSub` (either with PG2 or Redis) instead of Redis PubSub directly.
-
-### To do next
+## To Do
 
 * Add some optional randomness to the TTL, so that Redis doesn't get hammered at constant intervals after a server restart.
 * % of actors gate.
@@ -433,19 +410,3 @@ $ mix test.all
 ```
 
 The `test.all` task will first run the default `mix test` task, then re-run the integration tests only, with the ETS cache disabled.
-
-## Why not Distributed Erlang?
-
-Redis PubSub, huh? Why not Distributed Erlang's inter-node messages?
-
-Because there are people who want to run Elixir and Phoenix on Heroku, where nodes are isolated on the dynos. Distributed Erlang unfortunately doesn't work on Heroku, but sharing data through Redis works and it's a common pattern in a lot of frameworks.
-
-Another reason is that Redis is already a dependency for data persistence across restarts, so adding PubSub is not a problem. Redis is a good tool to store this kind of data. A pure Elixir solution could use Mnesia, DETS, or dump the ETS cache to files, but these approaches would still not work if running on a PaaS like Heroku, and it would be hard to quickly syncronize new nodes if more are started in a burst.
-
-Also, a lot of people approaching Elixir come from a Rails background, and in this case my priority is to make this library work on setups that are familiar to Rails developers. The goal is to facilitate the adoption of Elixir and Phoenix by growing a familiar ecosystem.
-
-One of the reasons why Rails has become popular is its ease of use and deployment. Of course it hasn't always been like that, and at the beginning it required complex setups with Capistrano, Mongrels and reverse proxys. In the meantime, however, the ecosystem has matured and PaaS have become a thing. Some of today's most popular frameworks, too, have been built to leverage the ease of deployment provided by PaaS vendors.
-
-I have a feeling that the adoption of Phoenix will grow faster if the ecosystem supports the techniques that developers are already familiar with. Distributed Erlang can be seen as the next level of deployment and setup.
-
-With that out of the way, making FunWithFlags work with Distributed Erlang instead of Redis PubSub wouldn't be too hard. Feel free to propose a design for an adapter interface or send a PR.
