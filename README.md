@@ -12,7 +12,7 @@ This readme refers to the `master` branch. For the latest version released on He
 
 FunWithFlags is an OTP application that provides a 2-level storage to save and retrieve feature flags, an Elixir API to toggle and query them, and a [web dashboard](#web-dashboard) as control panel.
 
-It stores flag information in Redis for persistence and syncronization across different nodes, but it also maintains a local cache in an ETS table for fast lookups. When flags are added or toggled on a node, the other nodes are notified via Redis PubSub and reload their local ETS caches.
+It stores flag information in Redis for persistence and syncronization across different nodes, but it also maintains a local cache in an ETS table for fast lookups. When flags are added or toggled on a node, the other nodes are notified via PubSub and reload their local ETS caches.
 
 ## Content
 
@@ -28,7 +28,8 @@ It stores flag information in Redis for persistence and syncronization across di
 * [Features](#features)
   - [To do next](#to-do-next)
 * [Configuration](#configuration)
-  - [Alternative adapters](#alternative-adapters)
+  - [Persistence Adapters](#alternative-persistence-adapters)
+  - [PubSub Adapters](#alternative-pubsub-adapters)
 * [Installation](#installation)
 * [Testing](#testing)
 * [Why not Distributed Erlang?](#why-not-distributed-erlang)
@@ -300,7 +301,7 @@ For example, of we have two or more nodes running the application, and on one of
 
 FunWithFlags uses three mechanisms to deal with the problem:
 
-1. Use Redis PubSub to emit change notifications. All nodes subscribe to the same channel and reload flags in the ETS cache when required.
+1. Use PubSub to emit change notifications. All nodes subscribe to the same channel and reload flags in the ETS cache when required.
 2. If that fails, the cache has a configurable TTL. Reading from redis every few minutes is still better than doing so 30k times per second.
 3. If that doesn't work, it's possible to disable the cache and just read from Redis all the time. That's what Flipper does.
 
@@ -324,12 +325,14 @@ A grab bag. I'll add more items as I get closer to a stable release.
 * Ability to clear flag and gate data, to reset some rules.
 * Support for alternative persistence and notification adapters.
 * A web GUI, as a plug, available in a separate optional package.
+* Support for using `Phoenix.PubSub` (either with PG2 or Redis) instead of Redis PubSub directly.
 
 ### To do next
 
 * Add some optional randomness to the TTL, so that Redis doesn't get hammered at constant intervals after a server restart.
 * % of actors gate.
 * % of time gate.
+* Alternative persistence adapter (Ecto or Postgrex).
 
 
 ## Configuration
@@ -350,23 +353,58 @@ config :fun_with_flags, :redis,
 # a URL string can be used instead
 config :fun_with_flags, :redis, "redis://locahost:6379/0"
 
+# only the Redis adapter is available at the moment. No need to set this.
+config :fun_with_flags, :persistence,
+  [adapter: FunWithFlags.Store.Persistent.Redis]
+
 # this can be disabled if you are running on a single node and don't need to
 # sync different ETS caches. It won't have any effect if the cache is disabled.
 config :fun_with_flags, :cache_bust_notifications,
   [enabled: true, adapter: FunWithFlags.Notifications.Redis]
 ```
 
-### Alternative adapters
+### Persistence Adapters
 
-It's also possible to configure different persistence and notification adapters. The defaults are the provided Redis adapters. There is no need to explicitly set these options.
+It's possible to configure different persistence adapters. The default is the provided Redis module and there is no need to set it explicitly. No other persistent adapters are provided at the moment, but the internal API allows the development of 3rd party adapters.
+
+To configure them:
 
 ```elixir
 config :fun_with_flags, :persistence, [adapter: MyCustomPersistenceModule]
-config :fun_with_flags, :cache_bust_notifications, [adapter: MyCustomNotificationsModule]
 ```
 
-No official support for other adapters is planned at the moment, but the internal API allows the development of 3rd party adapters.
 
+### PubSub Adapters
+
+The library comes with two PubSub adapters: [`Redix.PubSub`](https://hex.pm/packages/redix_pubsub) and [`Phoenix.PubSub`](https://hex.pm/packages/phoenix_pubsub).
+
+The Redis adapter is the default and it connects directly to the Redis instance used for persisting the flag data.
+
+The Phoenix PubSub adapter uses the high level API of `Phoenix.PubSub`, which means that under the hood it could use either its PG2 or Redis adapters, and this library doesn't need to know. It's provided as a convenient way to leverage distributed Erlang when using FunWithFlags in a Phoenix application, although it can be used independently (without the rest of the Phoenix framework) to add PubSub to Elixir apps running on Erlang clusters.  
+FunWithFlags expects the `Phoenix.PubSub` process to be started by the host application, and in order to use this adapter the client (name or PID) must be provided in the configuration.
+
+For example, in Phoenix it would be:
+
+```elixir
+config :my_app, MyApp.Web.Endpoint,
+  pubsub: [name: MyApp.PubSub, adapter: Phoenix.PubSub.PG2]
+
+config :fun_with_flags, :cache_bust_notifications,
+  adapter: FunWithFlags.Notifications.PhoenixPubSub,
+  client: MyApp.PubSub
+```
+
+Or, without Phoenix:
+
+```elixir
+# possibly in the application's supervision tree
+{:ok, _pid} = Phoenix.PubSub.PG2.start_link(:my_pubsub_process_name)
+
+# config/config.exs
+config :fun_with_flags, :cache_bust_notifications,
+  adapter: FunWithFlags.Notifications.PhoenixPubSub,
+  client: :my_pubsub_process_name
+```
 
 ## Installation
 
