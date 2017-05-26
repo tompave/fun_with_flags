@@ -210,7 +210,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
       {:ok, name: name, stored_flag: stored_flag, cached_flag: cached_flag}
     end
 
-
+    @tag :redis_persistence
     test "when the message is not valid, the Cached value is not changed", %{name: name, cached_flag: cached_flag} do
       channel = "fun_with_flags_changes"
       
@@ -219,7 +219,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
       assert {:ok, ^cached_flag} = Cache.get(name)
     end
 
-
+    @tag :redis_persistence
     test "when the message comes from this same process, the Cached value is not changed", %{name: name, cached_flag: cached_flag} do
       u_id = NotifiRedis.unique_id()
       channel = "fun_with_flags_changes"
@@ -230,7 +230,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
       assert {:ok, ^cached_flag} = Cache.get(name)
     end
 
-
+    @tag :redis_persistence
     test "when the message comes from another process, the Cached value is reloaded", %{name: name, cached_flag: cached_flag, stored_flag: stored_flag} do
       another_u_id = Config.build_unique_id()
       refute another_u_id == NotifiRedis.unique_id()

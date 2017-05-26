@@ -132,7 +132,6 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
 
   describe "integration: side effects" do
     alias FunWithFlags.Store.Cache
-    alias FunWithFlags.Store.Persistent.Redis, as: PersiRedis
     alias FunWithFlags.{Store, Config, Gate, Flag}
 
     setup do
@@ -143,11 +142,11 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
       gate2 = %Gate{type: :boolean, enabled: false}
       cached_flag = %Flag{name: name, gates: [gate2]}
 
-      {:ok, ^stored_flag} = PersiRedis.put(name, gate)
+      {:ok, ^stored_flag} = Config.persistence_adapter.put(name, gate)
       :timer.sleep(10)
       {:ok, ^cached_flag} = Cache.put(cached_flag)
 
-      assert {:ok, ^stored_flag} = PersiRedis.get(name)
+      assert {:ok, ^stored_flag} = Config.persistence_adapter.get(name)
       assert {:ok, ^cached_flag} = Cache.get(name)
 
       refute match? ^stored_flag, cached_flag
@@ -156,7 +155,6 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
     end
 
 
-    @tag :redis_persistence
     test "when the message comes from this same process, the Cached value is not changed", %{name: name, cached_flag: cached_flag} do
       u_id = PubSub.unique_id()
       client = FunWithFlags.Config.pubsub_client()
@@ -169,7 +167,6 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
     end
 
 
-    @tag :redis_persistence
     test "when the message comes from another process, the Cached value is reloaded", %{name: name, cached_flag: cached_flag, stored_flag: stored_flag} do
       another_u_id = Config.build_unique_id()
       refute another_u_id == PubSub.unique_id()
