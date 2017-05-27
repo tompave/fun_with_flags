@@ -2,9 +2,16 @@
 
 ## Unreleased
 
+New Features:
+
+* Added support for Phoenix.PubSub as an alternative transport for the cache busting notifications.
+* Added ability to enable the ETS cache but disable the cache-busting notifications, as it can be useful when running on a single node.
+
+Other changes:
+
 * Upgraded `redix` and `redix_pubsub` dependencies.
-* Added ability to enable the ETS cache but disable the cache-busting notifications, as it can be useful when running on a single node. Updated available Mix config options.
-* Internal changes to better support different adapters.
+* Internal project and supervision changes to better support different adapters.
+* Updated the Mix configuration options.
 * More rational test setup.
 
 ## v0.7.1
