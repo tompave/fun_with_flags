@@ -354,7 +354,7 @@ config :fun_with_flags, :persistence, [adapter: MyCustomPersistenceModule]
 
 ### PubSub Adapters
 
-The library comes with two PubSub adapters: [`Redix.PubSub`](https://hex.pm/packages/redix_pubsub) and [`Phoenix.PubSub`](https://hex.pm/packages/phoenix_pubsub).
+The library comes with two PubSub adapters: [`Redix.PubSub`](https://hex.pm/packages/redix_pubsub) and [`Phoenix.PubSub`](https://hex.pm/packages/phoenix_pubsub). In order to use them, you must declare the correct optional dependency in the Mixfile. (see the [installation](#installation) instructions, below)
 
 The Redis adapter is the default and it connects directly to the Redis instance used for persisting the flag data.
 
@@ -386,15 +386,24 @@ config :fun_with_flags, :cache_bust_notifications,
 
 ## Installation
 
-The package can be installed by adding `fun_with_flags` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `fun_with_flags` to your list of dependencies in `mix.exs`.
+
+In order to have a small installation footprint, the dependencies for the different adapters are all optional and it's required to explicitly require the one you wish to use.
 
 ```elixir
 def deps do
-  [{:fun_with_flags, "~> 0.8.0"}]
+  [
+    {:fun_with_flags, "~> 0.8.0"},
+
+    # either:
+    {:redix_pubsub, "~> 0.4.1"},
+    # or:
+    {:phoenix_pubsub, "~> 1.0"},
+  ]
 end
 ```
 
-Since it depends on Elixir `1.4`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
+Since FunWithFlags depends on Elixir `1.4`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
 
 ## Testing
 
