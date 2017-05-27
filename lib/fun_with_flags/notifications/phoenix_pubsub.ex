@@ -60,18 +60,17 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
       case Phoenix.PubSub.subscribe(client(), @channel) do
         :ok ->
           # All good
-          Logger.debug "FunWithFlags: Subscribed to to Phoenix.PubSub process #{inspect(client())}."
           :ok
         {:error, reason} ->
           # Handled application errors
-          Logger.error "FunWithFlags: Cannot subscribe to Phoenix.PubSub process #{inspect(client())} ({:error, #{inspect(reason)}})."
+          Logger.debug "FunWithFlags: Cannot subscribe to Phoenix.PubSub process #{inspect(client())} ({:error, #{inspect(reason)}})."
           try_again_to_subscribe(attempt)
       end
     rescue
       e ->
         # The pubsub process was probably not running. This happens when using it in Phoenix, as it tries to connect the
         # first time while the application is booting, and the Phoenix.PubSub process is not fully started yet.
-        Logger.error "FunWithFlags: Cannot subscribe to Phoenix.PubSub process #{inspect(client())} (exception: #{inspect(e)})."
+        Logger.debug "FunWithFlags: Cannot subscribe to Phoenix.PubSub process #{inspect(client())} (exception: #{inspect(e)})."
         try_again_to_subscribe(attempt)
     end
   end
