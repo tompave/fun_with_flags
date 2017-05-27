@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.8.1
 
 * Mark the `redix_pubsub` dependency as optional.
 * Clearer error reporting for missing adapter dependencies.
