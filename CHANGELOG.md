@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Mark the `redix_pubsub` dependency as optional.
+* Clearer error reporting for missing adapter dependencies.
 
 ## v0.8.0
 

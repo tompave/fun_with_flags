@@ -3,6 +3,7 @@ defmodule FunWithFlags.Application do
 
   use Application
   alias FunWithFlags.Config
+  require Logger
 
   def start(_type, _args) do
     opts = [strategy: :one_for_one, name: FunWithFlags.Supervisor]
@@ -19,12 +20,19 @@ defmodule FunWithFlags.Application do
     |> Enum.reject(&(!&1))
   end
 
-  # Are the change notifications enabled AND can the notifications
-  # adapter be supervised?
+  # If the change notifications are enabled AND the adapter can
+  # be supervised, then return a spec for the supervisor.
+  # Also handle cases where an adapter has been configured but its
+  # optional dependency is not required in the Mixfile.
   #
   defp notifications_spec do
-    Config.change_notifications_enabled? &&
-      Config.notifications_adapter.worker_spec
+    try do
+      Config.change_notifications_enabled? && Config.notifications_adapter.worker_spec
+    rescue
+      e in [UndefinedFunctionError] ->
+        Logger.error "FunWithFlags: Looks like you're trying to use #{Config.notifications_adapter}, but you haven't added its optional dependency to the Mixfile."
+        raise e
+    end
   end
 
 
