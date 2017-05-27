@@ -419,7 +419,7 @@ Then:
 $ mix test.all
 ```
 
-The `test.all` task will first run the default `mix test` task, then re-run the integration tests only, with the ETS cache disabled.
+The `test.all` task will run the test suite multiple times with different configurations, to exercise a matrix of options and adapters.
 
 ## Common Issues
 
