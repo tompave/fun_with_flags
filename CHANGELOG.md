@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Mark the `redix_pubsub` dependency as optional.
+
 ## v0.8.0
 
 New Features:
