@@ -31,6 +31,7 @@ It stores flag information in Redis for persistence and syncronization across di
   - [PubSub Adapters](#pubsub-adapters)
 * [Installation](#installation)
 * [Testing](#testing)
+* [Common Issues](#common-issues)
 
 ## What's a feature flag?
 
@@ -410,3 +411,27 @@ $ mix test.all
 ```
 
 The `test.all` task will first run the default `mix test` task, then re-run the integration tests only, with the ETS cache disabled.
+
+## Common Issues
+
+### Configuration changes have no effect in `MIX_ENV=dev`
+
+**Issue**: changing the library settings in the host application's Mix config file has no effect, or "missing process" exceptions are raised when booting. This should only be an issue in the development environment.  
+**Solution**: clear the compiled BEAM bytecode with:
+
+```shell
+rm -r _build/dev/lib/fun_with_flags
+rm -r _build/dev/lib/YOUR_APP_NAME
+```
+
+Why does this happen?
+
+This library tries to be fast and performant, and will optimize as many things as possible at compile time by conditionally compiling different references to values and modules.
+
+For example, disabling or enabling the cache will cause a different module to be used, and the same applies to choosing different persistence or PubSub adapters. Setting other values can have a similar effect (e.g. the cache TTL).
+
+While it would be possible to read everything dynamically with [`Application.get_env/3`](https://hexdocs.pm/elixir/Application.html#get_env/3) (which holds the config in the main application GenServer's state), that would require a few extra calls that should not really be necessary for data that never changes while the application is running.
+
+For this reason, most things that are referenced in the hot path of the library are frozen at compile time with [module attributes](https://elixir-lang.org/getting-started/module-attributes.html#as-constants). This effectively minimizes needless inter-process messages, and gives a nice performance boost to busy applications.
+
+This should only be a problem in the development environment, where if you change some settings after the initial compilation, Mix will not recompile the dependencies. In the production enviroment this should not be an issue.
