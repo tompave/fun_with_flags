@@ -45,6 +45,8 @@ defmodule FunWithFlags.Mixfile do
       {:redix, "~> 0.6.1"},
       {:redix_pubsub, "~> 0.4.1", optional: true},
       {:phoenix_pubsub, "~> 1.0", optional: true},
+      {:ecto, "~> 2.1", optional: true},
+      {:postgrex, "~> 0.13.2", optional: true, only: [:dev, :test]},
     ]
   end
 
