@@ -107,6 +107,19 @@ defmodule FunWithFlags.Mixfile do
     )
   end
 
+  # Run the tests with Ecto as persistent store and Phoenix.PubSub as broker.
+  #
+  defp run_tests_ecto_persistence(_) do
+    Mix.shell.cmd(
+      "mix test --color --force --no-start --exclude redis_pubsub --exclude redis_persistence --include phoenix_pubsub --include ecto_persistence", 
+      env: [
+        {"CACHE_ENABLED", "true"},
+        {"PUBSUB_BROKER", "phoenix_pubsub"},
+        {"PERSISTENCE", "ecto"}
+      ]
+    )
+  end
+
 
   defp elixirc_paths(:test), do: ["lib", "test/support", "dev_support"]
   defp elixirc_paths(:dev), do: ["lib", "dev_support"]

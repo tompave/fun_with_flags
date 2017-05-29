@@ -1,6 +1,8 @@
-# By default exclude the phoenix pubsub tests.
+# By default exclude the phoenix pubsub tests and the ecto persistence tests.
+#
 ExUnit.configure exclude: [
   :phoenix_pubsub,
+  :ecto_persistence,
 ]
 
 if System.get_env("PUBSUB_BROKER") == "phoenix_pubsub" do
@@ -16,6 +18,7 @@ Application.ensure_all_started(:fun_with_flags)
 IO.puts "--------------------------------------------------------------"
 IO.puts "$TEST_OPTS='#{System.get_env("TEST_OPTS")}'"
 IO.puts "$CACHE_ENABLED=#{System.get_env("CACHE_ENABLED")}"
+IO.puts "$PERSISTENCE=#{System.get_env("PERSISTENCE")}"
 IO.puts "$PUBSUB_BROKER=#{System.get_env("PUBSUB_BROKER")}"
 IO.puts "--------------------------------------------------------------"
 IO.puts "Cache enabled:         #{inspect(FunWithFlags.Config.cache?)}"
@@ -23,10 +26,13 @@ IO.puts "Persistence adapter:   #{inspect(FunWithFlags.Config.persistence_adapte
 IO.puts "Notifications adapter: #{inspect(FunWithFlags.Config.notifications_adapter())}"
 IO.puts "--------------------------------------------------------------"
 
-FunWithFlags.TestUtils.use_redis_test_db()
+unless FunWithFlags.Config.persist_in_ecto? do
+  FunWithFlags.TestUtils.use_redis_test_db()
+end
+
 ExUnit.start()
 
-if System.get_env("PERSISTENCE") == "ecto" do
+if FunWithFlags.Config.persist_in_ecto? do
   {:ok, _pid} = FunWithFlags.Dev.EctoRepo.start_link()
   Ecto.Adapters.SQL.Sandbox.mode(MFunWithFlags.Dev.EctoRepo, :manual)
 end
