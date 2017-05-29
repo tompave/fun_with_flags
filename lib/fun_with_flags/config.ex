@@ -68,6 +68,11 @@ defmodule FunWithFlags.Config do
   end
 
 
+  def persist_in_ecto? do
+    persistence_adapter() == FunWithFlags.Store.Persistent.Ecto
+  end
+
+
   defp notifications_config do
     Keyword.merge(
       @default_notifications_config,

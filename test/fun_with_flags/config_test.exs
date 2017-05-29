@@ -83,10 +83,27 @@ defmodule FunWithFlags.ConfigTest do
   end
 
 
-  test "persistence_adapter() returns a module" do
-    assert FunWithFlags.Store.Persistent.Redis = Config.persistence_adapter
+  describe "When we are persisting data in Redis" do
+    @describetag :redis_persistence
+    test "persistence_adapter() returns the Redis module" do
+      assert FunWithFlags.Store.Persistent.Redis = Config.persistence_adapter
+    end
+
+    test "persist_in_ecto? returns false" do
+      refute Config.persist_in_ecto?
+    end
   end
 
+  describe "When we are persisting data in Ecto" do
+    @describetag :ecto_persistence
+    test "persistence_adapter() returns the Ecto module" do
+      assert FunWithFlags.Store.Persistent.Ecto = Config.persistence_adapter
+    end
+
+    test "persist_in_ecto? returns true" do
+      refute Config.persist_in_ecto?
+    end
+  end
 
   test "notifications_adapter() returns a module" do
     assert Config.notifications_adapter() in [

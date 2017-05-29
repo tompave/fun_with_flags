@@ -6,7 +6,9 @@ alias FunWithFlags.{Actor,Group}
 alias FunWithFlags.Dev.EctoRepo, as: Repo
 alias FunWithFlags.Store.Persistent.Ecto.Schema, as: Model
 
-{:ok, _pid} = FunWithFlags.Dev.EctoRepo.start_link()
+if Config.persist_in_ecto? do
+  {:ok, _pid} = FunWithFlags.Dev.EctoRepo.start_link()
+end
 
 {:ok, redis} =
   Redix.start_link(
