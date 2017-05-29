@@ -6,14 +6,7 @@ config :fun_with_flags, :redis,
 config :logger, level: :error
 
 
-persistence =
-  case System.get_env("PERSISTENCE") do
-    "ecto" -> :ecto
-    _      -> :redis # default
-  end
-
-
-if persistence == :ecto do
+if System.get_env("PERSISTENCE") == "ecto" do
   config :fun_with_flags, FunWithFlags.Dev.EctoRepo,
     database: "fun_with_flags_test",
     pool: Ecto.Adapters.SQL.Sandbox
