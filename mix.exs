@@ -41,7 +41,7 @@ defmodule FunWithFlags.Mixfile do
   defp deps do
     [
       {:ex_doc, "~> 0.15", only: :dev},
-      {:mock, "~> 0.2.1", only: [:test, :test_no_cache]},
+      {:mock, "~> 0.2.1", only: :test},
       {:redix, "~> 0.6.1"},
       {:redix_pubsub, "~> 0.4.1", optional: true},
       {:phoenix_pubsub, "~> 1.0", optional: true},
@@ -93,7 +93,6 @@ defmodule FunWithFlags.Mixfile do
 
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(:test_no_cache), do: ["lib", "test/support"]
   defp elixirc_paths(_),     do: ["lib"]
 
 
