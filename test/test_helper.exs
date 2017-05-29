@@ -24,5 +24,6 @@ FunWithFlags.TestUtils.use_redis_test_db()
 ExUnit.start()
 
 if System.get_env("PERSISTENCE") == "ecto" do
+  {:ok, _pid} = FunWithFlags.Dev.EctoRepo.start_link()
   Ecto.Adapters.SQL.Sandbox.mode(MFunWithFlags.Dev.EctoRepo, :manual)
 end

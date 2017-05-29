@@ -3,6 +3,11 @@ alias FunWithFlags.{Store,Config,Flag,Gate}
 alias FunWithFlags.Store.{Cache,Persistent,Serializer}
 alias FunWithFlags.{Actor,Group}
 
+alias FunWithFlags.Dev.EctoRepo, as: Repo
+alias FunWithFlags.Store.Persistent.Ecto.Schema, as: Model
+
+{:ok, _pid} = FunWithFlags.Dev.EctoRepo.start_link()
+
 {:ok, redis} =
   Redix.start_link(
     Config.redis_config,
