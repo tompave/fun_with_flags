@@ -416,8 +416,8 @@ $ redis-server
 
 To test the Ecto persistence adapter, setup the DB with:
 ```
-$ PERSISTENCE=ecto mix ecto.create
-$ PERSISTENCE=ecto mix ecto.migrate
+$ MIX_ENV=test PERSISTENCE=ecto mix ecto.create
+$ MIX_ENV=test PERSISTENCE=ecto mix ecto.migrate
 ```
 
 Then:

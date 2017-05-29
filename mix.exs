@@ -108,7 +108,7 @@ defmodule FunWithFlags.Mixfile do
   end
 
 
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(:test), do: ["lib", "test/support", "dev_support"]
   defp elixirc_paths(:dev), do: ["lib", "dev_support"]
   defp elixirc_paths(_),     do: ["lib"]
 
