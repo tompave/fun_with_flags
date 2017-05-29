@@ -10,9 +10,11 @@ if System.get_env("PUBSUB_BROKER") == "phoenix_pubsub" do
   {:ok, _pid} = Phoenix.PubSub.PG2.start_link(:fwf_test, [pool_size: 1])
 end
 
+
 # With some configurations the tests are run with `--no-start`, because
 # we want to start the Phoenix.PubSub process before starting the application.
 Application.ensure_all_started(:fun_with_flags)
+
 
 IO.puts "Running tests with $TEST_OPTS='#{System.get_env("TEST_OPTS")}'"
 IO.puts "$PUBSUB_BROKER=#{System.get_env("PUBSUB_BROKER") }"
@@ -20,3 +22,7 @@ IO.puts "Notifications adapter: #{inspect(FunWithFlags.Config.notifications_adap
 
 FunWithFlags.TestUtils.use_redis_test_db()
 ExUnit.start()
+
+if System.get_env("PERSISTENCE") == "ecto" do
+  Ecto.Adapters.SQL.Sandbox.mode(MFunWithFlags.Dev.EctoRepo, :manual)
+end
