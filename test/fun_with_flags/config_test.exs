@@ -92,6 +92,10 @@ defmodule FunWithFlags.ConfigTest do
     test "persist_in_ecto? returns false" do
       refute Config.persist_in_ecto?
     end
+
+    test "ecto_repo() returns nil" do
+      assert is_nil(Config.ecto_repo)
+    end
   end
 
   describe "When we are persisting data in Ecto" do
@@ -101,7 +105,11 @@ defmodule FunWithFlags.ConfigTest do
     end
 
     test "persist_in_ecto? returns true" do
-      refute Config.persist_in_ecto?
+      assert Config.persist_in_ecto?
+    end
+
+    test "ecto_repo() returns a repo" do
+      assert FunWithFlags.Dev.EctoRepo = Config.ecto_repo
     end
   end
 

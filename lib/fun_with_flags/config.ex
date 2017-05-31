@@ -56,15 +56,23 @@ defmodule FunWithFlags.Config do
   end
 
 
-  # Defaults to FunWithFlags.Store.Persistent.Redis
-  #
-  def persistence_adapter do
+  defp persistence_config do
     Application.get_env(
       :fun_with_flags,
       :persistence,
       [adapter: FunWithFlags.Store.Persistent.Redis]
     )
-    |> Keyword.get(:adapter)
+  end
+
+  # Defaults to FunWithFlags.Store.Persistent.Redis
+  #
+  def persistence_adapter do
+    Keyword.get(persistence_config(), :adapter)
+  end
+
+
+  def ecto_repo do
+    Keyword.get(persistence_config(), :repo)
   end
 
 
