@@ -60,6 +60,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
       case Phoenix.PubSub.subscribe(client(), @channel) do
         :ok ->
           # All good
+          Logger.debug "FunWithFlags: Connected to Phoenix.PubSub process #{inspect(client())}"
           :ok
         {:error, reason} ->
           # Handled application errors

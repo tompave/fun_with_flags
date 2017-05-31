@@ -96,6 +96,11 @@ defmodule FunWithFlags.Config do
   end
 
 
+  def phoenix_pubsub? do
+    notifications_adapter() == FunWithFlags.Notifications.PhoenixPubSub
+  end
+
+
   def pubsub_client do
     Keyword.get(notifications_config(), :client)
   end

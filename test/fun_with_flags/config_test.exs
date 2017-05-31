@@ -113,11 +113,37 @@ defmodule FunWithFlags.ConfigTest do
     end
   end
 
-  test "notifications_adapter() returns a module" do
-    assert Config.notifications_adapter() in [
-      FunWithFlags.Notifications.Redis,
-      FunWithFlags.Notifications.PhoenixPubSub,
-    ]
+
+  describe "When we are sending notifications with Redis PubSub" do
+    @describetag :redis_pubsub
+
+    test "notifications_adapter() returns the Redis module" do
+      assert FunWithFlags.Notifications.Redis = Config.notifications_adapter
+    end
+
+    test "phoenix_pubsub? returns false" do
+      refute Config.phoenix_pubsub?
+    end
+
+    test "pubsub_client() returns nil" do
+      assert is_nil(Config.pubsub_client)
+    end
+  end
+
+  describe "When we are sending notifications with Phoenix.PubSub" do
+    @describetag :phoenix_pubsub
+
+    test "notifications_adapter() returns the Redis module" do
+      assert FunWithFlags.Notifications.PhoenixPubSub = Config.notifications_adapter
+    end
+
+    test "phoenix_pubsub? returns true" do
+      assert Config.phoenix_pubsub?
+    end
+
+    test "pubsub_client() returns an atom" do
+      assert :fwf_test = Config.pubsub_client
+    end
   end
 
 
