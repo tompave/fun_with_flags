@@ -16,5 +16,21 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Schema do
     struct
     |> cast(params, @fields)
     |> validate_required(@required_fields)
+    |> unique_constraint(
+      :gate_type,
+      name: "fwf_flag_name_gate_target_idx",
+      message: "Can't store a duplicated gate."
+    )
+  end
+
+
+  def build(flag_name, gate) do
+    data = %{
+      flag_name: to_string(flag_name),
+      gate_type: to_string(gate.type),
+      target: to_string(gate.for),
+      enabled: gate.enabled
+    }
+    changeset(%__MODULE__{}, data)
   end
 end

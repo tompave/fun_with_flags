@@ -5,7 +5,7 @@ ExUnit.configure exclude: [
   :ecto_persistence,
 ]
 
-if System.get_env("PUBSUB_BROKER") == "phoenix_pubsub" do
+if FunWithFlags.Config.phoenix_pubsub? do
   # Start a Phoenix.PubSub process for the tests.
   # The `:fwf_test` connection name will be injected into this
   # library in `config/test.exs`.

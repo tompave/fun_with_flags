@@ -10,6 +10,10 @@ if Config.persist_in_ecto? do
   {:ok, _pid} = FunWithFlags.Dev.EctoRepo.start_link()
 end
 
+if Config.phoenix_pubsub? do
+  {:ok, _pid} = Phoenix.PubSub.PG2.start_link(:fwf_test, [pool_size: 1])
+end
+
 {:ok, redis} =
   Redix.start_link(
     Config.redis_config,

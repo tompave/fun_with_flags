@@ -4,7 +4,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   @moduledoc false
 
   alias FunWithFlags.{Config, Gate, Flag}
-
+  alias FunWithFlags.Store.Persistent.Ecto.Schema
 
   def worker_spec do
     nil
@@ -18,9 +18,16 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
 
   def put(flag_name, gate = %Gate{}) do
-    publish_change(flag_name)
-    {:ok, %Flag{name: flag_name, gates: [gate]}}
-    # {:error, "reason"}
+    changeset = Schema.build(flag_name, gate)
+    repo = Config.ecto_repo()
+
+    case repo.insert(changeset) do
+      {:ok, _struct} ->
+        publish_change(flag_name)
+        {:ok, nil}
+      {:error, changeset} ->
+        {:error, changeset.errors}
+    end
   end
 
 
