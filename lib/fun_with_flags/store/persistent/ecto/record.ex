@@ -1,4 +1,4 @@
-defmodule FunWithFlags.Store.Persistent.Ecto.Schema do
+defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -17,10 +17,10 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Schema do
     |> cast(params, @fields)
     |> validate_required(@required_fields)
     |> unique_constraint(
-      :gate_type,
-      name: "fwf_flag_name_gate_target_idx",
-      message: "Can't store a duplicated gate."
-    )
+        :gate_type,
+        name: "fwf_flag_name_gate_target_idx",
+        message: "Can't store a duplicated gate."
+      )
   end
 
 

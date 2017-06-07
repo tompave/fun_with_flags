@@ -46,10 +46,12 @@ end
 
 
 if with_ecto do
+  # this library's config
   config :fun_with_flags, :persistence,
     adapter: FunWithFlags.Store.Persistent.Ecto,
     repo: FunWithFlags.Dev.EctoRepo
 
+  # ecto's config
   config :fun_with_flags, ecto_repos: [FunWithFlags.Dev.EctoRepo]
 
   config :fun_with_flags, FunWithFlags.Dev.EctoRepo,
