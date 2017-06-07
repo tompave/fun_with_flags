@@ -1,4 +1,4 @@
-defmodule FunWithFlags.Store.SerializerTest do
+defmodule FunWithFlags.Store.Serializer.RedisTest do
   use ExUnit.Case, async: true
 
   alias FunWithFlags.Flag
