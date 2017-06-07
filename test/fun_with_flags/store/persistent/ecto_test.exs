@@ -8,9 +8,4 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
   # alias FunWithFlags.Notifications.PhoenixPubSub, as: NotifiPhoenix
 
   @moduletag :ecto_persistence
-
-  setup_all do
-    on_exit(__MODULE__, fn() -> clear_ecto_test_db() end)
-    :ok
-  end
 end

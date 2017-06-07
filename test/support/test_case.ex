@@ -3,7 +3,7 @@ defmodule FunWithFlags.TestCase do
 
   setup do
     # Setup the SQL sandbox if the persistent store is Ecto
-    if FunWithFlags.Config.persistence_adapter() == FunWithFlags.Store.Persistent.Ecto do
+    if FunWithFlags.Config.persist_in_ecto? do
       :ok = Ecto.Adapters.SQL.Sandbox.checkout(FunWithFlags.Dev.EctoRepo)
     end
   end

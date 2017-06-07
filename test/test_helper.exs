@@ -1,9 +1,18 @@
-# By default exclude the phoenix pubsub tests and the ecto persistence tests.
+# By default exclude the phoenix pubsub tests and the ecto persistence tests,
+# so that the tests will default to run with just Redis for persistence
+# and pubsub notifications.
 #
 ExUnit.configure exclude: [
   :phoenix_pubsub,
   :ecto_persistence,
 ]
+
+# If we are not using Ecto and we're not using Phoenix.PubSub, then
+# we need a Redis instance for either persistence or PubSub.
+does_anything_need_redis = !(
+  FunWithFlags.Config.persist_in_ecto? && FunWithFlags.Config.phoenix_pubsub?
+)
+
 
 if FunWithFlags.Config.phoenix_pubsub? do
   # Start a Phoenix.PubSub process for the tests.
@@ -24,9 +33,10 @@ IO.puts "--------------------------------------------------------------"
 IO.puts "Cache enabled:         #{inspect(FunWithFlags.Config.cache?)}"
 IO.puts "Persistence adapter:   #{inspect(FunWithFlags.Config.persistence_adapter())}"
 IO.puts "Notifications adapter: #{inspect(FunWithFlags.Config.notifications_adapter())}"
+IO.puts "Anything using Redis:  #{inspect(does_anything_need_redis)}"
 IO.puts "--------------------------------------------------------------"
 
-unless FunWithFlags.Config.persist_in_ecto? do
+if does_anything_need_redis do
   FunWithFlags.TestUtils.use_redis_test_db()
 end
 
@@ -34,5 +44,5 @@ ExUnit.start()
 
 if FunWithFlags.Config.persist_in_ecto? do
   {:ok, _pid} = FunWithFlags.Dev.EctoRepo.start_link()
-  Ecto.Adapters.SQL.Sandbox.mode(MFunWithFlags.Dev.EctoRepo, :manual)
+  Ecto.Adapters.SQL.Sandbox.mode(FunWithFlags.Dev.EctoRepo, :manual)
 end

@@ -71,6 +71,7 @@ defmodule FunWithFlags.Mixfile do
     [
       {:"test.all", [&run_tests/1, &run_integration_tests_no_cache/1, &run_tests_phoenix_pubsub/1]},
       {:"test.phx", [&run_tests_phoenix_pubsub/1]},
+      {:"test.ecto", [&run_tests_ecto_persistence/1]},
     ]
   end
 

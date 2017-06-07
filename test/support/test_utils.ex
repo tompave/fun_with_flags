@@ -34,8 +34,6 @@ defmodule FunWithFlags.TestUtils do
   end
 
 
-  def clear_ecto_test_db do
-  end
   
   defmacro timetravel([by: offset], [do: body]) do
     quote do
