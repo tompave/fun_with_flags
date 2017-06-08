@@ -28,9 +28,17 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
     data = %{
       flag_name: to_string(flag_name),
       gate_type: to_string(gate.type),
-      target: to_string(gate.for),
+      target: serialize_target(gate.for),
       enabled: gate.enabled
     }
     changeset(%__MODULE__{}, data)
   end
+
+  # Do not just store NULL for `target: nil`, because the unique
+  # index in the table does not see NULL values as equal.
+  # 
+  defp serialize_target(nil), do: "_fwf_none"
+  defp serialize_target(str) when is_binary(str), do: str
+  defp serialize_target(atm) when is_atom(atm), do: to_string(atm)
+
 end
