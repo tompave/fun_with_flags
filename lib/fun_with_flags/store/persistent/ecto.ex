@@ -4,7 +4,10 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   @moduledoc false
 
   alias FunWithFlags.{Config, Gate, Flag}
-  alias FunWithFlags.Store.Persistent.Ecto.Schema
+  alias FunWithFlags.Store.Persistent.Ecto.Record
+  alias FunWithFlags.Store.Serializer.Ecto, as: Serializer
+
+  import Ecto.Query
 
   def worker_spec do
     nil
@@ -12,13 +15,19 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
 
   def get(flag_name) do
-    {:ok, %Flag{name: flag_name, gates: []}}
-    # {:error, "reason"}
+    name_string = to_string(flag_name)
+    
+    query = from r in Record, where: r.flag_name == ^name_string
+    repo = Config.ecto_repo()
+    results = repo.all(query)
+    flag = Serializer.deserialize_flag(flag_name, results)
+
+    {:ok, flag}
   end
 
 
   def put(flag_name, gate = %Gate{}) do
-    changeset = Schema.build(flag_name, gate)
+    changeset = Record.build(flag_name, gate)
     repo = Config.ecto_repo()
 
     case repo.insert(changeset) do
@@ -36,6 +45,20 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   # A flag will continue to exist even though it has no gates.
   #
   def delete(flag_name, gate = %Gate{}) do
+    flag_name = to_string(flag_name)
+    gate_type = to_string(gate.type)
+    target    = to_string(gate.for)
+
+    query = from(
+      r in Record,
+      where: r.flag_name == ^flag_name
+      and r.gate_type == ^gate_type
+      and r.target == ^target
+    )
+    repo = Config.ecto_repo()
+
+    {count, something} = repo.delete_all(query)
+
     publish_change(flag_name)
     {:ok, %Flag{name: flag_name, gates: []}}
     # {:error, "reason"}
