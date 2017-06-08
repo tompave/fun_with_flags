@@ -43,38 +43,49 @@ defmodule FunWithFlags.Store.Serializer.EctoTest do
       ]}
       assert ^flag = Serializer.deserialize_flag(flag_name, [bool_record, actor_record, group_record])
 
-      # flag = %Flag{name: :apricot, gates: [
-      #   %Gate{type: :actor, for: "string:albicocca", enabled: true},
-      #   %Gate{type: :boolean, enabled: false},
-      #   %Gate{type: :actor, for: "user:123", enabled: false},
-      #   %Gate{type: :group, for: :penguins, enabled: true},
-      # ]}
+      flag = %Flag{name: flag_name, gates: [
+        %Gate{type: :boolean, enabled: true},
+        %Gate{type: :actor, for: "user:123", enabled: true},
+        %Gate{type: :group, for: :admins, enabled: false},
+        %Gate{type: :actor, for: "string:albicocca", enabled: false},
+        %Gate{type: :group, for: :penguins, enabled: true},
+      ]}
 
-      # raw_redis_data = [
-      #   "actor/string:albicocca", "true",
-      #   "boolean", "false",
-      #   "actor/user:123", "false",
-      #   "group/penguins", "true"
-      # ]
-      # assert ^flag = Serializer.deserialize_flag(:apricot, raw_redis_data)
+      actor_record_2 = %{actor_record | id: 5, target: "string:albicocca", enabled: false}
+      group_record_2 = %{group_record | id: 6, target: "penguins", enabled: true}
+
+      assert ^flag = Serializer.deserialize_flag(flag_name, [bool_record, actor_record, group_record, actor_record_2, group_record_2])
     end
   end
 
-  # describe "deserialize_gate() returns a Gate struct" do
-  #   test "with boolean data" do
-  #     assert %Gate{type: :boolean, for: nil, enabled: true} = Serializer.deserialize_gate(["boolean", "true"])
-  #     assert %Gate{type: :boolean, for: nil, enabled: false} = Serializer.deserialize_gate(["boolean", "false"])
-  #   end
 
-  #   test "with actor data" do
-  #     assert %Gate{type: :actor, for: "anything", enabled: true} = Serializer.deserialize_gate(["actor/anything", "true"])
-  #     assert %Gate{type: :actor, for: "really:123", enabled: false} = Serializer.deserialize_gate(["actor/really:123", "false"])
-  #   end
+  describe "deserialize_gate(flag_name, %Record{}) returns a Gate struct" do
+    setup(shared) do
+      {:ok, flag_name: to_string(shared.flag_name)}
+    end
 
-  #   test "with group data" do
-  #     assert %Gate{type: :group, for: :fishes, enabled: true} = Serializer.deserialize_gate(["group/fishes", "true"])
-  #     assert %Gate{type: :group, for: :cetacea, enabled: false} = Serializer.deserialize_gate(["group/cetacea", "false"])
-  #   end
-  # end
+    test "with boolean data", %{flag_name: flag_name, bool_record: bool_record} do
+      bool_record = %{bool_record | enabled: true}
+      assert %Gate{type: :boolean, for: nil, enabled: true} = Serializer.deserialize_gate(flag_name, bool_record)
 
+      bool_record = %{bool_record | enabled: false}
+      assert %Gate{type: :boolean, for: nil, enabled: false} = Serializer.deserialize_gate(flag_name, bool_record)
+    end
+
+    test "with actor data", %{flag_name: flag_name, actor_record: actor_record} do
+      actor_record = %{actor_record | enabled: true}
+      assert %Gate{type: :actor, for: "user:123", enabled: true} = Serializer.deserialize_gate(flag_name, actor_record)
+
+      actor_record = %{actor_record | enabled: false}
+      assert %Gate{type: :actor, for: "user:123", enabled: false} = Serializer.deserialize_gate(flag_name, actor_record)
+    end
+
+    test "with group data", %{flag_name: flag_name, group_record: group_record} do
+      group_record = %{group_record | enabled: true}
+      assert %Gate{type: :group, for: :admins, enabled: true} = Serializer.deserialize_gate(flag_name, group_record)
+
+      group_record = %{group_record | enabled: false}
+      assert %Gate{type: :group, for: :admins, enabled: false} = Serializer.deserialize_gate(flag_name, group_record)
+    end
+  end
 end
