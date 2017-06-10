@@ -3,7 +3,7 @@ if Code.ensure_loaded?(Ecto) do
 defmodule FunWithFlags.Store.Persistent.Ecto do
   @moduledoc false
 
-  alias FunWithFlags.{Config, Gate, Flag}
+  alias FunWithFlags.{Config, Gate}
   alias FunWithFlags.Store.Persistent.Ecto.Record
   alias FunWithFlags.Store.Serializer.Ecto, as: Serializer
 
@@ -16,19 +16,25 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   def get(flag_name) do
     name_string = to_string(flag_name)
-    
-    query = from r in Record, where: r.flag_name == ^name_string
-    results = repo().all(query)
-    flag = deserialize(flag_name, results)
-
-    {:ok, flag}
+    query = from(r in Record, where: r.flag_name == ^name_string)
+    try do
+      results = repo().all(query)
+      flag = deserialize(flag_name, results)
+      {:ok, flag}
+    rescue
+      e in [Ecto.QueryError] -> {:error, e}
+    end
   end
 
 
   def put(flag_name, gate = %Gate{}) do
     changeset = Record.build(flag_name, gate)
+    options = [
+      on_conflict: [set: [enabled: gate.enabled]],
+      conflict_target: [:flag_name, :gate_type, :target] # the unique index
+    ]
 
-    case repo().insert(changeset, on_conflict: [set: [enabled: gate.enabled]], conflict_target: [:flag_name, :gate_type, :target]) do
+    case repo().insert(changeset, options) do
       {:ok, _struct} ->
         {:ok, flag} = get(flag_name)
         publish_change(flag_name)
@@ -39,7 +45,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
-  # Deletes one gate from the Flag's Redis hash.
+  # Deletes one gate from the toggles table in the DB.
   # Deleting gates is idempotent and deleting unknown gates is safe.
   # A flag will continue to exist even though it has no gates.
   #
@@ -55,17 +61,19 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
       and r.target == ^target
     )
 
-    {count, something} = repo().delete_all(query)
-    {:ok, flag} = get(flag_name)
-
-    publish_change(flag_name)
-
-    {:ok, flag}
-    # {:error, "reason"}
+    try do
+      {_count, _} = repo().delete_all(query)
+      {:ok, flag} = get(flag_name)
+      publish_change(flag_name)
+      {:ok, flag}
+    rescue
+      e in [Ecto.QueryError] -> {:error, e}
+    end
   end
 
 
-  # Deletes an entire Flag's Redis hash and removes its name from the Redis set.
+  # Deletes all of of this flags' gates from the toggles table, thus deleting
+  # the entire flag.
   # Deleting flags is idempotent and deleting unknown flags is safe.
   # After the operation fetching the now-deleted flag will return the default
   # empty flag structure.
@@ -78,13 +86,14 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
       where: r.flag_name == ^flag_name
     )
 
-    {count, something} = repo().delete_all(query)
-    {:ok, flag} = get(flag_name)
-
-    publish_change(flag_name)
-
-    {:ok, flag}
-    # {:error, "reason"}
+    try do
+      {_count, _} = repo().delete_all(query)
+      {:ok, flag} = get(flag_name)
+      publish_change(flag_name)
+      {:ok, flag}
+    rescue
+      e in [Ecto.QueryError] -> {:error, e}
+    end
   end
 
 
