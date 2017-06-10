@@ -5,14 +5,14 @@ defmodule FunWithFlags.Store.Serializer.Ecto do
   alias FunWithFlags.Flag
   alias FunWithFlags.Store.Persistent.Ecto.Record
 
-  def deserialize_flag(name, []), do: Flag.new(name, [])
+  def deserialize_flag(name, []), do: Flag.new(to_atom(name), [])
 
   def deserialize_flag(name, list) when is_list(list) do
     gates =
       list
       |> Enum.map(&deserialize_gate(to_string(name), &1))
       |> Enum.reject(&(!&1))
-    Flag.new(name, gates)
+    Flag.new(to_atom(name), gates)
   end
 
 
@@ -34,4 +34,7 @@ defmodule FunWithFlags.Store.Serializer.Ecto do
   defp do_deserialize_gate(%Record{gate_type: "group", enabled: enabled, target: target}) do
     %Gate{type: :group, for: String.to_atom(target), enabled: enabled}
   end
+
+  def to_atom(atm) when is_atom(atm), do: atm
+  def to_atom(str) when is_binary(str), do: String.to_atom(str)
 end

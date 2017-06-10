@@ -18,9 +18,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     name_string = to_string(flag_name)
     
     query = from r in Record, where: r.flag_name == ^name_string
-    repo = Config.ecto_repo()
-    results = repo.all(query)
-    flag = Serializer.deserialize_flag(flag_name, results)
+    results = repo().all(query)
+    flag = deserialize(flag_name, results)
 
     {:ok, flag}
   end
@@ -28,12 +27,12 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   def put(flag_name, gate = %Gate{}) do
     changeset = Record.build(flag_name, gate)
-    repo = Config.ecto_repo()
 
-    case repo.insert(changeset) do
+    case repo().insert(changeset, on_conflict: [set: [enabled: gate.enabled]], conflict_target: [:flag_name, :gate_type, :target]) do
       {:ok, _struct} ->
+        {:ok, flag} = get(flag_name)
         publish_change(flag_name)
-        {:ok, nil}
+        {:ok, flag}
       {:error, changeset} ->
         {:error, changeset.errors}
     end
@@ -55,12 +54,13 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
       and r.gate_type == ^gate_type
       and r.target == ^target
     )
-    repo = Config.ecto_repo()
 
-    {count, something} = repo.delete_all(query)
+    {count, something} = repo().delete_all(query)
+    {:ok, flag} = get(flag_name)
 
     publish_change(flag_name)
-    {:ok, %Flag{name: flag_name, gates: []}}
+
+    {:ok, flag}
     # {:error, "reason"}
   end
 
@@ -71,19 +71,37 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   # empty flag structure.
   #
   def delete(flag_name) do
+    flag_name = to_string(flag_name)
+
+    query = from(
+      r in Record,
+      where: r.flag_name == ^flag_name
+    )
+
+    {count, something} = repo().delete_all(query)
+    {:ok, flag} = get(flag_name)
+
     publish_change(flag_name)
-    {:ok, %Flag{name: flag_name, gates: []}}
+
+    {:ok, flag}
     # {:error, "reason"}
   end
 
 
   def all_flags do
-    {:ok, [%Flag{name: :dummy, gates: []}]}
+    flags = 
+      repo().all(Record)
+      |> Enum.group_by(&(&1.flag_name))
+      |> Enum.map(fn ({name, records}) -> deserialize(name, records) end)
+    {:ok, flags}
   end
 
 
   def all_flag_names do
-    {:ok, [:dummy]}
+    query = from(r in Record, select: r.flag_name, distinct: true)
+    strings = repo().all(query)
+    atoms = Enum.map(strings, &String.to_atom(&1))
+    {:ok, atoms}
   end
 
 
@@ -91,6 +109,12 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     if Config.change_notifications_enabled? do
       Config.notifications_adapter.publish_change(flag_name)
     end
+  end
+
+  defp repo, do: Config.ecto_repo()
+
+  defp deserialize(flag_name, records) do
+    Serializer.deserialize_flag(flag_name, records)
   end
 end
 
