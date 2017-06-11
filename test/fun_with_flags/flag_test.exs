@@ -1,5 +1,5 @@
 defmodule FunWithFlags.FlagTest do
-  use ExUnit.Case, async: true
+  use FunWithFlags.TestCase, async: true
 
   alias FunWithFlags.{Flag,Gate}
 

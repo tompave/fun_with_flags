@@ -1,5 +1,5 @@
 defmodule FunWithFlags.Store.Serializer.RedisTest do
-  use ExUnit.Case, async: true
+  use FunWithFlags.TestCase, async: true
 
   alias FunWithFlags.Flag
   alias FunWithFlags.Gate

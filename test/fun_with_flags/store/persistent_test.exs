@@ -1,5 +1,5 @@
 defmodule FunWithFlags.Store.PersistentTest do
-  use ExUnit.Case, async: true
+  use FunWithFlags.TestCase, async: true
   alias FunWithFlags.Store.Persistent
 
   test "adapter() returns the Redis adapter" do

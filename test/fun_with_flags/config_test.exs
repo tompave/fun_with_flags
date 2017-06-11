@@ -1,5 +1,5 @@
 defmodule FunWithFlags.ConfigTest do
-  use ExUnit.Case, async: true
+  use FunWithFlags.TestCase, async: true
   alias FunWithFlags.Config
 
   # Test all of these in the same test case because Mix provides

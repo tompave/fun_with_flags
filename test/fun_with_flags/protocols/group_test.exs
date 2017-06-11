@@ -1,5 +1,5 @@
 defmodule FunWithFlags.GroupTest do
-  use ExUnit.Case, async: true
+  use FunWithFlags.TestCase, async: true
 
   alias FunWithFlags.{Group, TestUser}
 

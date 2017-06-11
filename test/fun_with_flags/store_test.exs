@@ -1,5 +1,5 @@
 defmodule FunWithFlags.StoreTest do
-  use ExUnit.Case, async: false
+  use FunWithFlags.TestCase, async: false
   import FunWithFlags.TestUtils
   import Mock
 

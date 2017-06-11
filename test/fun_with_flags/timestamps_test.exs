@@ -1,5 +1,5 @@
 defmodule FunWithFlags.TimestampsTest do
-  use ExUnit.Case
+  use FunWithFlags.TestCase
   alias FunWithFlags.Timestamps, as: TS
 
   test "now() returns a Unix timestamp" do

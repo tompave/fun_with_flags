@@ -1,5 +1,5 @@
 defmodule FunWithFlags.Store.CacheTest do
-  use ExUnit.Case, async: false # mocks!
+  use FunWithFlags.TestCase, async: false # mocks!
   import FunWithFlags.TestUtils
   import Mock
 
