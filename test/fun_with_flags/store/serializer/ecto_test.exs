@@ -37,17 +37,17 @@ defmodule FunWithFlags.Store.Serializer.EctoTest do
          %{flag_name: flag_name, bool_record: bool_record, actor_record: actor_record, group_record: group_record} do
 
       flag = %Flag{name: flag_name, gates: [
-        %Gate{type: :boolean, enabled: true},
         %Gate{type: :actor, for: "user:123", enabled: true},
+        %Gate{type: :boolean, enabled: true},
         %Gate{type: :group, for: :admins, enabled: false},
       ]}
       assert ^flag = Serializer.deserialize_flag(flag_name, [bool_record, actor_record, group_record])
 
       flag = %Flag{name: flag_name, gates: [
-        %Gate{type: :boolean, enabled: true},
         %Gate{type: :actor, for: "user:123", enabled: true},
-        %Gate{type: :group, for: :admins, enabled: false},
         %Gate{type: :actor, for: "string:albicocca", enabled: false},
+        %Gate{type: :boolean, enabled: true},
+        %Gate{type: :group, for: :admins, enabled: false},
         %Gate{type: :group, for: :penguins, enabled: true},
       ]}
 

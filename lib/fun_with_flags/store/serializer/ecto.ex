@@ -10,6 +10,7 @@ defmodule FunWithFlags.Store.Serializer.Ecto do
   def deserialize_flag(name, list) when is_list(list) do
     gates =
       list
+      |> Enum.sort_by(&(&1.gate_type))
       |> Enum.map(&deserialize_gate(to_string(name), &1))
       |> Enum.reject(&(!&1))
     Flag.new(to_atom(name), gates)
