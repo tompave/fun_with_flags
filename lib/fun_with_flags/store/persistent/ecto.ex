@@ -52,13 +52,13 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   # A flag will continue to exist even though it has no gates.
   #
   def delete(flag_name, gate = %Gate{}) do
-    flag_name = to_string(flag_name)
+    name_string = to_string(flag_name)
     gate_type = to_string(gate.type)
     target    = Record.serialize_target(gate.for)
 
     query = from(
       r in Record,
-      where: r.flag_name == ^flag_name
+      where: r.flag_name == ^name_string
       and r.gate_type == ^gate_type
       and r.target == ^target
     )
@@ -81,11 +81,11 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   # empty flag structure.
   #
   def delete(flag_name) do
-    flag_name = to_string(flag_name)
+    name_string = to_string(flag_name)
 
     query = from(
       r in Record,
-      where: r.flag_name == ^flag_name
+      where: r.flag_name == ^name_string
     )
 
     try do
