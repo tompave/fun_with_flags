@@ -73,7 +73,7 @@ defmodule FunWithFlags.Store.CacheTest do
     setup do
       # can't use setup_all in here, but the on_exit should
       # be run only once because it's identifed by a common ref
-      on_exit(:cache_integration_group, fn() -> clear_redis_test_db() end)
+      on_exit(:cache_integration_group, fn() -> clear_test_db() end)
       :ok
     end
 
