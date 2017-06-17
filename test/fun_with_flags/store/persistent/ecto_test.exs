@@ -52,7 +52,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
     end
 
 
-    @tag :phoenix_pubsub
+    @tag phoenix_pubsub: "with_ecto"
     test "when change notifications are enabled, put() will publish a notification to Phoenix.PubSub", %{name: name, gate: gate, flag: flag} do
       assert Config.change_notifications_enabled?
 
@@ -75,7 +75,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
     end
 
 
-    @tag :phoenix_pubsub
+    @tag phoenix_pubsub: "with_ecto"
     test "when change notifications are enabled, put() will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name, gate: gate, flag: flag} do
       assert Config.change_notifications_enabled?
       channel = "fun_with_flags_changes"
@@ -102,7 +102,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
     end
 
 
-    @tag :phoenix_pubsub
+    @tag phoenix_pubsub: "with_ecto"
     test "when change notifications are NOT enabled, put() will NOT publish a notification to Phoenix.PubSub", %{name: name, gate: gate, flag: flag} do
       u_id = NotifiPhoenix.unique_id()
 
@@ -182,7 +182,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
     end
 
 
-    @tag :phoenix_pubsub
+    @tag phoenix_pubsub: "with_ecto"
     test "when change notifications are enabled, delete(flag_name, gate) will publish a notification to PhoenixPubSub", %{name: name, group_gate: group_gate} do
       assert Config.change_notifications_enabled?
 
@@ -205,7 +205,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
     end
 
 
-    @tag :phoenix_pubsub
+    @tag phoenix_pubsub: "with_ecto"
     test "when change notifications are enabled, delete(flag_name, gate) will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name, group_gate: group_gate} do
       assert Config.change_notifications_enabled?
       channel = "fun_with_flags_changes"
@@ -232,7 +232,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
     end
 
 
-    @tag :phoenix_pubsub
+    @tag phoenix_pubsub: "with_ecto"
     test "when change notifications are NOT enabled, delete(flag_name, gate) will NOT publish a notification to Phoenix.PubSub ", %{name: name, group_gate: group_gate} do
       u_id = NotifiPhoenix.unique_id()
 
@@ -298,7 +298,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
     end
 
 
-    @tag :phoenix_pubsub
+    @tag phoenix_pubsub: "with_ecto"
     test "when change notifications are enabled, delete(flag_name) will publish a notification to Phoenix.PubSub", %{name: name} do
       assert Config.change_notifications_enabled?
 
@@ -321,7 +321,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
     end
 
 
-    @tag :phoenix_pubsub
+    @tag phoenix_pubsub: "with_ecto"
     test "when change notifications are enabled, delete(flag_name) will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name} do
       assert Config.change_notifications_enabled?
       channel = "fun_with_flags_changes"
@@ -347,7 +347,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
     end
 
 
-    @tag :phoenix_pubsub
+    @tag phoenix_pubsub: "with_ecto"
     test "when change notifications are NOT enabled, delete(flag_name) will NOT publish a notification to Phoenix.PubSub", %{name: name} do
       u_id = NotifiPhoenix.unique_id()
 

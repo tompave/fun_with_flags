@@ -69,20 +69,23 @@ defmodule FunWithFlags.Mixfile do
 
   defp aliases do
     [
-      {:"test.all", [&run_tests/1, &run_integration_tests_no_cache/1, &run_tests_phoenix_pubsub/1]},
-      {:"test.phx", [&run_tests_phoenix_pubsub/1]},
-      {:"test.ecto", [&run_tests_ecto_persistence/1]},
+      {:"test.all", [&run_tests__redis_pers__redis_pubsub/1, &run_integration_tests_no_cache/1, &run_tests__redis_pers__phoenix_pubsub/1, &run_tests__ecto_pers__phoenix_pubsub/1]},
+      {:"test.phx", [&run_tests__redis_pers__phoenix_pubsub/1]},
+      {:"test.ecto", [&run_tests__ecto_pers__phoenix_pubsub/1]},
     ]
   end
 
 
-  # Runs the entire test suite.
+  # Run the tests with Redis as persistent store and Redis PubSub as broker.
+  #
   # Cache enabled, force re-compilation.
   #
-  defp run_tests(_) do
+  defp run_tests__redis_pers__redis_pubsub(_) do
     Mix.shell.cmd(
       "mix test --color --force", 
-      env: [{"CACHE_ENABLED", "true"}]
+      env: [
+        {"CACHE_ENABLED", "true"},
+      ]
     )
   end
 
@@ -92,15 +95,17 @@ defmodule FunWithFlags.Mixfile do
   defp run_integration_tests_no_cache(_) do
     Mix.shell.cmd(
       "mix test --color --force --only integration",
-      env: [{"CACHE_ENABLED", "false"}]
+      env: [
+        {"CACHE_ENABLED", "false"},
+      ]
     )
   end
 
-  # PUBSUB_BROKER=phoenix_pubsub iex -S mix test --force --no-start --exclude redis_pubsub --include phoenix_pubsub
+  # Run the tests with Redis as persistent store and Phoenix.PubSub as broker.
   #
-  defp run_tests_phoenix_pubsub(_) do
+  defp run_tests__redis_pers__phoenix_pubsub(_) do
     Mix.shell.cmd(
-      "mix test --color --force --no-start --exclude redis_pubsub --include phoenix_pubsub", 
+      "mix test --color --force --no-start --exclude redis_pubsub --exclude ecto_persistence --exclude phoenix_pubsub:with_ecto --include phoenix_pubsub:with_redis --include phoenix_pubsub:true", 
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -110,11 +115,9 @@ defmodule FunWithFlags.Mixfile do
 
   # Run the tests with Ecto as persistent store and Phoenix.PubSub as broker.
   #
-  # PUBSUB_BROKER=phoenix_pubsub PERSISTENCE=ecto mix test --force --no-start --exclude redis_pubsub --exclude redis_persistence --include phoenix_pubsub --include ecto_persistence
-  #
-  defp run_tests_ecto_persistence(_) do
+  defp run_tests__ecto_pers__phoenix_pubsub(_) do
     Mix.shell.cmd(
-      "mix test --color --force --no-start --exclude redis_pubsub --exclude redis_persistence --include phoenix_pubsub --include ecto_persistence", 
+      "mix test --color --force --no-start --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence", 
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
