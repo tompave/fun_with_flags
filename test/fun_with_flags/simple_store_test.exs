@@ -133,16 +133,16 @@ defmodule FunWithFlags.SimpleStoreTest do
       clear_test_db()
 
       name1 = unique_atom()
-      g_1a = Gate.new(:boolean, false)
-      g_1b = Gate.new(:actor, "the actor", true)
+      g_1a = Gate.new(:actor, "the actor", true)
+      g_1b = Gate.new(:boolean, false)
       g_1c = Gate.new(:group, :horses, true)
       SimpleStore.put(name1, g_1a)
       SimpleStore.put(name1, g_1b)
       SimpleStore.put(name1, g_1c)
 
       name2 = unique_atom()
-      g_2a = Gate.new(:boolean, false)
-      g_2b = Gate.new(:actor, "another actor", true)
+      g_2a = Gate.new(:actor, "another actor", true)
+      g_2b = Gate.new(:boolean, false)
       SimpleStore.put(name2, g_2a)
       SimpleStore.put(name2, g_2b)
 
@@ -217,9 +217,9 @@ defmodule FunWithFlags.SimpleStoreTest do
 
 
   describe "in case of Persistent store failure" do
-    alias FunWithFlags.Store.Persistent.Redis, as: PersiRedis
-
-    test "it raises an error" do
+    @tag :redis_persistence
+    test "it raises an error (redis)" do
+      alias FunWithFlags.Store.Persistent.Redis, as: PersiRedis
       name = unique_atom()
 
       with_mock(PersiRedis, [], get: fn(^name) -> {:error, "mocked error"} end) do
@@ -228,6 +228,20 @@ defmodule FunWithFlags.SimpleStoreTest do
         end
         assert called(PersiRedis.get(name))
         assert {:error, "mocked error"} = PersiRedis.get(name)
+      end
+    end
+
+    @tag :ecto_persistence
+    test "it raises an error (ecto)" do
+      alias FunWithFlags.Store.Persistent.Ecto, as: PersiEcto
+      name = unique_atom()
+
+      with_mock(PersiEcto, [], get: fn(^name) -> {:error, "mocked error"} end) do
+        assert_raise RuntimeError, "Can't load feature flag", fn() ->
+          SimpleStore.lookup(name)
+        end
+        assert called(PersiEcto.get(name))
+        assert {:error, "mocked error"} = PersiEcto.get(name)
       end
     end
   end
