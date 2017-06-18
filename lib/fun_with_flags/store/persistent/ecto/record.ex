@@ -11,12 +11,11 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   end
 
   @fields [:flag_name, :gate_type, :target, :enabled]
-  @required_fields [:flag_name, :gate_type, :enabled]
 
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, @fields)
-    |> validate_required(@required_fields)
+    |> validate_required(@fields)
     |> unique_constraint(
         :gate_type,
         name: "fwf_flag_name_gate_target_idx",
