@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.9.0
 
 * Ecto persistence adapter. It's now possible to store flag data with Ecto instead of Redis; if used in conjunction with the Phoenix.PubSub adapter, it's possible to use this library in Phoenix without Redis.
 * The `redix` dependencency is now optional.
