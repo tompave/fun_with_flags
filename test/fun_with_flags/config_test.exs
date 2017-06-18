@@ -93,8 +93,8 @@ defmodule FunWithFlags.ConfigTest do
       refute Config.persist_in_ecto?
     end
 
-    test "ecto_repo() returns nil" do
-      assert is_nil(Config.ecto_repo)
+    test "ecto_repo() returns the null repo" do
+      assert FunWithFlags.NullEctoRepo = Config.ecto_repo
     end
   end
 
