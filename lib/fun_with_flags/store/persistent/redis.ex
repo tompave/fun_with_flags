@@ -1,3 +1,5 @@
+if Code.ensure_loaded?(Redix) do
+
 defmodule FunWithFlags.Store.Persistent.Redis do
   @moduledoc false
 
@@ -124,5 +126,6 @@ defmodule FunWithFlags.Store.Persistent.Redis do
   defp redis_error(reason_atom) do
     "Redis Error: #{reason_atom}"
   end
-
 end
+
+end # Code.ensure_loaded?

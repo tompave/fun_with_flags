@@ -16,6 +16,11 @@ defmodule FunWithFlags.Config do
     adapter: FunWithFlags.Notifications.Redis
   ]
 
+  @default_persistence_config [
+    adapter: FunWithFlags.Store.Persistent.Redis,
+    repo: FunWithFlags.NullEctoRepo,
+  ]
+
   def redis_config do
     case Application.get_env(:fun_with_flags, :redis, []) do
       uri  when is_binary(uri) ->
@@ -56,15 +61,27 @@ defmodule FunWithFlags.Config do
   end
 
 
+  defp persistence_config do
+    Keyword.merge(
+      @default_persistence_config,
+      Application.get_env(:fun_with_flags, :persistence, [])
+    )
+  end
+
   # Defaults to FunWithFlags.Store.Persistent.Redis
   #
   def persistence_adapter do
-    Application.get_env(
-      :fun_with_flags,
-      :persistence,
-      [adapter: FunWithFlags.Store.Persistent.Redis]
-    )
-    |> Keyword.get(:adapter)
+    Keyword.get(persistence_config(), :adapter)
+  end
+
+
+  def ecto_repo do
+    Keyword.get(persistence_config(), :repo)
+  end
+
+
+  def persist_in_ecto? do
+    persistence_adapter() == FunWithFlags.Store.Persistent.Ecto
   end
 
 

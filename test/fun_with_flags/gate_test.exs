@@ -1,5 +1,5 @@
 defmodule FunWithFlags.GateTest do
-  use ExUnit.Case, async: true
+  use FunWithFlags.TestCase, async: true
 
   alias FunWithFlags.Gate
   alias FunWithFlags.TestUser

@@ -3,11 +3,23 @@ alias FunWithFlags.{Store,Config,Flag,Gate}
 alias FunWithFlags.Store.{Cache,Persistent,Serializer}
 alias FunWithFlags.{Actor,Group}
 
-{:ok, redis} =
-  Redix.start_link(
-    Config.redis_config,
-    [name: :dev_console_redis, sync_connect: false])
+alias FunWithFlags.Dev.EctoRepo, as: Repo
+alias FunWithFlags.Store.Persistent.Ecto.Record
 
+if Config.persist_in_ecto? do
+  {:ok, _pid} = FunWithFlags.Dev.EctoRepo.start_link()
+else
+  {:ok, redis} =
+    Redix.start_link(
+      Config.redis_config,
+      [name: :dev_console_redis, sync_connect: false])
+end
+
+if Config.phoenix_pubsub? do
+  {:ok, _pid} = Phoenix.PubSub.PG2.start_link(:fwf_test, [pool_size: 1])
+end
+
+alias FunWithFlags.Store.Persistent.Ecto, as: PEcto
 
 cacheinfo = fn() ->
   size = :ets.info(:fun_with_flags_cache)[:size]

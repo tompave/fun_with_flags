@@ -414,6 +414,12 @@ Start Redis with:
 $ redis-server
 ```
 
+To test the Ecto persistence adapter, setup the DB with:
+```
+$ MIX_ENV=test PERSISTENCE=ecto mix ecto.create
+$ MIX_ENV=test PERSISTENCE=ecto mix ecto.migrate
+```
+
 Then:
 ```
 $ mix test.all

@@ -1,14 +1,15 @@
 defmodule FunWithFlags.StoreTest do
-  use ExUnit.Case, async: false
+  use FunWithFlags.TestCase, async: false
   import FunWithFlags.TestUtils
   import Mock
 
   alias FunWithFlags.{Store, Config, Flag, Gate}
   alias FunWithFlags.Store.Cache
-  alias FunWithFlags.Store.Persistent.Redis, as: PersiRedis
+
+  @persistence Config.persistence_adapter()
 
   setup_all do
-    on_exit(__MODULE__, fn() -> clear_redis_test_db() end)
+    on_exit(__MODULE__, fn() -> clear_test_db() end)
     :ok
   end
 
@@ -125,7 +126,7 @@ defmodule FunWithFlags.StoreTest do
   describe "reload(flag_name) reads the flag value from Redis and updates the Cache" do
     test "if the flag is not found in Redis, it sets it to false in the Cache", %{name: name, flag: flag} do
       empty_flag = %Flag{name: name, gates: []}
-      assert {:ok, ^empty_flag} = PersiRedis.get(name)
+      assert {:ok, ^empty_flag} = @persistence.get(name)
       assert {:miss, :not_found, nil} = Cache.get(name)
       assert {:ok, ^empty_flag} = Store.lookup(name)
 
@@ -142,8 +143,8 @@ defmodule FunWithFlags.StoreTest do
 
 
     test "if the flag is stored in Redis, it stores it in the Cache", %{name: name, gate: gate, flag: flag} do
-      {:ok, ^flag} = PersiRedis.put(name, gate)
-      assert {:ok, ^flag} = PersiRedis.get(name)
+      {:ok, ^flag} = @persistence.put(name, gate)
+      assert {:ok, ^flag} = @persistence.get(name)
 
       gate2 = %Gate{gate | enabled: false}
       flag2 = %Flag{name: name, gates: [gate2]}
@@ -164,24 +165,24 @@ defmodule FunWithFlags.StoreTest do
 
   describe "all_flags() returns the tuple {:ok, list} with all the flags" do
     test "with no saved flags it returns an empty list" do
-      clear_redis_test_db()
+      clear_test_db()
       assert {:ok, []} = Store.all_flags()
     end
 
     test "with saved flags it returns a list of flags" do
-      clear_redis_test_db()
+      clear_test_db()
 
       name1 = unique_atom()
-      g_1a = Gate.new(:boolean, false)
-      g_1b = Gate.new(:actor, "the actor", true)
+      g_1a = Gate.new(:actor, "the actor", true)
+      g_1b = Gate.new(:boolean, false)
       g_1c = Gate.new(:group, :horses, true)
       Store.put(name1, g_1a)
       Store.put(name1, g_1b)
       Store.put(name1, g_1c)
 
       name2 = unique_atom()
-      g_2a = Gate.new(:boolean, false)
-      g_2b = Gate.new(:actor, "another actor", true)
+      g_2a = Gate.new(:actor, "another actor", true)
+      g_2b = Gate.new(:boolean, false)
       Store.put(name2, g_2a)
       Store.put(name2, g_2b)
 
@@ -205,12 +206,12 @@ defmodule FunWithFlags.StoreTest do
 
   describe "all_flag_names() returns the tuple {:ok, list}, with the names of all the flags" do
     test "with no saved flags it returns an empty list" do
-      clear_redis_test_db()
+      clear_test_db()
       assert {:ok, []} = Store.all_flag_names()
     end
 
     test "with saved flags it returns a list of flag names" do
-      clear_redis_test_db()
+      clear_test_db()
 
       name1 = unique_atom()
       g_1a = Gate.new(:boolean, false)
@@ -267,12 +268,12 @@ defmodule FunWithFlags.StoreTest do
       Cache.put(flag)
 
       with_mocks([
-        {PersiRedis, [:passthrough], []},
+        {@persistence, [:passthrough], []},
         {Cache, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = Store.lookup(name)
         assert called(Cache.get(name))
-        refute called(PersiRedis.get(name))
+        refute called(@persistence.get(name))
       end
     end
 
@@ -280,11 +281,11 @@ defmodule FunWithFlags.StoreTest do
       empty_flag = %Flag{name: name, gates: []}
 
       assert {:miss, :not_found, nil} == Cache.get(name)
-      assert {:ok, ^empty_flag} = PersiRedis.get(name)
+      assert {:ok, ^empty_flag} = @persistence.get(name)
 
       Store.put(name, gate)
       assert {:ok, ^flag} = Cache.get(name)
-      assert {:ok, ^flag} = PersiRedis.get(name)
+      assert {:ok, ^flag} = @persistence.get(name)
     end
 
     test "deleting a gate will update both the cache and the persistent store", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
@@ -292,20 +293,20 @@ defmodule FunWithFlags.StoreTest do
       Store.put(name, group_gate)
 
       assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = Cache.get(name)
-      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = PersiRedis.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = @persistence.get(name)
 
       Store.delete(name, group_gate)
       assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = Cache.get(name)
-      assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = PersiRedis.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = @persistence.get(name)
 
       # repeat. check it's safe and idempotent
       Store.delete(name, group_gate)
       assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = Cache.get(name)
-      assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = PersiRedis.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = @persistence.get(name)
 
       Store.delete(name, bool_gate)
       assert {:ok, %Flag{name: ^name, gates: []}} = Cache.get(name)
-      assert {:ok, %Flag{name: ^name, gates: []}} = PersiRedis.get(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = @persistence.get(name)
     end
 
 
@@ -314,25 +315,25 @@ defmodule FunWithFlags.StoreTest do
       Store.put(name, group_gate)
 
       assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = Cache.get(name)
-      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = PersiRedis.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = @persistence.get(name)
 
       Store.delete(name)
       assert {:ok, %Flag{name: ^name, gates: []}} = Cache.get(name)
-      assert {:ok, %Flag{name: ^name, gates: []}} = PersiRedis.get(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = @persistence.get(name)
 
       # repeat. check it's safe and idempotent
       Store.delete(name)
       assert {:ok, %Flag{name: ^name, gates: []}} = Cache.get(name)
-      assert {:ok, %Flag{name: ^name, gates: []}} = PersiRedis.get(name)
+      assert {:ok, %Flag{name: ^name, gates: []}} = @persistence.get(name)
     end
 
 
     test "when the value is initially not in the cache but set in redis,
           looking it up will populate the cache", %{name: name, gate: gate, flag: flag} do
-      PersiRedis.put(name, gate)
+      @persistence.put(name, gate)
 
       assert {:miss, :not_found, nil} = Cache.get(name)
-      assert {:ok, ^flag} = PersiRedis.get(name)
+      assert {:ok, ^flag} = @persistence.get(name)
       
       assert {:ok, ^flag} = Store.lookup(name)
       assert {:ok, ^flag} = Cache.get(name)
@@ -344,7 +345,7 @@ defmodule FunWithFlags.StoreTest do
       empty_flag = %Flag{name: name, gates: []}
 
       assert {:miss, :not_found, nil} == Cache.get(name)
-      assert {:ok, ^empty_flag} = PersiRedis.get(name)
+      assert {:ok, ^empty_flag} = @persistence.get(name)
 
       assert {:ok, ^empty_flag} = Store.lookup(name)
       assert {:ok, ^empty_flag} = Cache.get(name)
@@ -352,11 +353,11 @@ defmodule FunWithFlags.StoreTest do
 
 
     test "put() will change both the value stored in the Cache and in Redis", %{name: name, gate: gate, flag: flag} do
-      {:ok, ^flag} = PersiRedis.put(name, gate)
+      {:ok, ^flag} = @persistence.put(name, gate)
       {:ok, ^flag} = Cache.put(flag)
 
       assert {:ok, ^flag} = Cache.get(name)
-      assert {:ok, ^flag} = PersiRedis.get(name)
+      assert {:ok, ^flag} = @persistence.get(name)
 
       gate2 = %Gate{gate | enabled: false}
       flag2 = %Flag{name: name, gates: [gate2]}
@@ -364,16 +365,16 @@ defmodule FunWithFlags.StoreTest do
       {:ok, ^flag2} = Store.put(name, gate2)
 
       assert {:ok, ^flag2} = Cache.get(name)
-      assert {:ok, ^flag2} = PersiRedis.get(name)
+      assert {:ok, ^flag2} = @persistence.get(name)
     end
 
 
     test "when a value in the cache expires, it will load it from redis
           and update the cache", %{name: name, gate: gate, flag: flag} do
-      PersiRedis.put(name, gate)
+      @persistence.put(name, gate)
 
       assert {:miss, :not_found, nil} = Cache.get(name)
-      assert {:ok, ^flag} = PersiRedis.get(name)
+      assert {:ok, ^flag} = @persistence.get(name)
 
       assert {:ok, ^flag} = Store.lookup(name)
       assert {:ok, ^flag} = Cache.get(name)
@@ -392,18 +393,18 @@ defmodule FunWithFlags.StoreTest do
       Cache.put(flag)
 
       with_mocks([
-        {PersiRedis, [], get: fn(^name) -> {:error, "mocked error"} end},
+        {@persistence, [], get: fn(^name) -> {:error, "mocked error"} end},
         {Cache, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = Store.lookup(name)
         assert called(Cache.get(name))
-        refute called(PersiRedis.get(name))
+        refute called(@persistence.get(name))
       end
     end
 
 
     test "if the Cached value is expired, it will still be used", %{name: name, gate: gate, flag: flag} do
-      PersiRedis.put(name, gate)
+      @persistence.put(name, gate)
       assert {:ok, ^flag} = Store.lookup(name)
 
       gate2 = %Gate{gate | enabled: false}
@@ -413,29 +414,29 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, ^flag2} = Cache.get(name)
 
       timetravel by: (Config.cache_ttl + 1) do
-        with_mock(PersiRedis, [], get: fn(^name) -> {:error, "mocked error"} end) do
+        with_mock(@persistence, [], get: fn(^name) -> {:error, "mocked error"} end) do
           assert {:ok, ^flag2} = Store.lookup(name)
           assert {:miss, :expired, ^flag2} = Cache.get(name)
-          assert called(PersiRedis.get(name))
-          assert {:error, "mocked error"} = PersiRedis.get(name)
+          assert called(@persistence.get(name))
+          assert {:error, "mocked error"} = @persistence.get(name)
         end
       end
     end
 
 
     test "if there is no cached value, it raises an error", %{name: name, gate: gate, flag: flag} do
-      PersiRedis.put(name, gate)
+      @persistence.put(name, gate)
       assert {:ok, ^flag} = Store.lookup(name)
 
       Cache.flush()
       assert {:miss, :not_found, nil} = Cache.get(name)
 
-      with_mock(PersiRedis, [], get: fn(^name) -> {:error, "mocked error"} end) do
+      with_mock(@persistence, [], get: fn(^name) -> {:error, "mocked error"} end) do
         assert_raise RuntimeError, "Can't load feature flag '#{name}' from neither storage nor the cache", fn() ->
           Store.lookup(name)
         end
-        assert called(PersiRedis.get(name))
-        assert {:error, "mocked error"} = PersiRedis.get(name)
+        assert called(@persistence.get(name))
+        assert {:error, "mocked error"} = @persistence.get(name)
       end
     end
   end

@@ -22,6 +22,13 @@ with_phx_pubsub =
     _ -> false
   end
 
+with_ecto =
+  case System.get_env("PERSISTENCE") do
+    "ecto" -> true
+    _      -> false # default
+  end
+
+
 # -------------------------------------------------
 # Configuration
 
@@ -37,6 +44,24 @@ if with_phx_pubsub do
   ]
 end
 
+
+if with_ecto do
+  # this library's config
+  config :fun_with_flags, :persistence,
+    adapter: FunWithFlags.Store.Persistent.Ecto,
+    repo: FunWithFlags.Dev.EctoRepo
+
+  # ecto's config
+  config :fun_with_flags, ecto_repos: [FunWithFlags.Dev.EctoRepo]
+
+  config :fun_with_flags, FunWithFlags.Dev.EctoRepo,
+    adapter: Ecto.Adapters.Postgres,
+    username: "postgres",
+    password: "postgres",
+    database: "fun_with_flags_dev",
+    hostname: "localhost",
+    pool_size: 10
+end
 
 # -------------------------------------------------
 # Import

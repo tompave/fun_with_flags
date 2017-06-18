@@ -1,0 +1,3 @@
+#!/bin/bash
+
+PERSISTENCE=ecto PUBSUB_BROKER=phoenix_pubsub iex -S mix

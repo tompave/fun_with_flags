@@ -1,5 +1,5 @@
 defmodule FunWithFlags.ConfigTest do
-  use ExUnit.Case, async: true
+  use FunWithFlags.TestCase, async: true
   alias FunWithFlags.Config
 
   # Test all of these in the same test case because Mix provides
@@ -83,10 +83,35 @@ defmodule FunWithFlags.ConfigTest do
   end
 
 
-  test "persistence_adapter() returns a module" do
-    assert FunWithFlags.Store.Persistent.Redis = Config.persistence_adapter
+  describe "When we are persisting data in Redis" do
+    @describetag :redis_persistence
+    test "persistence_adapter() returns the Redis module" do
+      assert FunWithFlags.Store.Persistent.Redis = Config.persistence_adapter
+    end
+
+    test "persist_in_ecto? returns false" do
+      refute Config.persist_in_ecto?
+    end
+
+    test "ecto_repo() returns the null repo" do
+      assert FunWithFlags.NullEctoRepo = Config.ecto_repo
+    end
   end
 
+  describe "When we are persisting data in Ecto" do
+    @describetag :ecto_persistence
+    test "persistence_adapter() returns the Ecto module" do
+      assert FunWithFlags.Store.Persistent.Ecto = Config.persistence_adapter
+    end
+
+    test "persist_in_ecto? returns true" do
+      assert Config.persist_in_ecto?
+    end
+
+    test "ecto_repo() returns a repo" do
+      assert FunWithFlags.Dev.EctoRepo = Config.ecto_repo
+    end
+  end
 
 
   describe "When we are sending notifications with Redis PubSub" do

@@ -1,4 +1,6 @@
 defmodule FunWithFlags.TestUtils do
+  alias FunWithFlags.Config
+
   @test_db 5
   @redis FunWithFlags.Store.Persistent.Redis
 
@@ -20,12 +22,14 @@ defmodule FunWithFlags.TestUtils do
     Redix.command!(@redis, ["SELECT", @test_db])
   end
 
-  def clear_redis_test_db do
-    use_redis_test_db()
+  def clear_test_db do
+    unless Config.persist_in_ecto? do
+      use_redis_test_db()
 
-    Redix.command!(@redis, ["DEL", "fun_with_flags"])
-    Redix.command!(@redis, ["KEYS", "fun_with_flags:*"])
-    |> delete_keys()
+      Redix.command!(@redis, ["DEL", "fun_with_flags"])
+      Redix.command!(@redis, ["KEYS", "fun_with_flags:*"])
+      |> delete_keys()
+    end
   end
 
   defp delete_keys([]), do: 0

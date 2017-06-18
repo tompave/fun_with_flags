@@ -25,8 +25,24 @@ defmodule FunWithFlags.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
-    [extra_applications: [:logger],
+    [extra_applications: extra_applications(Mix.env),
      mod: {FunWithFlags.Application, []}]
+  end
+ 
+  defp extra_applications(:test), do: local_extra_applications()
+  defp extra_applications(:dev),  do: local_extra_applications()
+  defp extra_applications(_),     do: [:logger]
+
+  # When working locally with the Ecto adapter, start the postgrex
+  # application. It's not started automatically because it's
+  # optional, I think.
+  #
+  defp local_extra_applications do
+    if System.get_env("PERSISTENCE") == "ecto" do
+      [:logger, :postgrex]
+    else
+      [:logger]
+    end
   end
 
   # Dependencies can be Hex packages:
@@ -45,43 +61,55 @@ defmodule FunWithFlags.Mixfile do
       {:redix, "~> 0.6.1"},
       {:redix_pubsub, "~> 0.4.1", optional: true},
       {:phoenix_pubsub, "~> 1.0", optional: true},
+      {:ecto, "~> 2.1", optional: true},
+      {:postgrex, "~> 0.13", optional: true, only: [:dev, :test]},
     ]
   end
 
 
   defp aliases do
     [
-      {:"test.all", [&run_tests/1, &run_integration_tests_no_cache/1, &run_tests_phoenix_pubsub/1]},
-      {:"test.phx", [&run_tests_phoenix_pubsub/1]},
+      {:"test.all", [
+        &run_tests__redis_pers__redis_pubsub/1, &run_integration_tests__redis_pers__redis_pubsub__no_cache/1,
+        &run_tests__redis_pers__phoenix_pubsub/1, &run_integration_tests__redis_pers__phoenix_pubsub__no_cache/1,
+        &run_tests__ecto_pers__phoenix_pubsub/1, &run_integration_tests__ecto_pers__phoenix_pubsub__no_cache/1,
+      ]},
+      {:"test.phx", [&run_tests__redis_pers__phoenix_pubsub/1]},
+      {:"test.ecto", [&run_tests__ecto_pers__phoenix_pubsub/1]},
     ]
   end
 
 
-  # Runs the entire test suite.
+  # Run the tests with Redis as persistent store and Redis PubSub as broker.
+  #
   # Cache enabled, force re-compilation.
   #
-  defp run_tests(_) do
+  defp run_tests__redis_pers__redis_pubsub(_) do
     Mix.shell.cmd(
-      "mix test --color --force", 
-      env: [{"CACHE_ENABLED", "true"}]
+      "mix test --color --force --exclude phoenix_pubsub --exclude ecto_persistence", 
+      env: [
+        {"CACHE_ENABLED", "true"},
+      ]
     )
   end
 
   # Runs the integration tests only.
-  # Cache disabled, force re-compilation.
+  # Cache disabled, Redis as persistent store and Redis PubSub as broker.
   #
-  defp run_integration_tests_no_cache(_) do
+  defp run_integration_tests__redis_pers__redis_pubsub__no_cache(_) do
     Mix.shell.cmd(
       "mix test --color --force --only integration",
-      env: [{"CACHE_ENABLED", "false"}]
+      env: [
+        {"CACHE_ENABLED", "false"},
+      ]
     )
   end
 
-  # PUBSUB_BROKER=phoenix_pubsub iex -S mix test --force --no-start --exclude redis_pubsub --include phoenix_pubsub
+  # Run the tests with Redis as persistent store and Phoenix.PubSub as broker.
   #
-  defp run_tests_phoenix_pubsub(_) do
+  defp run_tests__redis_pers__phoenix_pubsub(_) do
     Mix.shell.cmd(
-      "mix test --color --force --no-start --exclude redis_pubsub --include phoenix_pubsub", 
+      "mix test --color --force --no-start --exclude redis_pubsub --exclude ecto_persistence --exclude phoenix_pubsub:with_ecto --include phoenix_pubsub:with_redis --include phoenix_pubsub:true", 
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -89,8 +117,49 @@ defmodule FunWithFlags.Mixfile do
     )
   end
 
+  # Runs the integration tests only.
+  # Cache disabled, Redis as persistent store and Phoenix.PubSubas broker.
+  #
+  defp run_integration_tests__redis_pers__phoenix_pubsub__no_cache(_) do
+    Mix.shell.cmd(
+      "mix test --color --force --no-start --only integration",
+      env: [
+        {"CACHE_ENABLED", "false"},
+        {"PUBSUB_BROKER", "phoenix_pubsub"},
+      ]
+    )
+  end
 
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  # Run the tests with Ecto as persistent store and Phoenix.PubSub as broker.
+  #
+  defp run_tests__ecto_pers__phoenix_pubsub(_) do
+    Mix.shell.cmd(
+      "mix test --color --force --no-start --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence", 
+      env: [
+        {"CACHE_ENABLED", "true"},
+        {"PUBSUB_BROKER", "phoenix_pubsub"},
+        {"PERSISTENCE", "ecto"},
+      ]
+    )
+  end
+
+  # Runs the integration tests only.
+  # Cache disabled, Ecto as persistent store and Phoenix.PubSub as broker.
+  #
+  defp run_integration_tests__ecto_pers__phoenix_pubsub__no_cache(_) do
+    Mix.shell.cmd(
+      "mix test --color --force --no-start --only integration",
+      env: [
+        {"CACHE_ENABLED", "false"},
+        {"PUBSUB_BROKER", "phoenix_pubsub"},
+        {"PERSISTENCE", "ecto"},
+      ]
+    )
+  end
+
+
+  defp elixirc_paths(:test), do: ["lib", "test/support", "dev_support"]
+  defp elixirc_paths(:dev), do: ["lib", "dev_support"]
   defp elixirc_paths(_),     do: ["lib"]
 
 

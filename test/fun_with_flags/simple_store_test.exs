@@ -1,5 +1,5 @@
 defmodule FunWithFlags.SimpleStoreTest do
-  use ExUnit.Case, async: false
+  use FunWithFlags.TestCase, async: false
   import FunWithFlags.TestUtils
   import Mock
 
@@ -7,7 +7,7 @@ defmodule FunWithFlags.SimpleStoreTest do
   alias FunWithFlags.{Flag, Gate}
 
   setup_all do
-    on_exit(__MODULE__, fn() -> clear_redis_test_db() end)
+    on_exit(__MODULE__, fn() -> clear_test_db() end)
     :ok
   end
 
@@ -125,24 +125,24 @@ defmodule FunWithFlags.SimpleStoreTest do
 
   describe "all_flags() returns the tuple {:ok, list} with all the flags" do
     test "with no saved flags it returns an empty list" do
-      clear_redis_test_db()
+      clear_test_db()
       assert {:ok, []} = SimpleStore.all_flags()
     end
 
     test "with saved flags it returns a list of flags" do
-      clear_redis_test_db()
+      clear_test_db()
 
       name1 = unique_atom()
-      g_1a = Gate.new(:boolean, false)
-      g_1b = Gate.new(:actor, "the actor", true)
+      g_1a = Gate.new(:actor, "the actor", true)
+      g_1b = Gate.new(:boolean, false)
       g_1c = Gate.new(:group, :horses, true)
       SimpleStore.put(name1, g_1a)
       SimpleStore.put(name1, g_1b)
       SimpleStore.put(name1, g_1c)
 
       name2 = unique_atom()
-      g_2a = Gate.new(:boolean, false)
-      g_2b = Gate.new(:actor, "another actor", true)
+      g_2a = Gate.new(:actor, "another actor", true)
+      g_2b = Gate.new(:boolean, false)
       SimpleStore.put(name2, g_2a)
       SimpleStore.put(name2, g_2b)
 
@@ -166,12 +166,12 @@ defmodule FunWithFlags.SimpleStoreTest do
 
   describe "all_flag_names() returns the tuple {:ok, list}, with the names of all the flags" do
     test "with no saved flags it returns an empty list" do
-      clear_redis_test_db()
+      clear_test_db()
       assert {:ok, []} = SimpleStore.all_flag_names()
     end
 
     test "with saved flags it returns a list of flag names" do
-      clear_redis_test_db()
+      clear_test_db()
 
       name1 = unique_atom()
       g_1a = Gate.new(:boolean, false)
@@ -217,9 +217,9 @@ defmodule FunWithFlags.SimpleStoreTest do
 
 
   describe "in case of Persistent store failure" do
-    alias FunWithFlags.Store.Persistent.Redis, as: PersiRedis
-
-    test "it raises an error" do
+    @tag :redis_persistence
+    test "it raises an error (redis)" do
+      alias FunWithFlags.Store.Persistent.Redis, as: PersiRedis
       name = unique_atom()
 
       with_mock(PersiRedis, [], get: fn(^name) -> {:error, "mocked error"} end) do
@@ -228,6 +228,20 @@ defmodule FunWithFlags.SimpleStoreTest do
         end
         assert called(PersiRedis.get(name))
         assert {:error, "mocked error"} = PersiRedis.get(name)
+      end
+    end
+
+    @tag :ecto_persistence
+    test "it raises an error (ecto)" do
+      alias FunWithFlags.Store.Persistent.Ecto, as: PersiEcto
+      name = unique_atom()
+
+      with_mock(PersiEcto, [], get: fn(^name) -> {:error, "mocked error"} end) do
+        assert_raise RuntimeError, "Can't load feature flag", fn() ->
+          SimpleStore.lookup(name)
+        end
+        assert called(PersiEcto.get(name))
+        assert {:error, "mocked error"} = PersiEcto.get(name)
       end
     end
   end

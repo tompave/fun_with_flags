@@ -1,5 +1,5 @@
 defmodule FunWithFlagsTest do
-  use ExUnit.Case, async: false
+  use FunWithFlags.TestCase, async: false
   import FunWithFlags.TestUtils
   import Mock
 
@@ -7,7 +7,7 @@ defmodule FunWithFlagsTest do
   doctest FunWithFlags
 
   setup_all do
-    on_exit(__MODULE__, fn() -> clear_redis_test_db() end)
+    on_exit(__MODULE__, fn() -> clear_test_db() end)
     :ok
   end
 
@@ -526,12 +526,12 @@ defmodule FunWithFlagsTest do
   describe "all_flags() returns the tuple {:ok, list} with all the flags" do
     alias FunWithFlags.{Flag, Gate}
     test "with no saved flags it returns an empty list" do
-      clear_redis_test_db()
+      clear_test_db()
       assert {:ok, []} = FunWithFlags.all_flags()
     end
 
     test "with saved flags it returns a list of flags" do
-      clear_redis_test_db()
+      clear_test_db()
 
       name1 = unique_atom()
       FunWithFlags.enable(name1)
@@ -571,12 +571,12 @@ defmodule FunWithFlagsTest do
 
   describe "all_flag_names() returns the tuple {:ok, list}, with the names of all the flags" do
     test "with no saved flags it returns an empty list" do
-      clear_redis_test_db()
+      clear_test_db()
       assert {:ok, []} = FunWithFlags.all_flag_names()
     end
 
     test "with saved flags it returns a list of flag names" do
-      clear_redis_test_db()
+      clear_test_db()
 
       name1 = unique_atom()
       FunWithFlags.enable(name1)
