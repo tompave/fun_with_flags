@@ -1,12 +1,3 @@
-# By default exclude the phoenix pubsub tests and the ecto persistence tests,
-# so that the tests will default to run with just Redis for persistence
-# and pubsub notifications.
-#
-ExUnit.configure exclude: [
-  :phoenix_pubsub,
-  :ecto_persistence,
-]
-
 # If we are not using Ecto and we're not using Phoenix.PubSub, then
 # we need a Redis instance for either persistence or PubSub.
 does_anything_need_redis = !(
