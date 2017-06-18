@@ -12,7 +12,7 @@ This readme refers to the `master` branch. For the latest version released on He
 
 FunWithFlags is an OTP application that provides a 2-level storage to save and retrieve feature flags, an Elixir API to toggle and query them, and a [web dashboard](#web-dashboard) as control panel.
 
-It stores flag information in Redis for persistence and syncronization across different nodes, but it also maintains a local cache in an ETS table for fast lookups. When flags are added or toggled on a node, the other nodes are notified via PubSub and reload their local ETS caches.
+It stores flag information in Redis or a RDBMS (with Ecto) for persistence and syncronization across different nodes, but it also maintains a local cache in an ETS table for fast lookups. When flags are added or toggled on a node, the other nodes are notified via PubSub and reload their local ETS caches.
 
 ## Content
 
@@ -279,8 +279,8 @@ This library is heavily inspired by the [flipper Ruby gem](https://github.com/jn
 
 Having used Flipper in production at scale, this project aims to improve in two main areas:
 
-* Minimize the load on Redis: feature flags are not toggled _that_ often, and there is no need to query Redis for each check.
-* Be more reliable: it should keep working with the latest cached values even if Redis becomes unavailable, although with the risk of nodes getting out of sync.
+* Minimize the load on the persistence layer: feature flags are not toggled _that_ often, and there is no need to query Redis or the DB for each check.
+* Be more reliable: it should keep working with the latest cached values even if Redis becomes unavailable, although with the risk of nodes getting out of sync. (if the DB becomes unavailable, feature flags are probably the last of your problems)
 
 Just as Elixir and Phoenix are meant to scale better than Ruby on Rails with high levels of traffic and concurrency, FunWithFlags should aim to be more scalable and reliable than Flipper.
 
@@ -290,7 +290,7 @@ Just as Elixir and Phoenix are meant to scale better than Ruby on Rails with hig
 > 
 > -- Phil Karlton
 
-The reason to add an ETS cache is that, most of the time, feature flags can be considered static values. Doing a round-trip to Redis is expensive in terms of time and in terms of resources, expecially if multiple flags must be checked during a single web request. In the worst cases, the load on Redis can become a cause of concern, a performance bottleneck or the source of a system failure.
+The reason to add an ETS cache is that, most of the time, feature flags can be considered static values. Doing a round-trip to the DB (Redis or RDBMS) is expensive in terms of time and in terms of resources, expecially if multiple flags must be checked during a single web request. In the worst cases, the load on the DB can become a cause of concern, a performance bottleneck or the source of a system failure.
 
 Often the solution is to memoize the flag values _in the context of the web request_, but the apprach can be extended to the scope of the entire server.
 
@@ -302,27 +302,40 @@ FunWithFlags uses three mechanisms to deal with the problem:
 
 1. Use PubSub to emit change notifications. All nodes subscribe to the same channel and reload flags in the ETS cache when required.
 2. If that fails, the cache has a configurable TTL. Reading from redis every few minutes is still better than doing so 30k times per second.
-3. If that doesn't work, it's possible to disable the cache and just read from Redis all the time. That's what Flipper does.
+3. If that doesn't work, it's possible to disable the cache and just read from the DB all the time. That's what Flipper does.
 
 
 ## To Do
 
-* Add some optional randomness to the TTL, so that Redis doesn't get hammered at constant intervals after a server restart.
+* Add some optional randomness to the TTL, so that Redis or the DB don't get hammered at constant intervals after a server restart.
 * % of actors gate.
 * % of time gate.
-* Alternative persistence adapter (Ecto or Postgrex).
 
 
 ## Configuration
 
-The library can be configured in host applications through Mix and the `config.exs` file. This example shows the default values:
+The library can be configured in host applications through Mix and the `config.exs` file. This example shows some default values:
 
 ```elixir
 config :fun_with_flags, :cache,
   enabled: true,
   ttl: 900 # in seconds
 
-# the Redis options will be forwarded to Redix
+# the Redis persistence adapter is the default, no need to set this.
+config :fun_with_flags, :persistence,
+  [adapter: FunWithFlags.Store.Persistent.Redis]
+
+# this can be disabled if you are running on a single node and don't need to
+# sync different ETS caches. It won't have any effect if the cache is disabled.
+# The Redis PuSub adapter is the default, no need to set this.
+config :fun_with_flags, :cache_bust_notifications,
+  [enabled: true, adapter: FunWithFlags.Notifications.Redis]
+```
+
+When using Redis for persistence and/or cache-busting PubSub it is necessary to configure the connection to the Redis instance. These options can be omitted if Redis is not being used. For example, the defaults:
+
+```elixir
+# the Redis options will be forwarded to Redix.
 config :fun_with_flags, :redis,
   host: 'localhost',
   port: 6379,
@@ -330,33 +343,45 @@ config :fun_with_flags, :redis,
 
 # a URL string can be used instead
 config :fun_with_flags, :redis, "redis://locahost:6379/0"
-
-# only the Redis adapter is available at the moment. No need to set this.
-config :fun_with_flags, :persistence,
-  [adapter: FunWithFlags.Store.Persistent.Redis]
-
-# this can be disabled if you are running on a single node and don't need to
-# sync different ETS caches. It won't have any effect if the cache is disabled.
-config :fun_with_flags, :cache_bust_notifications,
-  [enabled: true, adapter: FunWithFlags.Notifications.Redis]
 ```
 
 ### Persistence Adapters
 
-It's possible to configure different persistence adapters. The default is the provided Redis module and there is no need to set it explicitly. No other persistent adapters are provided at the moment, but the internal API allows the development of 3rd party adapters.
+The library comes with two persistence adapters for the the [`Redix`](https://hex.pm/packages/redix) and [`Ecto`](https://hex.pm/packages/ecto) libraries, that allow to persist feature flag data in Redis and relational databases, respectively. In order to use any of them, you must declare the correct optional dependency in the Mixfile (see the [installation](#installation) instructions, below).
 
-To configure them:
+The Redis adapter is the default and there is no need to explicitly declare it. All it needs is the Redis connection configuration.
+
+In order to use the Ecto adapter, an Ecto repo must be provided in the configuration. FunWithFlags expects the Ecto repo to be initialized by the host application, which also needs to start and supervise any required processes. If using Phoenix this is managed automatically by the framework, and it's fine to use the same repo used by the rest of the application.
+
+The Ecto adapter implicitly requires a lower level DB adapter (e.g. [`postgrex`](https://hex.pm/packages/postgrex) for PostgreSQL). This is usually a detail managed by Ecto, which means that this library can work with different underlying DBs as long as Ecto knows how to talk with them.
+
+To configure the Ecto adapter:
 
 ```elixir
-config :fun_with_flags, :persistence, [adapter: MyCustomPersistenceModule]
+
+# normal Phoenix configuration
+config :my_app, ecto_repos: [MyApp.Repo]
+config :my_app, MyApp.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  username: "postgres",
+  password: "postgres",
+  database: "my_app_dev",
+  hostname: "localhost",
+  pool_size: 10
+
+# FunWithFlags configuration
+config :fun_with_flags, :persistence,
+  adapter: FunWithFlags.Store.Persistent.Ecto,
+  repo: MyApp.Repo
 ```
 
+It's also necessary to create the DB table that will hold the feature flag data. To do that, [create a new migration](https://hexdocs.pm/ecto/Mix.Tasks.Ecto.Gen.Migration.html) in your project and copy the contents of [the provided migration file](https://github.com/tompave/fun_with_flags/blob/master/priv/ecto_repo/migrations/00000000000000_create_feature_flags_table.exs). Then [run the migration](https://hexdocs.pm/ecto/Mix.Tasks.Ecto.Migrate.html).
 
 ### PubSub Adapters
 
-The library comes with two PubSub adapters: [`Redix.PubSub`](https://hex.pm/packages/redix_pubsub) and [`Phoenix.PubSub`](https://hex.pm/packages/phoenix_pubsub). In order to use them, you must declare the correct optional dependency in the Mixfile. (see the [installation](#installation) instructions, below)
+The library comes with two PubSub adapters for the [`Redix.PubSub`](https://hex.pm/packages/redix_pubsub) and [`Phoenix.PubSub`](https://hex.pm/packages/phoenix_pubsub) libraries. In order to use any of them, you must declare the correct optional dependency in the Mixfile. (see the [installation](#installation) instructions, below)
 
-The Redis adapter is the default and it connects directly to the Redis instance used for persisting the flag data.
+The Redis PubSub adapter is the default and doesn't need to be excplicity configured. It can only be used in conjunction with the Redis persistence adapter however, and is not available when using Ecto for persistence. When used, it connects directly to the Redis instance used for persisting the the flag data.
 
 The Phoenix PubSub adapter uses the high level API of `Phoenix.PubSub`, which means that under the hood it could use either its PG2 or Redis adapters, and this library doesn't need to know. It's provided as a convenient way to leverage distributed Erlang when using FunWithFlags in a Phoenix application, although it can be used independently (without the rest of the Phoenix framework) to add PubSub to Elixir apps running on Erlang clusters.  
 FunWithFlags expects the `Phoenix.PubSub` process to be started by the host application, and in order to use this adapter the client (name or PID) must be provided in the configuration.
@@ -364,10 +389,13 @@ FunWithFlags expects the `Phoenix.PubSub` process to be started by the host appl
 For example, in Phoenix it would be:
 
 ```elixir
+# normal Phoenix configuration
 config :my_app, MyApp.Web.Endpoint,
   pubsub: [name: MyApp.PubSub, adapter: Phoenix.PubSub.PG2]
 
+# FunWithFlags configuration
 config :fun_with_flags, :cache_bust_notifications,
+  enabled: true,
   adapter: FunWithFlags.Notifications.PhoenixPubSub,
   client: MyApp.PubSub
 ```
@@ -380,6 +408,7 @@ Or, without Phoenix:
 
 # config/config.exs
 config :fun_with_flags, :cache_bust_notifications,
+  enabled: true,
   adapter: FunWithFlags.Notifications.PhoenixPubSub,
   client: :my_pubsub_process_name
 ```
@@ -396,7 +425,12 @@ def deps do
     {:fun_with_flags, "~> 0.8.1"},
 
     # either:
-    {:redix_pubsub, "~> 0.4.1"},
+    {:redix, "~> 0.6"},
+    # or:
+    {:ecto, "~> 2.1",
+
+    # either:
+    {:redix_pubsub, "~> 0.4"}, # depends on :redix
     # or:
     {:phoenix_pubsub, "~> 1.0"},
   ]
@@ -407,25 +441,20 @@ Since FunWithFlags depends on Elixir `1.4`, there is [no need to explicitly decl
 
 ## Testing
 
-This library depends on Redis and you'll need it installed on your system in order to run the tests. A test run will create a few keys in the [Redis db number 5](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_utils.ex#L2) and then remove them, but it's safer to start Redis in a directory where there is no `dump.rdb` file you care about to avoid issues.
+This library depends on Redis and PostgreSQL, and you'll need them installed and running on your system in order to run the complete test suite. The tests will use the [Redis db number 5](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_utils.ex#L2) and then clean after themselves, but it's safer to start Redis in a directory where there is no `dump.rdb` file you care about to avoid issues. The Ecto tests will use the SQL sandbox and all transactions will be automatically rolled back.
 
-Start Redis with:
-```shell
-$ redis-server
+To setup the test DB for the Ecto persistence tests, run:
+
+```
+$ MIX_ENV=test PERSISTENCE=ecto mix do ecto.create, ecto.migrate
 ```
 
-To test the Ecto persistence adapter, setup the DB with:
-```
-$ MIX_ENV=test PERSISTENCE=ecto mix ecto.create
-$ MIX_ENV=test PERSISTENCE=ecto mix ecto.migrate
-```
-
-Then:
+Then, to run all the tests:
 ```
 $ mix test.all
 ```
 
-The `test.all` task will run the test suite multiple times with different configurations, to exercise a matrix of options and adapters.
+The `test.all` task will run the test suite multiple times with different configurations to exercise a matrix of options and adapters.
 
 ## Common Issues
 
