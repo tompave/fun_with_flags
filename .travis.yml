@@ -1,3 +1,4 @@
+dist: trusty
 language: elixir
 elixir:
   - 1.4
@@ -5,13 +6,21 @@ otp_release:
   - 19.3
   - 18.3
 env:
-  - CACHE_ENABLED=true
-  - CACHE_ENABLED=true TEST_OPTS='--exclude redis_pubsub --include phoenix_pubsub --no-start' PUBSUB_BROKER=phoenix_pubsub
+  - CACHE_ENABLED=true  TEST_OPTS='--exclude phoenix_pubsub --exclude ecto_persistence'
   - CACHE_ENABLED=false TEST_OPTS='--only integration'
+  - CACHE_ENABLED=true  PUBSUB_BROKER=phoenix_pubsub TEST_OPTS='--no-start --exclude redis_pubsub --exclude ecto_persistence --exclude phoenix_pubsub:with_ecto --include phoenix_pubsub:with_redis --include phoenix_pubsub:true' 
+  - CACHE_ENABLED=false PUBSUB_BROKER=phoenix_pubsub TEST_OPTS='--no-start --only integration'
+  - CACHE_ENABLED=true  PUBSUB_BROKER=phoenix_pubsub PERSISTENCE=ecto TEST_OPTS='--no-start --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence' 
+  - CACHE_ENABLED=false PUBSUB_BROKER=phoenix_pubsub PERSISTENCE=ecto TEST_OPTS='--no-start --only integration'
 services:
   - redis-server
+addons:
+  postgresql: "9.6"
 script:
   - mix test --force $TEST_OPTS
+before_script:
+  - MIX_ENV=test mix ecto.create
+  - MIX_ENV=test mix ecto.migrate
 notifications:
   email:
     on_success: never
