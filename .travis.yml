@@ -2,6 +2,7 @@ dist: trusty
 language: elixir
 elixir:
   - 1.4
+  - 1.5
 otp_release:
   - 20.0
   - 19.3
@@ -13,6 +14,10 @@ env:
   - CACHE_ENABLED=false PUBSUB_BROKER=phoenix_pubsub TEST_OPTS='--no-start --only integration'
   - CACHE_ENABLED=true  PUBSUB_BROKER=phoenix_pubsub PERSISTENCE=ecto TEST_OPTS='--no-start --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence' 
   - CACHE_ENABLED=false PUBSUB_BROKER=phoenix_pubsub PERSISTENCE=ecto TEST_OPTS='--no-start --only integration'
+matrix:
+  exclude:
+    - elixir: 1.5
+      otp_release: 18.3
 services:
   - redis-server
 addons:
