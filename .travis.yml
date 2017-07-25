@@ -17,7 +17,7 @@ env:
 matrix:
   exclude:
     - elixir: 1.5
-      otp_release: 1.8
+      otp_release: 18.3
 services:
   - redis-server
 addons:
