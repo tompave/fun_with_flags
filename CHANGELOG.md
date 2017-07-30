@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.9.2
+
+Bug Fixes:
+
+* Fixed another issue with modules referencing Ecto.
+
 ## v0.9.1
 
 Bug Fixes:

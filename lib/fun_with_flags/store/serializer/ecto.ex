@@ -1,3 +1,5 @@
+if Code.ensure_loaded?(Ecto) do
+
 defmodule FunWithFlags.Store.Serializer.Ecto do
   @moduledoc false
 
@@ -39,3 +41,5 @@ defmodule FunWithFlags.Store.Serializer.Ecto do
   def to_atom(atm) when is_atom(atm), do: atm
   def to_atom(str) when is_binary(str), do: String.to_atom(str)
 end
+
+end # Code.ensure_loaded?
