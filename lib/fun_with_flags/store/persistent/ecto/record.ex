@@ -1,3 +1,5 @@
+if Code.ensure_loaded?(Ecto) do
+
 defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   @moduledoc false
   use Ecto.Schema
@@ -40,5 +42,6 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   def serialize_target(nil), do: "_fwf_none"
   def serialize_target(str) when is_binary(str), do: str
   def serialize_target(atm) when is_atom(atm), do: to_string(atm)
-
 end
+
+end # Code.ensure_loaded?
