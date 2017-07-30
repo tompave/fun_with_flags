@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.9.1
+
+Bug Fixes:
+
+* Fixed an issue with module referencing Ecto that was not wrapped in a `Code.ensure_loaded?` block, which prevented the library from being used in projects that did not include Ecto.
+
 ## v0.9.0
 
 * Ecto persistence adapter. It's now possible to store flag data with Ecto instead of Redis; if used in conjunction with the Phoenix.PubSub adapter, it's possible to use this library in Phoenix without Redis.
