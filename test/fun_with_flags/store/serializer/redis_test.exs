@@ -30,6 +30,12 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
 
       gate = %Gate{type: :group, for: :swimmers, enabled: false}
       assert ["group/swimmers", "false"] = Serializer.serialize(gate)
+
+      gate = %Gate{type: :group, for: "runners", enabled: true}
+      assert ["group/runners", "true"] = Serializer.serialize(gate)
+
+      gate = %Gate{type: :group, for: "swimmers", enabled: false}
+      assert ["group/swimmers", "false"] = Serializer.serialize(gate)
     end
   end
 
@@ -61,7 +67,7 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
         %Gate{type: :actor, for: "string:albicocca", enabled: true},
         %Gate{type: :boolean, enabled: false},
         %Gate{type: :actor, for: "user:123", enabled: false},
-        %Gate{type: :group, for: :penguins, enabled: true},
+        %Gate{type: :group, for: "penguins", enabled: true},
       ]}
 
       raw_redis_data = [
@@ -86,8 +92,8 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
     end
 
     test "with group data" do
-      assert %Gate{type: :group, for: :fishes, enabled: true} = Serializer.deserialize_gate(["group/fishes", "true"])
-      assert %Gate{type: :group, for: :cetacea, enabled: false} = Serializer.deserialize_gate(["group/cetacea", "false"])
+      assert %Gate{type: :group, for: "fishes", enabled: true} = Serializer.deserialize_gate(["group/fishes", "true"])
+      assert %Gate{type: :group, for: "cetacea", enabled: false} = Serializer.deserialize_gate(["group/cetacea", "false"])
     end
   end
 

@@ -57,7 +57,7 @@ defmodule FunWithFlags.StoreTest do
 
   describe "delete(flag_name, gate)" do
     setup data do
-      group_gate = %Gate{type: :group, for: :muggles, enabled: false}
+      group_gate = %Gate{type: :group, for: "muggles", enabled: false}
       bool_gate = data[:gate]
       name = data[:name]
 
@@ -93,7 +93,7 @@ defmodule FunWithFlags.StoreTest do
 
   describe "delete(flag_name)" do
     setup data do
-      group_gate = %Gate{type: :group, for: :muggles, enabled: false}
+      group_gate = %Gate{type: :group, for: "muggles", enabled: false}
       bool_gate = data[:gate]
       name = data[:name]
 
@@ -258,7 +258,7 @@ defmodule FunWithFlags.StoreTest do
 
   describe "integration: Cache and Persistence" do
     setup data do
-      group_gate = %Gate{type: :group, for: :muggles, enabled: false}
+      group_gate = %Gate{type: :group, for: "muggles", enabled: false}
       bool_gate = data[:gate]
       {:ok, bool_gate: bool_gate, group_gate: group_gate}
     end

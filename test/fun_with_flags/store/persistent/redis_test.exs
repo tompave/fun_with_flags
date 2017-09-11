@@ -217,7 +217,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     setup do
       name = unique_atom()
       bool_gate = %Gate{type: :boolean, enabled: false}
-      group_gate = %Gate{type: :group, for: :admins, enabled: true}
+      group_gate = %Gate{type: :group, for: "admins", enabled: true}
       actor_gate = %Gate{type: :actor, for: "string_actor", enabled: true}
       flag = %Flag{name: name, gates: [bool_gate, group_gate, actor_gate]}
 
@@ -428,7 +428,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     setup do
       name = unique_atom()
       bool_gate = %Gate{type: :boolean, enabled: false}
-      group_gate = %Gate{type: :group, for: :admins, enabled: true}
+      group_gate = %Gate{type: :group, for: "admins", enabled: true}
       actor_gate = %Gate{type: :actor, for: "string_actor", enabled: true}
       flag = %Flag{name: name, gates: [bool_gate, group_gate, actor_gate]}
 

@@ -27,13 +27,18 @@ defmodule FunWithFlags.GateTest do
       end
     end
 
-    test "new(:group, group_name, true|false) returns a new Group Gate" do
-      assert %Gate{type: :group, for: :plants, enabled: true} = Gate.new(:group, :plants, true)
-      assert %Gate{type: :group, for: :animals, enabled: false} = Gate.new(:group, :animals, false)
+    test "new(:group, group_name, true|false) returns a new Group Gate, with atoms" do
+      assert %Gate{type: :group, for: "plants", enabled: true} = Gate.new(:group, :plants, true)
+      assert %Gate{type: :group, for: "animals", enabled: false} = Gate.new(:group, :animals, false)
     end
 
-    test "new(:group, ...) with a name that is not an atom raises an exception" do
-      assert_raise FunWithFlags.Gate.InvalidGroupNameError, fn() -> Gate.new(:group, "a_binary", true) end
+    test "new(:group, group_name, true|false) returns a new Group Gate, with binaries" do
+      assert %Gate{type: :group, for: "plants", enabled: true} = Gate.new(:group, "plants", true)
+      assert %Gate{type: :group, for: "animals", enabled: false} = Gate.new(:group, "animals", false)
+    end
+
+    test "new(:group, ...) with a name that is not an atom or a binary raises an exception" do
+      assert_raise FunWithFlags.Gate.InvalidGroupNameError, fn() -> Gate.new(:group, 123, true) end
       assert_raise FunWithFlags.Gate.InvalidGroupNameError, fn() -> Gate.new(:group, %{a: "map"}, false) end
     end
   end
