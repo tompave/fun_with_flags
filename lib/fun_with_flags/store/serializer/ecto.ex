@@ -35,7 +35,7 @@ defmodule FunWithFlags.Store.Serializer.Ecto do
   end
 
   defp do_deserialize_gate(%Record{gate_type: "group", enabled: enabled, target: target}) do
-    %Gate{type: :group, for: String.to_atom(target), enabled: enabled}
+    %Gate{type: :group, for: target, enabled: enabled}
   end
 
   def to_atom(atm) when is_atom(atm), do: atm
