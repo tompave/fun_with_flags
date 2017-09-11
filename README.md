@@ -165,9 +165,11 @@ end
 
 ### Group Gate
 
-Group gates are similar to actor gates, but they apply to a category of entities rather than specific ones. They can be toggled on or off for the _name of the group_ (as an atom) instead of a specific term.
+Group gates are similar to actor gates, but they apply to a category of entities rather than specific ones. They can be toggled on or off for the _name of the group_ instead of a specific term.
 
 Group gates take precendence over boolean gates but are overridden by actor gates.
+
+Group names can be binaries or atoms. Atoms are supported for retro-compatibility with versions `<= 0.9` and binaries are therefore preferred. In fact, atoms are internally converted to binaries and are then stored and later retrieved as binaries.
 
 The semantics to determine which entities belong to which groups are application specific.
 Entities could have an explicit list of groups they belong to, or the groups could be abstract and inferred from some other attribute. For example, an `:employee` group could comprise all `%User{}` structs with an email address matching the company domain, or an `:admin` group could be made of all users with `%User{admin: true}`.
@@ -183,19 +185,19 @@ defmodule MyApp.User do
 end
 
 defimpl FunWithFlags.Group, for: MyApp.User do
-  def in?(%{email: email}, :employee),  do: Regex.match?(~r/@mycompany.com$/, email)
-  def in?(%{admin: is_admin}, :admin),  do: !!is_admin
+  def in?(%{email: email}, "employee"),  do: Regex.match?(~r/@mycompany.com$/, email)
+  def in?(%{admin: is_admin}, "admin"),  do: !!is_admin
   def in?(%{groups: list}, group_name), do: group_name in list
 end
 
-elisabeth = %User{email: "elisabeth@mycompany.com", admin: true, groups: [:engineering, :product]}
-FunWithFlags.Group.in?(elisabeth, :employee)
+elisabeth = %User{email: "elisabeth@mycompany.com", admin: true, groups: ["engineering", "product"]}
+FunWithFlags.Group.in?(elisabeth, "employee")
 true
-FunWithFlags.Group.in?(elisabeth, :admin)
+FunWithFlags.Group.in?(elisabeth, "admin")
 true
-FunWithFlags.Group.in?(elisabeth, :engineering)
+FunWithFlags.Group.in?(elisabeth, "engineering")
 true
-FunWithFlags.Group.in?(elisabeth, :marketing)
+FunWithFlags.Group.in?(elisabeth, "marketing")
 false
 
 defimpl FunWithFlags.Group, for: Map do
@@ -203,7 +205,7 @@ defimpl FunWithFlags.Group, for: Map do
   def in?(_, _), do: false
 end
 
-FunWithFlags.Group.in?(%{group: :dumb_tests}, :dumb_tests)
+FunWithFlags.Group.in?(%{group: "dumb_tests"}, "dumb_tests")
 true
 ```
 
@@ -211,7 +213,7 @@ With the protocol implemented, actors can be used with the library functions:
 
 ```elixir
 FunWithFlags.disable(:database_access)
-FunWithFlags.enable(:database_access, for_group: :engineering)
+FunWithFlags.enable(:database_access, for_group: "engineering")
 
 FunWithFlags.enabled?(:database_access)
 false
@@ -227,11 +229,11 @@ More examples:
 
 ```elixir
 alias FunWithFlags.TestUser, as: User
-harry = %User{id: 1, name: "Harry Potter", groups: [:wizards, :gryffindor]}
-hagrid = %User{id: 2, name: "Rubeus Hagrid", groups: [:wizards, :gamekeeper]}
-dudley = %User{id: 3, name: "Dudley Dursley", groups: [:muggles]}
+harry = %User{id: 1, name: "Harry Potter", groups: ["wizards", "gryffindor"]}
+hagrid = %User{id: 2, name: "Rubeus Hagrid", groups: ["wizards", "gamekeeper"]}
+dudley = %User{id: 3, name: "Dudley Dursley", groups: ["muggles"]}
 FunWithFlags.disable(:wands)
-FunWithFlags.enable(:wands, for_group: :wizards)
+FunWithFlags.enable(:wands, for_group: "wizards")
 FunWithFlags.disable(:wands, for_actor: hagrid)
 
 FunWithFlags.enabled?(:wands)
@@ -247,7 +249,7 @@ FunWithFlags.clear(:wands, for_actor: hagrid)
 FunWithFlags.enabled?(:wands, for: hagrid)
 true
 
-FunWithFlags.clear(:wands, for_group: :wizards)
+FunWithFlags.clear(:wands, for_group: "wizards")
 FunWithFlags.enabled?(:wands, for: hagrid)
 false
 FunWithFlags.enabled?(:wands, for: harry)

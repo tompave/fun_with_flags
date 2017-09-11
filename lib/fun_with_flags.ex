@@ -51,18 +51,18 @@ defmodule FunWithFlags do
   used in the tests.
 
       iex> alias FunWithFlags.TestUser, as: User
-      iex> harry = %User{id: 1, name: "Harry Potter", groups: [:wizards, :gryffindor]}
+      iex> harry = %User{id: 1, name: "Harry Potter", groups: ["wizards", "gryffindor"]}
       iex> FunWithFlags.disable(:elder_wand)
       iex> FunWithFlags.enable(:elder_wand, for_actor: harry)
       iex> FunWithFlags.enabled?(:elder_wand)
       false
       iex> FunWithFlags.enabled?(:elder_wand, for: harry)
       true
-      iex> voldemort = %User{id: 7, name: "Tom Riddle", groups: [:wizards, :slytherin]}
+      iex> voldemort = %User{id: 7, name: "Tom Riddle", groups: ["wizards", "slytherin"]}
       iex> FunWithFlags.enabled?(:elder_wand, for: voldemort)
       false
-      iex> filch = %User{id: 88, name: "Argus Filch", groups: [:staff]}
-      iex> FunWithFlags.enable(:magic_wands, for_group: :wizards)
+      iex> filch = %User{id: 88, name: "Argus Filch", groups: ["staff"]}
+      iex> FunWithFlags.enable(:magic_wands, for_group: "wizards")
       iex> FunWithFlags.enabled?(:magic_wands, for: harry)
       true
       iex> FunWithFlags.enabled?(:magic_wands, for: voldemort)
@@ -103,7 +103,9 @@ defmodule FunWithFlags do
   * `:for_actor` - used to enable the flag for a specific term only.
   The value can be any term that implements the `Actor` protocol.
   * `:for_group` - used to enable the flag for a specific group only.
-  The value should be an atom.
+  The value should be a binary or an atom (It's internally converted
+  to a binary and it's stored and retrieved as a binary. Atoms are
+  supported for retro-compatibility with versions <= 0.9)
 
   ## Examples
 
@@ -133,10 +135,10 @@ defmodule FunWithFlags do
   used in the tests.
       
       iex> alias FunWithFlags.TestUser, as: User
-      iex> marty = %User{name: "Marty McFly", groups: [:students, :time_travelers]}
-      iex> doc = %User{name: "Emmet Brown", groups: [:scientists, :time_travelers]}
-      iex> buford = %User{name: "Buford Tannen", groups: [:gunmen, :bandits]}
-      iex> FunWithFlags.enable(:delorean, for_group: :time_travelers)
+      iex> marty = %User{name: "Marty McFly", groups: ["students", "time_travelers"]}
+      iex> doc = %User{name: "Emmet Brown", groups: ["scientists", "time_travelers"]}
+      iex> buford = %User{name: "Buford Tannen", groups: ["gunmen", "bandits"]}
+      iex> FunWithFlags.enable(:delorean, for_group: "time_travelers")
       {:ok, true}
       iex> FunWithFlags.enabled?(:delorean)
       false
@@ -187,7 +189,9 @@ defmodule FunWithFlags do
   * `:for_actor` - used to disable the flag for a specific term only.
   The value can be any term that implements the `Actor` protocol.
   * `:for_group` - used to disable the flag for a specific group only.
-  The value should be an atom.
+   The value should be a binary or an atom (It's internally converted
+  to a binary and it's stored and retrieved as a binary. Atoms are
+  supported for retro-compatibility with versions <= 0.9)
 
   ## Examples
 
@@ -220,11 +224,11 @@ defmodule FunWithFlags do
   used in the tests.
       
       iex> alias FunWithFlags.TestUser, as: User
-      iex> harry = %User{name: "Harry Potter", groups: [:wizards, :gryffindor]}
-      iex> dudley = %User{name: "Dudley Dursley", groups: [:muggles]}
+      iex> harry = %User{name: "Harry Potter", groups: ["wizards", "gryffindor"]}
+      iex> dudley = %User{name: "Dudley Dursley", groups: ["muggles"]}
       iex> FunWithFlags.enable(:hogwarts)
       {:ok, true}
-      iex> FunWithFlags.disable(:hogwarts, for_group: :muggles)
+      iex> FunWithFlags.disable(:hogwarts, for_group: "muggles")
       {:ok, false}
       iex> FunWithFlags.enabled?(:hogwarts)
       true
@@ -284,16 +288,18 @@ defmodule FunWithFlags do
   * `:for_actor` - used to clear the flag for a specific term only.
   The value can be any term that implements the `Actor` protocol.
   * `:for_group` - used to clear the flag for a specific group only.
-  The value should be an atom.
+   The value should be a binary or an atom (It's internally converted
+  to a binary and it's stored and retrieved as a binary. Atoms are
+  supported for retro-compatibility with versions <= 0.9)
 
   ## Examples
 
       iex> alias FunWithFlags.TestUser, as: User
-      iex> harry = %User{id: 1, name: "Harry Potter", groups: [:wizards, :gryffindor]}
-      iex> hagrid = %User{id: 2, name: "Rubeus Hagrid", groups: [:wizards, :gamekeeper]}
-      iex> dudley = %User{id: 3, name: "Dudley Dursley", groups: [:muggles]}
+      iex> harry = %User{id: 1, name: "Harry Potter", groups: ["wizards", "gryffindor"]}
+      iex> hagrid = %User{id: 2, name: "Rubeus Hagrid", groups: ["wizards", "gamekeeper"]}
+      iex> dudley = %User{id: 3, name: "Dudley Dursley", groups: ["muggles"]}
       iex> FunWithFlags.disable(:wands)
-      iex> FunWithFlags.enable(:wands, for_group: :wizards)
+      iex> FunWithFlags.enable(:wands, for_group: "wizards")
       iex> FunWithFlags.disable(:wands, for_actor: hagrid)
       iex>
       iex> FunWithFlags.enabled?(:wands)
