@@ -16,16 +16,16 @@ defmodule FunWithFlags.Gate do
 
   def new(:group, group_name, enabled) when is_boolean(enabled) do
     validate_group_name(group_name)
-    %__MODULE__{type: :group, for: group_name, enabled: enabled}
+    %__MODULE__{type: :group, for: to_string(group_name), enabled: enabled}
   end
 
   defmodule InvalidGroupNameError do
     defexception [:message]
   end
 
-  defp validate_group_name(name) when is_atom(name), do: nil
+  defp validate_group_name(name) when is_binary(name) or is_atom(name), do: nil
   defp validate_group_name(name) do
-    raise InvalidGroupNameError, "invalid group name '#{inspect(name)}', it should be an atom."
+    raise InvalidGroupNameError, "invalid group name '#{inspect(name)}', it should be a binary or an atom."
   end
 
 

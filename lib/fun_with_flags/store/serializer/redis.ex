@@ -29,7 +29,7 @@ defmodule FunWithFlags.Store.Serializer.Redis do
   end
 
   def deserialize_gate(["group/" <> group_name, enabled]) do
-    %Gate{type: :group, for: String.to_atom(group_name), enabled: parse_bool(enabled)}
+    %Gate{type: :group, for: group_name, enabled: parse_bool(enabled)}
   end
 
   def deserialize_flag(name, []), do: Flag.new(name, [])

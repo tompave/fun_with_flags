@@ -40,7 +40,7 @@ defmodule FunWithFlags.SimpleStoreTest do
 
   describe "delete(flag_name, gate)" do
     setup do
-      group_gate = %Gate{type: :group, for: :muggles, enabled: false}
+      group_gate = %Gate{type: :group, for: "muggles", enabled: false}
       bool_gate = %Gate{type: :boolean, enabled: true}
       name = unique_atom()
 
@@ -76,7 +76,7 @@ defmodule FunWithFlags.SimpleStoreTest do
 
   describe "delete(flag_name)" do
     setup do
-      group_gate = %Gate{type: :group, for: :muggles, enabled: false}
+      group_gate = %Gate{type: :group, for: "muggles", enabled: false}
       bool_gate = %Gate{type: :boolean, enabled: true}
       name = unique_atom()
 

@@ -39,7 +39,7 @@ defmodule FunWithFlags.Store.Serializer.EctoTest do
       flag = %Flag{name: flag_name, gates: [
         %Gate{type: :actor, for: "user:123", enabled: true},
         %Gate{type: :boolean, enabled: true},
-        %Gate{type: :group, for: :admins, enabled: false},
+        %Gate{type: :group, for: "admins", enabled: false},
       ]}
       assert ^flag = Serializer.deserialize_flag(flag_name, [bool_record, actor_record, group_record])
 
@@ -47,8 +47,8 @@ defmodule FunWithFlags.Store.Serializer.EctoTest do
         %Gate{type: :actor, for: "user:123", enabled: true},
         %Gate{type: :actor, for: "string:albicocca", enabled: false},
         %Gate{type: :boolean, enabled: true},
-        %Gate{type: :group, for: :admins, enabled: false},
-        %Gate{type: :group, for: :penguins, enabled: true},
+        %Gate{type: :group, for: "admins", enabled: false},
+        %Gate{type: :group, for: "penguins", enabled: true},
       ]}
 
       actor_record_2 = %{actor_record | id: 5, target: "string:albicocca", enabled: false}
@@ -82,10 +82,10 @@ defmodule FunWithFlags.Store.Serializer.EctoTest do
 
     test "with group data", %{flag_name: flag_name, group_record: group_record} do
       group_record = %{group_record | enabled: true}
-      assert %Gate{type: :group, for: :admins, enabled: true} = Serializer.deserialize_gate(flag_name, group_record)
+      assert %Gate{type: :group, for: "admins", enabled: true} = Serializer.deserialize_gate(flag_name, group_record)
 
       group_record = %{group_record | enabled: false}
-      assert %Gate{type: :group, for: :admins, enabled: false} = Serializer.deserialize_gate(flag_name, group_record)
+      assert %Gate{type: :group, for: "admins", enabled: false} = Serializer.deserialize_gate(flag_name, group_record)
     end
   end
 end
