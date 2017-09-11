@@ -39,7 +39,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp local_extra_applications do
     if System.get_env("PERSISTENCE") == "ecto" do
-      [:logger, :postgrex]
+      [:logger, :ecto, :postgrex]
     else
       [:logger]
     end
@@ -56,8 +56,8 @@ defmodule FunWithFlags.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:ex_doc, "~> 0.15", only: :dev},
-      {:mock, "~> 0.2.1", only: :test},
+      {:ex_doc, "~> 0.16", only: :dev},
+      {:mock, "~> 0.2", only: :test},
 
       {:redix, "~> 0.6", optional: true},
       {:ecto, "~> 2.1", optional: true},

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Compatibility updates for Ecto 2.2 (dev env, was fine in prod)
+
 ## v0.9.2
 
 Bug Fixes:
