@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+Possibly Breaking Changes:
+
+* Allow binaries _and_ atoms as group gate names. Binaries are now preferred (atom group names are internally converted, stored and retrieved as binaries) and atoms are still allowed for retro-compatibility.  
+While calling `FunWithFlags.enable(:foo, for_group: :bar)` is still allowed and continues to work as before, this change will impact implementations of the `FunWithFlags.Group` protocol that assume
+that the group name is passed as an atom.  
+To safely upgrade, these implementations should be changed to work with the group names passed as a binary instead. See the [update to the protocol implementation used in the tests](https://github.com/tompave/fun_with_flags/pull/13/files#diff-8c1bcfc3d51e8d863953ac5b57f0da2b) for an example.
+
+Other changes:
+
 * Compatibility updates for Ecto 2.2 (dev env, was fine in prod)
 
 ## v0.9.2
