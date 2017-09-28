@@ -4,6 +4,7 @@ elixir:
   - 1.5
   - 1.4
 otp_release:
+  - 20.1
   - 20.0
   - 19.3
 env:
@@ -15,8 +16,8 @@ env:
   - CACHE_ENABLED=false PUBSUB_BROKER=phoenix_pubsub PERSISTENCE=ecto TEST_OPTS='--no-start --only integration'
 matrix:
   exclude:
-    - elixir: 1.5
-      otp_release: 18.3
+    - elixir: 1.4
+      otp_release: 20.1
 services:
   - redis-server
 addons:
