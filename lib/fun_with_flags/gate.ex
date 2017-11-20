@@ -19,6 +19,13 @@ defmodule FunWithFlags.Gate do
     %__MODULE__{type: :group, for: to_string(group_name), enabled: enabled}
   end
 
+  # Don't accept 0 or 1 because a boolean gate should be used instead.
+  #
+  def new(:percent_of_time, ratio)
+  when is_float(ratio) and ratio > 0 and ratio < 1 do
+    %__MODULE__{type: :percent_of_time, for: ratio, enabled: true}
+  end
+
   defmodule InvalidGroupNameError do
     defexception [:message]
   end
@@ -37,6 +44,9 @@ defmodule FunWithFlags.Gate do
 
   def group?(%__MODULE__{type: :group}), do: true
   def group?(%__MODULE__{type: _}),      do: false
+
+  def percent_of_time?(%__MODULE__{type: :percent_of_time}), do: true
+  def percent_of_time?(%__MODULE__{type: _}),                do: false
 
 
 
@@ -65,4 +75,15 @@ defmodule FunWithFlags.Gate do
     end
   end
 
+  def enabled?(%__MODULE__{type: :percent_of_time, for: ratio}, _) do
+    roll = random_float
+    enabled = roll <= ratio
+    {:ok, enabled}
+  end
+
+  # Returns a float (2 digit precision) between 0.0 and 1.0
+  #
+  defp random_float do
+    (:rand.uniform(100) / 100)
+  end
 end

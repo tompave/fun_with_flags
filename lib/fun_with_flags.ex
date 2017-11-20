@@ -180,6 +180,13 @@ defmodule FunWithFlags do
   end
 
 
+  def enable(flag_name, [for_percent_of_time: ratio]) when is_atom(flag_name) do
+    gate = Gate.new(:percent_of_time, ratio)
+    {:ok, _flag} = @store.put(flag_name, gate)
+    {:ok, true}
+  end
+
+
 
   @doc """
   Disables a feature flag.

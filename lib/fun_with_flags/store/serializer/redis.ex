@@ -19,6 +19,10 @@ defmodule FunWithFlags.Store.Serializer.Redis do
     ["group/#{group}", to_string(enabled)]
   end
 
+  def serialize(%Gate{type: :percent_of_time, for: ratio}) do
+    ["percent_of_time", to_string(ratio)]
+  end
+
 
   def deserialize_gate(["boolean", enabled]) do
     %Gate{type: :boolean, for: nil, enabled: parse_bool(enabled)}
@@ -32,6 +36,11 @@ defmodule FunWithFlags.Store.Serializer.Redis do
     %Gate{type: :group, for: group_name, enabled: parse_bool(enabled)}
   end
 
+  def deserialize_gate(["percent_of_time", ratio_s]) do
+    %Gate{type: :percent_of_time, for: parse_float(ratio_s), enabled: true}
+  end
+
+
   def deserialize_flag(name, []), do: Flag.new(name, [])
   def deserialize_flag(name, list) when is_list(list) do
     gates =
@@ -43,4 +52,6 @@ defmodule FunWithFlags.Store.Serializer.Redis do
 
   defp parse_bool("true"), do: true
   defp parse_bool(_), do: false
+
+  defp parse_float(f_s), do: String.to_float(f_s)
 end

@@ -42,6 +42,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   def serialize_target(nil), do: "_fwf_none"
   def serialize_target(str) when is_binary(str), do: str
   def serialize_target(atm) when is_atom(atm), do: to_string(atm)
+  def serialize_target(flo) when is_float(flo), do: to_string(flo)
 end
 
 end # Code.ensure_loaded?
