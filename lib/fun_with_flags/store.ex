@@ -3,15 +3,17 @@ defmodule FunWithFlags.Store do
 
   require Logger
   alias FunWithFlags.Store.Cache
-  @persistence FunWithFlags.Store.Persistent.adapter
 
+  defp persistence do
+    FunWithFlags.Store.Persistent.adapter()
+  end
 
   def lookup(flag_name) do
     case Cache.get(flag_name) do
       {:ok, flag} ->
         {:ok, flag}
       {:miss, reason, stale_value_or_nil} ->
-        case @persistence.get(flag_name) do
+        case persistence().get(flag_name) do
           {:ok, flag} ->
             Cache.put(flag) 
             {:ok, flag}
@@ -32,32 +34,32 @@ defmodule FunWithFlags.Store do
 
 
   def put(flag_name, gate) do
-    @persistence.put(flag_name, gate)
+    persistence().put(flag_name, gate)
     |> cache_persistence_result()
   end
 
 
   def delete(flag_name, gate) do
-    @persistence.delete(flag_name, gate)
+    persistence().delete(flag_name, gate)
     |> cache_persistence_result()
   end
 
 
   def delete(flag_name) do
-    @persistence.delete(flag_name)
+    persistence().delete(flag_name)
     |> cache_persistence_result()
   end
 
 
   def reload(flag_name) do
     Logger.debug("FunWithFlags: reloading cached flag '#{flag_name}' from storage ")
-    @persistence.get(flag_name)
+    persistence().get(flag_name)
     |> cache_persistence_result()
   end
 
 
-  defdelegate all_flags(), to: @persistence
-  defdelegate all_flag_names(), to: @persistence
+  def all_flags(), do: persistence().all_flags()
+  def all_flag_names(), do: persistence().all_flag_names()
 
 
   defp cache_persistence_result(result) do

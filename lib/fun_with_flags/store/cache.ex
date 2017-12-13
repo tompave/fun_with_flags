@@ -8,7 +8,10 @@ defmodule FunWithFlags.Store.Cache do
   @table_options [
     :set, :protected, :named_table, {:read_concurrency, true}
   ]
-  @ttl FunWithFlags.Config.cache_ttl
+
+  defp ttl do
+    FunWithFlags.Config.cache_ttl()
+  end
 
   def start_link do
     GenServer.start_link(__MODULE__, :ok, [name: __MODULE__])
@@ -28,7 +31,7 @@ defmodule FunWithFlags.Store.Cache do
   end
 
   defp validate(name, flag = %Flag{name: name}, timestamp) do
-    if Timestamps.expired?(timestamp, @ttl) do
+    if Timestamps.expired?(timestamp, ttl()) do
       {:miss, :expired, flag}
     else
       {:ok, flag}
