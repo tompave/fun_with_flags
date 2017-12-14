@@ -2,7 +2,7 @@ defmodule FunWithFlags.SimpleStore do
   @moduledoc false
 
   defp persistence do
-    FunWithFlags.Store.Persistent.adapter()
+    FunWithFlags.Config.persistence_adapter()
   end
 
 

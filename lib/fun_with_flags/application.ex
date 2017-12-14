@@ -13,7 +13,7 @@ defmodule FunWithFlags.Application do
 
   defp children do
     [
-      FunWithFlags.Store.Persistent.adapter.worker_spec,
+      FunWithFlags.Config.persistence_adapter().worker_spec,
       cache_spec(),
       notifications_spec(),
     ]

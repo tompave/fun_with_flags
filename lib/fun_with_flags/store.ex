@@ -5,7 +5,7 @@ defmodule FunWithFlags.Store do
   alias FunWithFlags.Store.Cache
 
   defp persistence do
-    FunWithFlags.Store.Persistent.adapter()
+    FunWithFlags.Config.persistence_adapter()
   end
 
   def lookup(flag_name) do
