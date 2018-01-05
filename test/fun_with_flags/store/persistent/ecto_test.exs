@@ -107,7 +107,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       u_id = NotifiPhoenix.unique_id()
 
       with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {Config, [:passthrough], [change_notifications_enabled?: fn() -> false end]},
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = PersiEcto.put(name, gate)
@@ -237,7 +237,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       u_id = NotifiPhoenix.unique_id()
 
       with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {Config, [:passthrough], [change_notifications_enabled?: fn() -> false end]},
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, group_gate)
@@ -352,7 +352,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       u_id = NotifiPhoenix.unique_id()
 
       with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {Config, [:passthrough], [change_notifications_enabled?: fn() -> false end]},
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name, gates: []}} = PersiEcto.delete(name)

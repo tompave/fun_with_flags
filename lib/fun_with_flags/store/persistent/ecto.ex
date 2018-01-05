@@ -9,7 +9,9 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   import Ecto.Query
 
-  @repo Config.ecto_repo()
+  defp repo do
+    Config.ecto_repo()
+  end
 
   def worker_spec do
     nil
@@ -20,7 +22,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     name_string = to_string(flag_name)
     query = from(r in Record, where: r.flag_name == ^name_string)
     try do
-      results = @repo.all(query)
+      results = repo().all(query)
       flag = deserialize(flag_name, results)
       {:ok, flag}
     rescue
@@ -36,7 +38,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
       conflict_target: [:flag_name, :gate_type, :target] # the unique index
     ]
 
-    case @repo.insert(changeset, options) do
+    case repo().insert(changeset, options) do
       {:ok, _struct} ->
         {:ok, flag} = get(flag_name)
         publish_change(flag_name)
@@ -64,7 +66,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     )
 
     try do
-      {_count, _} = @repo.delete_all(query)
+      {_count, _} = repo().delete_all(query)
       {:ok, flag} = get(flag_name)
       publish_change(flag_name)
       {:ok, flag}
@@ -89,7 +91,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     )
 
     try do
-      {_count, _} = @repo.delete_all(query)
+      {_count, _} = repo().delete_all(query)
       {:ok, flag} = get(flag_name)
       publish_change(flag_name)
       {:ok, flag}
@@ -101,7 +103,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   def all_flags do
     flags = 
-      @repo.all(Record)
+      repo().all(Record)
       |> Enum.group_by(&(&1.flag_name))
       |> Enum.map(fn ({name, records}) -> deserialize(name, records) end)
     {:ok, flags}
@@ -110,7 +112,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   def all_flag_names do
     query = from(r in Record, select: r.flag_name, distinct: true)
-    strings = @repo.all(query)
+    strings = repo().all(query)
     atoms = Enum.map(strings, &String.to_atom(&1))
     {:ok, atoms}
   end
