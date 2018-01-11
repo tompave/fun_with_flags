@@ -339,7 +339,7 @@ When using Redis for persistence and/or cache-busting PubSub it is necessary to 
 ```elixir
 # the Redis options will be forwarded to Redix.
 config :fun_with_flags, :redis,
-  host: 'localhost',
+  host: "localhost",
   port: 6379,
   database: 0
 
