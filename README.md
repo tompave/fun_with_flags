@@ -185,8 +185,8 @@ defmodule MyApp.User do
 end
 
 defimpl FunWithFlags.Group, for: MyApp.User do
-  def in?(%{email: email}, "employee"),  do: Regex.match?(~r/@mycompany.com$/, email)
-  def in?(%{admin: is_admin}, "admin"),  do: !!is_admin
+  def in?(%{email: email}, "employee"), do: Regex.match?(~r/@mycompany.com$/, email)
+  def in?(%{admin: is_admin}, "admin"), do: !!is_admin
   def in?(%{groups: list}, group_name), do: group_name in list
 end
 
