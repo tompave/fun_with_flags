@@ -10,12 +10,11 @@ defmodule FunWithFlags.Application do
     Supervisor.start_link(children(), opts)
   end
 
-
   defp children do
     [
-      FunWithFlags.Store.Persistent.adapter.worker_spec,
+      FunWithFlags.Store.Persistent.adapter().worker_spec,
       cache_spec(),
-      notifications_spec(),
+      notifications_spec()
     ]
     |> Enum.reject(&(!&1))
   end
@@ -27,19 +26,21 @@ defmodule FunWithFlags.Application do
   #
   defp notifications_spec do
     try do
-      Config.change_notifications_enabled? && Config.notifications_adapter.worker_spec
+      Config.change_notifications_enabled?() && Config.notifications_adapter().worker_spec
     rescue
       e in [UndefinedFunctionError] ->
-        Logger.error "FunWithFlags: Looks like you're trying to use #{Config.notifications_adapter}, but you haven't added its optional dependency to the Mixfile."
+        Logger.error(
+          "FunWithFlags: Looks like you're trying to use #{Config.notifications_adapter()}, but you haven't added its optional dependency to the Mixfile."
+        )
+
         raise e
     end
   end
 
-
   defp cache_spec do
     import Supervisor.Spec, only: [worker: 3]
 
-    if Config.cache? do
+    if Config.cache?() do
       worker(FunWithFlags.Store.Cache, [], restart: :permanent)
     end
   end

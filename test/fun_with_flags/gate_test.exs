@@ -11,7 +11,7 @@ defmodule FunWithFlags.GateTest do
     end
 
     test "new(:actor, actor, true|false) returns a new Actor Gate" do
-      user = %TestUser{id: 234, email: "pineapple@pine.apple.com" }
+      user = %TestUser{id: 234, email: "pineapple@pine.apple.com"}
 
       assert %Gate{type: :actor, for: "user:234", enabled: true} = Gate.new(:actor, user, true)
       assert %Gate{type: :actor, for: "user:234", enabled: false} = Gate.new(:actor, user, false)
@@ -22,27 +22,33 @@ defmodule FunWithFlags.GateTest do
     end
 
     test "new(:actor, ...) with a non-actor raises an exception" do
-      assert_raise Protocol.UndefinedError, fn() ->
+      assert_raise Protocol.UndefinedError, fn ->
         Gate.new(:actor, :not_a_valid_actor, true)
       end
     end
 
     test "new(:group, group_name, true|false) returns a new Group Gate, with atoms" do
       assert %Gate{type: :group, for: "plants", enabled: true} = Gate.new(:group, :plants, true)
-      assert %Gate{type: :group, for: "animals", enabled: false} = Gate.new(:group, :animals, false)
+
+      assert %Gate{type: :group, for: "animals", enabled: false} =
+               Gate.new(:group, :animals, false)
     end
 
     test "new(:group, group_name, true|false) returns a new Group Gate, with binaries" do
       assert %Gate{type: :group, for: "plants", enabled: true} = Gate.new(:group, "plants", true)
-      assert %Gate{type: :group, for: "animals", enabled: false} = Gate.new(:group, "animals", false)
+
+      assert %Gate{type: :group, for: "animals", enabled: false} =
+               Gate.new(:group, "animals", false)
     end
 
     test "new(:group, ...) with a name that is not an atom or a binary raises an exception" do
-      assert_raise FunWithFlags.Gate.InvalidGroupNameError, fn() -> Gate.new(:group, 123, true) end
-      assert_raise FunWithFlags.Gate.InvalidGroupNameError, fn() -> Gate.new(:group, %{a: "map"}, false) end
+      assert_raise FunWithFlags.Gate.InvalidGroupNameError, fn -> Gate.new(:group, 123, true) end
+
+      assert_raise FunWithFlags.Gate.InvalidGroupNameError, fn ->
+        Gate.new(:group, %{a: "map"}, false)
+      end
     end
   end
-
 
   describe "enabled?(gate), for boolean gates" do
     test "without extra arguments, it simply checks the value of the gate" do
@@ -54,7 +60,7 @@ defmodule FunWithFlags.GateTest do
     end
 
     test "an optional [for: something] argument is ignored" do
-      gandalf = %TestUser{id: 42, email: "gandalf@travels.com" }
+      gandalf = %TestUser{id: 42, email: "gandalf@travels.com"}
 
       gate = %Gate{type: :boolean, for: nil, enabled: true}
       assert {:ok, true} = Gate.enabled?(gate, for: gandalf)
@@ -64,23 +70,24 @@ defmodule FunWithFlags.GateTest do
     end
   end
 
-
   describe "enabled?(gate, for: actor)" do
     setup do
-      chip = %TestUser{id: 1, email: "chip@rescuerangers.com" }
-      dale = %TestUser{id: 2, email: "dale@rescuerangers.com" }
+      chip = %TestUser{id: 1, email: "chip@rescuerangers.com"}
+      dale = %TestUser{id: 2, email: "dale@rescuerangers.com"}
       gate = Gate.new(:actor, chip, true)
       {:ok, gate: gate, chip: chip, dale: dale}
     end
 
     test "without the [for: actor] option it raises an exception", %{gate: gate} do
-      assert_raise FunctionClauseError, fn() ->
+      assert_raise FunctionClauseError, fn ->
         Gate.enabled?(gate)
       end
     end
 
-    test "passing a nil actor option raises an exception (just because nil is not an Actor)", %{gate: gate} do
-      assert_raise Protocol.UndefinedError, fn() ->
+    test "passing a nil actor option raises an exception (just because nil is not an Actor)", %{
+      gate: gate
+    } do
+      assert_raise Protocol.UndefinedError, fn ->
         Gate.enabled?(gate, for: nil)
       end
     end
@@ -100,7 +107,6 @@ defmodule FunWithFlags.GateTest do
     end
   end
 
-
   describe "enabled?(gate, for: item), for Group gates" do
     setup do
       bruce = %TestUser{id: 1, email: "bruce@wayne.com"}
@@ -110,7 +116,7 @@ defmodule FunWithFlags.GateTest do
     end
 
     test "without the [for: item] option it raises an exception", %{gate: gate} do
-      assert_raise FunctionClauseError, fn() ->
+      assert_raise FunctionClauseError, fn ->
         Gate.enabled?(gate)
       end
     end
@@ -129,16 +135,14 @@ defmodule FunWithFlags.GateTest do
       assert :ignore = Gate.enabled?(gate, for: clark)
     end
 
-
     test "it always returns :ignore for items that do not implement the Group protocol
           (because of the fallback to Any)", %{gate: gate} do
       assert :ignore = Gate.enabled?(gate, for: nil)
       assert :ignore = Gate.enabled?(gate, for: "pompelmo")
-      assert :ignore = Gate.enabled?(gate, for: [1,2,3])
-      assert :ignore = Gate.enabled?(gate, for: {:a, "tuple"})   
+      assert :ignore = Gate.enabled?(gate, for: [1, 2, 3])
+      assert :ignore = Gate.enabled?(gate, for: {:a, "tuple"})
     end
   end
-
 
   describe "boolean?(gate)" do
     test "with a boolean gate it returns true" do

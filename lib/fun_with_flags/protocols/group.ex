@@ -69,7 +69,6 @@ defprotocol FunWithFlags.Group do
   def in?(item, group)
 end
 
-
 defimpl FunWithFlags.Group, for: Any do
   def in?(_, _), do: false
 end

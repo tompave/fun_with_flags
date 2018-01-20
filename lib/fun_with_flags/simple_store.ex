@@ -1,8 +1,7 @@
 defmodule FunWithFlags.SimpleStore do
   @moduledoc false
 
-  @persistence FunWithFlags.Store.Persistent.adapter
-
+  @persistence FunWithFlags.Store.Persistent.adapter()
 
   def lookup(flag_name) do
     case @persistence.get(flag_name) do
