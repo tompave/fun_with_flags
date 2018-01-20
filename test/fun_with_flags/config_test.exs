@@ -15,118 +15,112 @@ defmodule FunWithFlags.ConfigTest do
     # without configuration, it returns the defaults
     ensure_no_redis_config()
     defaults = [host: "localhost", port: 6379, database: 5]
-    assert ^defaults = Config.redis_config
+    assert ^defaults = Config.redis_config()
 
     # when configured to use a URL string, it returns the string and ignores the defaults
     url = "redis:://locahost:1234/1"
     configure_redis_with(url)
-    assert ^url = Config.redis_config
+    assert ^url = Config.redis_config()
 
     # when confgured with keywords, it merges them with the default
     configure_redis_with(database: 42, port: 2000)
-    assert defaults[:host] == Config.redis_config[:host]
-    assert            2000 == Config.redis_config[:port]
-    assert              42 == Config.redis_config[:database]
+    assert defaults[:host] == Config.redis_config()[:host]
+    assert 2000 == Config.redis_config()[:port]
+    assert 42 == Config.redis_config()[:database]
 
     # cleanup
     configure_redis_with(defaults)
   end
 
-
   test "cache?" do
     # defaults to true
-    assert true == Config.cache?
+    assert true == Config.cache?()
 
     # can be configured
     Mix.Config.persist(fun_with_flags: [cache: [enabled: false]])
-    assert false == Config.cache?
+    assert false == Config.cache?()
 
     # cleanup
     reset_cache_defaults()
-    assert true == Config.cache?
+    assert true == Config.cache?()
   end
-
 
   test "cache_ttl" do
     # defaults to 60 seconds in test
-    assert 60 = Config.cache_ttl
+    assert 60 = Config.cache_ttl()
 
     # can be configured
     Mix.Config.persist(fun_with_flags: [cache: [ttl: 3600]])
-    assert 3600 = Config.cache_ttl
+    assert 3600 = Config.cache_ttl()
 
     # cleanup
     reset_cache_defaults()
-    assert 60 = Config.cache_ttl
+    assert 60 = Config.cache_ttl()
   end
-
 
   test "store_module" do
     # defaults to FunWithFlags.Store
-    assert FunWithFlags.Store = Config.store_module
+    assert FunWithFlags.Store = Config.store_module()
 
     # can be configured
     Mix.Config.persist(fun_with_flags: [cache: [enabled: false]])
-    assert FunWithFlags.SimpleStore = Config.store_module
+    assert FunWithFlags.SimpleStore = Config.store_module()
 
     # cleanup
     reset_cache_defaults()
-    assert FunWithFlags.Store = Config.store_module
+    assert FunWithFlags.Store = Config.store_module()
   end
-
 
   test "build_unique_id() returns a unique string" do
-    assert is_binary(Config.build_unique_id)
+    assert is_binary(Config.build_unique_id())
 
-    list = Enum.map(1..20, fn(_) -> Config.build_unique_id() end)
+    list = Enum.map(1..20, fn _ -> Config.build_unique_id() end)
     assert length(list) == length(Enum.uniq(list))
   end
-
 
   describe "When we are persisting data in Redis" do
     @describetag :redis_persistence
     test "persistence_adapter() returns the Redis module" do
-      assert FunWithFlags.Store.Persistent.Redis = Config.persistence_adapter
+      assert FunWithFlags.Store.Persistent.Redis = Config.persistence_adapter()
     end
 
     test "persist_in_ecto? returns false" do
-      refute Config.persist_in_ecto?
+      refute Config.persist_in_ecto?()
     end
 
     test "ecto_repo() returns the null repo" do
-      assert FunWithFlags.NullEctoRepo = Config.ecto_repo
+      assert FunWithFlags.NullEctoRepo = Config.ecto_repo()
     end
   end
 
   describe "When we are persisting data in Ecto" do
     @describetag :ecto_persistence
     test "persistence_adapter() returns the Ecto module" do
-      assert FunWithFlags.Store.Persistent.Ecto = Config.persistence_adapter
+      assert FunWithFlags.Store.Persistent.Ecto = Config.persistence_adapter()
     end
 
     test "persist_in_ecto? returns true" do
-      assert Config.persist_in_ecto?
+      assert Config.persist_in_ecto?()
     end
 
     test "ecto_repo() returns a repo" do
-      assert FunWithFlags.Dev.EctoRepo = Config.ecto_repo
+      assert FunWithFlags.Dev.EctoRepo = Config.ecto_repo()
     end
   end
-
 
   describe "When we are sending notifications with Redis PubSub" do
     @describetag :redis_pubsub
 
     test "notifications_adapter() returns the Redis module" do
-      assert FunWithFlags.Notifications.Redis = Config.notifications_adapter
+      assert FunWithFlags.Notifications.Redis = Config.notifications_adapter()
     end
 
     test "phoenix_pubsub? returns false" do
-      refute Config.phoenix_pubsub?
+      refute Config.phoenix_pubsub?()
     end
 
     test "pubsub_client() returns nil" do
-      assert is_nil(Config.pubsub_client)
+      assert is_nil(Config.pubsub_client())
     end
   end
 
@@ -134,53 +128,52 @@ defmodule FunWithFlags.ConfigTest do
     @describetag :phoenix_pubsub
 
     test "notifications_adapter() returns the Redis module" do
-      assert FunWithFlags.Notifications.PhoenixPubSub = Config.notifications_adapter
+      assert FunWithFlags.Notifications.PhoenixPubSub = Config.notifications_adapter()
     end
 
     test "phoenix_pubsub? returns true" do
-      assert Config.phoenix_pubsub?
+      assert Config.phoenix_pubsub?()
     end
 
     test "pubsub_client() returns an atom" do
-      assert :fwf_test = Config.pubsub_client
+      assert :fwf_test = Config.pubsub_client()
     end
   end
 
-
   describe "change_notifications_enabled?()" do
     test "returns true by default" do
-      assert Config.change_notifications_enabled?
+      assert Config.change_notifications_enabled?()
     end
 
     test "returns false if the cache is disabled" do
       Mix.Config.persist(fun_with_flags: [cache: [enabled: false]])
-      refute Config.change_notifications_enabled?
+      refute Config.change_notifications_enabled?()
 
       # cleanup
       reset_cache_defaults()
-      assert Config.change_notifications_enabled?
+      assert Config.change_notifications_enabled?()
     end
 
     test "returns false if no notification adapter is configured" do
       original_adapter = Config.notifications_adapter()
-      original_client = Config.pubsub_client
+      original_client = Config.pubsub_client()
       Mix.Config.persist(fun_with_flags: [cache_bust_notifications: [adapter: nil]])
-      refute Config.change_notifications_enabled?
+      refute Config.change_notifications_enabled?()
 
       # cleanup
       reset_notifications_defaults(original_adapter, original_client)
-      assert Config.change_notifications_enabled?
+      assert Config.change_notifications_enabled?()
     end
 
     test "returns false if it's explicitly disabled" do
       original_adapter = Config.notifications_adapter()
-      original_client = Config.pubsub_client
+      original_client = Config.pubsub_client()
       Mix.Config.persist(fun_with_flags: [cache_bust_notifications: [enabled: false]])
-      refute Config.change_notifications_enabled?
+      refute Config.change_notifications_enabled?()
 
       # cleanup
       reset_notifications_defaults(original_adapter, original_client)
-      assert Config.change_notifications_enabled?
+      assert Config.change_notifications_enabled?()
     end
   end
 
@@ -198,10 +191,14 @@ defmodule FunWithFlags.ConfigTest do
   end
 
   defp reset_notifications_defaults(adapter, client) do
-    Mix.Config.persist(fun_with_flags: [
-      cache_bust_notifications: [
-        enabled: true, adapter: adapter, client: client
+    Mix.Config.persist(
+      fun_with_flags: [
+        cache_bust_notifications: [
+          enabled: true,
+          adapter: adapter,
+          client: client
+        ]
       ]
-    ])
+    )
   end
 end

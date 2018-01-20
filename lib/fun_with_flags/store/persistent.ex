@@ -1,7 +1,7 @@
 defmodule FunWithFlags.Store.Persistent do
   @moduledoc false
 
-  @adapter FunWithFlags.Config.persistence_adapter
+  @adapter FunWithFlags.Config.persistence_adapter()
 
   def adapter, do: @adapter
 end

@@ -24,7 +24,7 @@ defprotocol FunWithFlags.Actor do
   ## Examples
 
   This protocol is typically implemented for some application structure.
-  
+
       defmodule MyApp.User do
         defstruct [:id, :name]
       end
@@ -99,7 +99,6 @@ defprotocol FunWithFlags.Actor do
         end
       end
   """
-
 
   @doc """
   Should return a globally unique binary.
