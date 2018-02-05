@@ -30,7 +30,8 @@ defmodule FunWithFlags.Application do
       Config.change_notifications_enabled? && Config.notifications_adapter.worker_spec
     rescue
       e in [UndefinedFunctionError] ->
-        Logger.error "FunWithFlags: Looks like you're trying to use #{Config.notifications_adapter}, but you haven't added its optional dependency to the Mixfile."
+        Logger.error "FunWithFlags: Looks like you're trying to use #{Config.notifications_adapter} for notifications, but you haven't added its optional dependency to the Mixfile."
+        Logger.error "FunWithFlags: Optionally caching can be disabled to exclude this dependency."
         raise e
     end
   end
