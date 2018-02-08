@@ -289,7 +289,7 @@ Just as Elixir and Phoenix are meant to scale better than Ruby on Rails with hig
 ## So, caching, huh?
 
 > There are only two hard things in Computer Science: cache invalidation and naming things.
-> 
+>
 > -- Phil Karlton
 
 The reason to add an ETS cache is that, most of the time, feature flags can be considered static values. Doing a round-trip to the DB (Redis or RDBMS) is expensive in terms of time and in terms of resources, expecially if multiple flags must be checked during a single web request. In the worst cases, the load on the DB can become a cause of concern, a performance bottleneck or the source of a system failure.
@@ -332,6 +332,9 @@ config :fun_with_flags, :persistence,
 # The Redis PuSub adapter is the default, no need to set this.
 config :fun_with_flags, :cache_bust_notifications,
   [enabled: true, adapter: FunWithFlags.Notifications.Redis]
+
+# Notifications can also be disabled, which will also remove the Redis/Redix dependency
+config :fun_with_flags, :cache_bust_notifications, [enabled: false]  
 ```
 
 When using Redis for persistence and/or cache-busting PubSub it is necessary to configure the connection to the Redis instance. These options can be omitted if Redis is not being used. For example, the defaults:
