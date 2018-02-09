@@ -38,7 +38,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
 
   # Do not just store NULL for `target: nil`, because the unique
   # index in the table does not see NULL values as equal.
-  # 
+  #
   def serialize_target(nil), do: "_fwf_none"
   def serialize_target(str) when is_binary(str), do: str
   def serialize_target(atm) when is_atom(atm), do: to_string(atm)
