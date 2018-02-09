@@ -5,6 +5,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @primary_key {:id, :id, autogenerate: true}
+
   schema "fun_with_flags_toggles" do
     field :flag_name, :string
     field :gate_type, :string
