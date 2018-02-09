@@ -5,11 +5,10 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key false
   schema "fun_with_flags_toggles" do
-    field :flag_name, :string, primary_key: true
-    field :gate_type, :string, primary_key: true
-    field :target, :string, primary_key: true
+    field :flag_name, :string
+    field :gate_type, :string
+    field :target, :string
     field :enabled, :boolean
   end
 

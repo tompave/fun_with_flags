@@ -3,11 +3,18 @@ defmodule FunWithFlags.Dev.EctoRepo.Migrations.CreateFeatureFlagsTable do
 
   def up do
     create table(:fun_with_flags_toggles, primary_key: false) do
-      add :flag_name, :string, primary_key: true
-      add :gate_type, :string, primary_key: true
-      add :target, :string, primary_key: true
+      add :id, :bigserial, primary_key: true
+      add :flag_name, :string
+      add :gate_type, :string
+      add :target, :string
       add :enabled, :boolean
     end
+
+    create index(
+      :fun_with_flags_toggles,
+      [:flag_name, :gate_type, :target],
+      [unique: true, name: "fwf_flag_name_gate_target_idx"]
+    )
   end
 
   def down do
