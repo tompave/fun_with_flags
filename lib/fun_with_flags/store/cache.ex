@@ -68,7 +68,7 @@ defmodule FunWithFlags.Store.Cache do
 
   def handle_call({:put, flag = %Flag{name: name}}, _from, state) do
     # writing to an ETS table will either return true or raise
-    :ets.insert(@table_name, {name, {flag, Timestamps.now}}) 
+    :ets.insert(@table_name, {name, {flag, Timestamps.now}})
     {:reply, {:ok, flag}, state}
   end
 
