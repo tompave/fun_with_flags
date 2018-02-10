@@ -66,7 +66,7 @@ defmodule FunWithFlags.Mixfile do
       {:redix_pubsub, "~> 0.4", optional: true},
       {:phoenix_pubsub, "~> 1.0", optional: true},
 
-      {:credo, "~> 0.9.0-rc3", only: [:dev, :test], runtime: false},
+      {:credo, "~> 0.9.0-rc3", only: :dev, runtime: false},
     ]
   end
 
