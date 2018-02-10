@@ -26,9 +26,19 @@ defmodule FunWithFlags.Gate do
     %__MODULE__{type: :percent_of_time, for: ratio, enabled: true}
   end
 
+  def new(:percent_of_time, ratio)
+  when is_float(ratio) and ratio <= 0 or ratio >= 1 do
+    raise InvalidTargetError, "percent_of_time gates must have a ratio in the range '0.0 < r < 1.0'."
+  end
+
   defmodule InvalidGroupNameError do
     defexception [:message]
   end
+
+  defmodule InvalidTargetError do
+    defexception [:message]
+  end
+
 
   defp validate_group_name(name) when is_binary(name) or is_atom(name), do: nil
   defp validate_group_name(name) do

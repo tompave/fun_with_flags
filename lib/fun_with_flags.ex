@@ -274,6 +274,13 @@ defmodule FunWithFlags do
   end
 
 
+  def disable(flag_name, [for_percent_of_time: ratio])
+  when is_atom(flag_name) and is_float(ratio) do
+    inverted_ratio = 1.0 - ratio
+    enable(flag_name, [for_percent_of_time: inverted_ratio])
+  end
+
+
 
   @doc """
   Clears the data of a feature flag.
