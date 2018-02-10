@@ -5,6 +5,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @primary_key {:id, :id, autogenerate: true}
+
   schema "fun_with_flags_toggles" do
     field :flag_name, :string
     field :gate_type, :string
@@ -38,7 +40,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
 
   # Do not just store NULL for `target: nil`, because the unique
   # index in the table does not see NULL values as equal.
-  # 
+  #
   def serialize_target(nil), do: "_fwf_none"
   def serialize_target(str) when is_binary(str), do: str
   def serialize_target(atm) when is_atom(atm), do: to_string(atm)

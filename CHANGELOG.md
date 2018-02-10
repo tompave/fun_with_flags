@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.10.1
+
+Improvements:
+
+* Ecto persistence: explicitly set the table primary key as an integer type. This improves the compatibility with Ecto repos where primary keys default to a binary type. (e.g. UUID)
+
 ## v0.10.0
 
 Possibly Breaking Changes:
