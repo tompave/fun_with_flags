@@ -390,6 +390,24 @@ defmodule FunWithFlags do
   defdelegate all_flags(), to: @store
 
 
+  @doc """
+  Returns a `FunWithFlags.Flag` struct for the given name, or `nil` if
+  no flag is found.
+
+  Useful for debugging.
+  """
+  @spec get_flag(atom) :: FunWithFlags.Flag.t | nil
+  def get_flag(name) do
+    {:ok, names} = all_flag_names()
+    if name in names do
+      {:ok, flag} = FunWithFlags.Store.Persistent.adapter.get(name)
+      flag
+    else
+      nil
+    end
+  end
+
+
   defp verify(flag) do
     {:ok, Flag.enabled?(flag)}
   end

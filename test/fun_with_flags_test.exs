@@ -621,4 +621,33 @@ defmodule FunWithFlagsTest do
       end
     end
   end
+
+
+  describe "get_flag(name) returns a single flag or nil" do
+    alias FunWithFlags.{Flag, Gate}
+
+    setup do
+      clear_test_db()
+      {:ok, name: unique_atom()}
+    end
+
+    test "with the name of an existing flag, it returns the flag", %{name: name} do
+      assert nil == FunWithFlags.get_flag(name)
+    end
+
+    test "with the name of a non existing flag, it returns nil", %{name: name} do
+      FunWithFlags.disable(name)
+      FunWithFlags.enable(name, for_group: "foobar")
+
+      expected = %Flag{
+        name: name,
+        gates: [
+          Gate.new(:boolean, false),
+          Gate.new(:group, "foobar", true)
+        ]
+      }
+
+      assert ^expected = FunWithFlags.get_flag(name)
+    end
+  end
 end
