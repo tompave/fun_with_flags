@@ -246,13 +246,41 @@ FunWithFlags.enabled?(:wands, for: dudley)
 false
 
 FunWithFlags.clear(:wands, for_actor: hagrid)
+
 FunWithFlags.enabled?(:wands, for: hagrid)
 true
 
 FunWithFlags.clear(:wands, for_group: "wizards")
+
 FunWithFlags.enabled?(:wands, for: hagrid)
 false
 FunWithFlags.enabled?(:wands, for: harry)
+false
+```
+
+For completeness, clearing the boolean gate is also supported.
+
+```elixir
+FunWithFlags.enable(:wands)
+
+FunWithFlags.enabled?(:wands)
+true
+FunWithFlags.enabled?(:wands, for: harry)
+true
+FunWithFlags.enabled?(:wands, for: hagrid)
+false
+FunWithFlags.enabled?(:wands, for: dudley)
+true
+
+FunWithFlags.clear(:wands, boolean: true)
+
+FunWithFlags.enabled?(:wands)
+false
+FunWithFlags.enabled?(:wands, for: harry)
+true
+FunWithFlags.enabled?(:wands, for: hagrid)
+false
+FunWithFlags.enabled?(:wands, for: dudley)
 false
 ```
 
@@ -260,6 +288,7 @@ It's also possible to clear an entire flag.
 
 ```elixir
 FunWithFlags.clear(:wands)
+
 FunWithFlags.enabled?(:wands)
 false
 FunWithFlags.enabled?(:wands, for: harry)

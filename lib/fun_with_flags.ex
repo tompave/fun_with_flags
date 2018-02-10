@@ -285,12 +285,13 @@ defmodule FunWithFlags do
 
   ## Options
 
-  * `:for_actor` - used to clear the flag for a specific term only.
+  * `for_actor: an_actor` - used to clear the flag for a specific term only.
   The value can be any term that implements the `Actor` protocol.
-  * `:for_group` - used to clear the flag for a specific group only.
+  * `for_group: a_group_name` - used to clear the flag for a specific group only.
    The value should be a binary or an atom (It's internally converted
   to a binary and it's stored and retrieved as a binary. Atoms are
   supported for retro-compatibility with versions <= 0.9)
+  * `boolean: true` - used to clear the boolean gate.
 
   ## Examples
 
@@ -335,6 +336,11 @@ defmodule FunWithFlags do
   def clear(flag_name, []) when is_atom(flag_name) do
     {:ok, _flag} = @store.delete(flag_name)
     :ok
+  end
+
+  def clear(flag_name, [boolean: true]) do
+    gate = Gate.new(:boolean, false) # we only care about the gate id
+    _clear_gate(flag_name, gate)
   end
 
   def clear(flag_name, [for_actor: nil]) do

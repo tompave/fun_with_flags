@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Add ability to clear the boolean gate only (useful for debugging)
+
 ## v0.10.1
 
 Improvements:

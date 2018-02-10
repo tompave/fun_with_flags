@@ -402,6 +402,23 @@ defmodule FunWithFlagsTest do
       assert FunWithFlags.enabled?(name, for: scrooge)
       assert FunWithFlags.enabled?(name, for: mickey)
     end
+
+    test "clearing a boolean gate will remove its rule and not affect the other gates", %{scrooge: scrooge, donald: donald, mickey: mickey, name: name}  do
+      FunWithFlags.enable(name)
+      FunWithFlags.disable(name, for_group: "ducks")
+
+      assert FunWithFlags.enabled?(name)
+      refute FunWithFlags.enabled?(name, for: donald)
+      refute FunWithFlags.enabled?(name, for: scrooge)
+      assert FunWithFlags.enabled?(name, for: mickey)
+
+      :ok = FunWithFlags.clear(name, boolean: :true)
+
+      refute FunWithFlags.enabled?(name)
+      refute FunWithFlags.enabled?(name, for: donald)
+      refute FunWithFlags.enabled?(name, for: scrooge)
+      refute FunWithFlags.enabled?(name, for: mickey)
+    end
   end
 
 
