@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+* Add ability to clear the boolean gate only (useful for debugging).
+* Added `FunWithFlags.get_flag/1`, to retrieve a flag struct. Useful for debugging.
+* Internal improvements.
+
 ## v0.10.1
 
 Improvements:

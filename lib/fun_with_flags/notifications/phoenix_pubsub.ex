@@ -31,7 +31,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
   def unique_id do
     {:ok, unique_id} = GenServer.call(__MODULE__, :get_unique_id)
     unique_id
-  end  
+  end
 
 
   def publish_change(flag_name) do
@@ -60,18 +60,18 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
       case Phoenix.PubSub.subscribe(client(), @channel) do
         :ok ->
           # All good
-          Logger.debug "FunWithFlags: Connected to Phoenix.PubSub process #{inspect(client())}"
+          Logger.debug fn -> "FunWithFlags: Connected to Phoenix.PubSub process #{inspect(client())}" end
           :ok
         {:error, reason} ->
           # Handled application errors
-          Logger.debug "FunWithFlags: Cannot subscribe to Phoenix.PubSub process #{inspect(client())} ({:error, #{inspect(reason)}})."
+          Logger.debug fn -> "FunWithFlags: Cannot subscribe to Phoenix.PubSub process #{inspect(client())} ({:error, #{inspect(reason)}})." end
           try_again_to_subscribe(attempt)
       end
     rescue
       e ->
         # The pubsub process was probably not running. This happens when using it in Phoenix, as it tries to connect the
         # first time while the application is booting, and the Phoenix.PubSub process is not fully started yet.
-        Logger.debug "FunWithFlags: Cannot subscribe to Phoenix.PubSub process #{inspect(client())} (exception: #{inspect(e)})."
+        Logger.debug fn -> "FunWithFlags: Cannot subscribe to Phoenix.PubSub process #{inspect(client())} (exception: #{inspect(e)})." end
         try_again_to_subscribe(attempt)
     end
   end
@@ -103,7 +103,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
 
   def handle_info({:fwf_changes, {:updated, name, _}}, unique_id) do
     # received message from another node, reload the flag
-    Logger.debug("FunWithFlags: received change notifiation for flag '#{name}'")
+    Logger.debug fn -> "FunWithFlags: received change notifiation for flag '#{name}'" end
     Task.start(Store, :reload, [name])
     {:noreply, unique_id}
   end
@@ -113,7 +113,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
   # to try again. It will be handlerd here.
   #
   def handle_info({:subscribe_retry, attempt}, unique_id) do
-    Logger.debug "FunWithFlags: retrying to subscribe to Phoenix.PubSub, attempt #{attempt}."
+    Logger.debug fn -> "FunWithFlags: retrying to subscribe to Phoenix.PubSub, attempt #{attempt}." end
     subscribe(attempt)
     {:noreply, unique_id}
   end

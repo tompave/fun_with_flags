@@ -1,7 +1,7 @@
 defmodule FunWithFlags.Gate do
   @moduledoc false
   alias FunWithFlags.{Actor, Group}
-  
+
   defstruct [:type, :for, :enabled]
   @type t :: %FunWithFlags.Gate{type: atom, for: (nil | String.t), enabled: boolean}
   @type options :: Keyword.t
@@ -57,7 +57,6 @@ defmodule FunWithFlags.Gate do
 
   def percent_of_time?(%__MODULE__{type: :percent_of_time}), do: true
   def percent_of_time?(%__MODULE__{type: _}),                do: false
-
 
 
   @spec enabled?(t, options) :: boolean

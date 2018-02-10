@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/tompave/fun_with_flags.svg?branch=master)](https://travis-ci.org/tompave/fun_with_flags)
 [![Hex.pm](https://img.shields.io/hexpm/v/fun_with_flags.svg)](https://hex.pm/packages/fun_with_flags)
 [![hexdocs.pm](https://img.shields.io/badge/docs-0.10.1-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/)
+[![ElixirWeekly](https://img.shields.io/badge/featured-ElixirWeekly-8e5ab5.svg)](https://elixirweekly.net/issues/43)
 
 FunWithFlags, the Elixir feature flag library.
 
@@ -246,13 +247,41 @@ FunWithFlags.enabled?(:wands, for: dudley)
 false
 
 FunWithFlags.clear(:wands, for_actor: hagrid)
+
 FunWithFlags.enabled?(:wands, for: hagrid)
 true
 
 FunWithFlags.clear(:wands, for_group: "wizards")
+
 FunWithFlags.enabled?(:wands, for: hagrid)
 false
 FunWithFlags.enabled?(:wands, for: harry)
+false
+```
+
+For completeness, clearing the boolean gate is also supported.
+
+```elixir
+FunWithFlags.enable(:wands)
+
+FunWithFlags.enabled?(:wands)
+true
+FunWithFlags.enabled?(:wands, for: harry)
+true
+FunWithFlags.enabled?(:wands, for: hagrid)
+false
+FunWithFlags.enabled?(:wands, for: dudley)
+true
+
+FunWithFlags.clear(:wands, boolean: true)
+
+FunWithFlags.enabled?(:wands)
+false
+FunWithFlags.enabled?(:wands, for: harry)
+true
+FunWithFlags.enabled?(:wands, for: hagrid)
+false
+FunWithFlags.enabled?(:wands, for: dudley)
 false
 ```
 
@@ -260,6 +289,7 @@ It's also possible to clear an entire flag.
 
 ```elixir
 FunWithFlags.clear(:wands)
+
 FunWithFlags.enabled?(:wands)
 false
 FunWithFlags.enabled?(:wands, for: harry)

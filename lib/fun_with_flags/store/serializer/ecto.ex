@@ -19,7 +19,7 @@ defmodule FunWithFlags.Store.Serializer.Ecto do
   end
 
 
-  def deserialize_gate(flag_name, %Record{flag_name: flag_name} = record) do
+  def deserialize_gate(flag_name, record = %Record{flag_name: flag_name}) do
     do_deserialize_gate(record)
   end
 

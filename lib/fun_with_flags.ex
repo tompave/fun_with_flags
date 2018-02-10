@@ -32,7 +32,6 @@ defmodule FunWithFlags do
   @type options :: Keyword.t
 
 
-
   @doc """
   Checks if a flag is enabled.
 
@@ -187,7 +186,6 @@ defmodule FunWithFlags do
   end
 
 
-
   @doc """
   Disables a feature flag.
 
@@ -281,7 +279,6 @@ defmodule FunWithFlags do
   end
 
 
-
   @doc """
   Clears the data of a feature flag.
 
@@ -299,12 +296,13 @@ defmodule FunWithFlags do
 
   ## Options
 
-  * `:for_actor` - used to clear the flag for a specific term only.
+  * `for_actor: an_actor` - used to clear the flag for a specific term only.
   The value can be any term that implements the `Actor` protocol.
-  * `:for_group` - used to clear the flag for a specific group only.
+  * `for_group: a_group_name` - used to clear the flag for a specific group only.
    The value should be a binary or an atom (It's internally converted
   to a binary and it's stored and retrieved as a binary. Atoms are
   supported for retro-compatibility with versions <= 0.9)
+  * `boolean: true` - used to clear the boolean gate.
 
   ## Examples
 
@@ -341,7 +339,6 @@ defmodule FunWithFlags do
       iex> FunWithFlags.enabled?(:wands, for: dudley)
       false
 
-
   """
   @spec clear(atom, options) :: :ok
   def clear(flag_name, options \\ [])
@@ -349,6 +346,11 @@ defmodule FunWithFlags do
   def clear(flag_name, []) when is_atom(flag_name) do
     {:ok, _flag} = @store.delete(flag_name)
     :ok
+  end
+
+  def clear(flag_name, [boolean: true]) do
+    gate = Gate.new(:boolean, false) # we only care about the gate id
+    _clear_gate(flag_name, gate)
   end
 
   def clear(flag_name, [for_actor: nil]) do
@@ -396,6 +398,24 @@ defmodule FunWithFlags do
   """
   @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]} | {:ok, []}
   defdelegate all_flags(), to: @store
+
+
+  @doc """
+  Returns a `FunWithFlags.Flag` struct for the given name, or `nil` if
+  no flag is found.
+
+  Useful for debugging.
+  """
+  @spec get_flag(atom) :: FunWithFlags.Flag.t | nil
+  def get_flag(name) do
+    {:ok, names} = all_flag_names()
+    if name in names do
+      {:ok, flag} = FunWithFlags.Store.Persistent.adapter.get(name)
+      flag
+    else
+      nil
+    end
+  end
 
 
   defp verify(flag) do

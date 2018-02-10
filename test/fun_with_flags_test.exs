@@ -402,6 +402,23 @@ defmodule FunWithFlagsTest do
       assert FunWithFlags.enabled?(name, for: scrooge)
       assert FunWithFlags.enabled?(name, for: mickey)
     end
+
+    test "clearing a boolean gate will remove its rule and not affect the other gates", %{scrooge: scrooge, donald: donald, mickey: mickey, name: name}  do
+      FunWithFlags.enable(name)
+      FunWithFlags.disable(name, for_group: "ducks")
+
+      assert FunWithFlags.enabled?(name)
+      refute FunWithFlags.enabled?(name, for: donald)
+      refute FunWithFlags.enabled?(name, for: scrooge)
+      assert FunWithFlags.enabled?(name, for: mickey)
+
+      :ok = FunWithFlags.clear(name, boolean: :true)
+
+      refute FunWithFlags.enabled?(name)
+      refute FunWithFlags.enabled?(name, for: donald)
+      refute FunWithFlags.enabled?(name, for: scrooge)
+      refute FunWithFlags.enabled?(name, for: mickey)
+    end
   end
 
 
@@ -602,6 +619,35 @@ defmodule FunWithFlagsTest do
       for name <- [name2, name3] do
         assert name in result
       end
+    end
+  end
+
+
+  describe "get_flag(name) returns a single flag or nil" do
+    alias FunWithFlags.{Flag, Gate}
+
+    setup do
+      clear_test_db()
+      {:ok, name: unique_atom()}
+    end
+
+    test "with the name of an existing flag, it returns the flag", %{name: name} do
+      assert nil == FunWithFlags.get_flag(name)
+    end
+
+    test "with the name of a non existing flag, it returns nil", %{name: name} do
+      FunWithFlags.disable(name)
+      FunWithFlags.enable(name, for_group: "foobar")
+
+      expected = %Flag{
+        name: name,
+        gates: [
+          Gate.new(:boolean, false),
+          Gate.new(:group, "foobar", true)
+        ]
+      }
+
+      assert ^expected = FunWithFlags.get_flag(name)
     end
   end
 end

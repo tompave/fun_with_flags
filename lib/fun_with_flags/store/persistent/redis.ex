@@ -97,7 +97,7 @@ defmodule FunWithFlags.Store.Persistent.Redis do
 
   def all_flags do
     {:ok, flag_names} = all_flag_names()
-    flags = Enum.map(flag_names, fn(name)->
+    flags = Enum.map(flag_names, fn(name) ->
       {:ok, flag} = get(name)
       flag
     end)

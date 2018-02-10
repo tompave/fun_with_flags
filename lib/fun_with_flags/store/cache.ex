@@ -14,7 +14,7 @@ defmodule FunWithFlags.Store.Cache do
     GenServer.start_link(__MODULE__, :ok, [name: __MODULE__])
   end
 
-  
+
   # We lookup without going through the GenServer
   # for concurrency and perfomance.
   #
@@ -67,20 +67,13 @@ defmodule FunWithFlags.Store.Cache do
 
 
   def handle_call({:put, flag = %Flag{name: name}}, _from, state) do
-    reply = case :ets.insert(@table_name, {name, {flag, Timestamps.now}}) do
-      true -> {:ok, flag}
-      _    -> {:error, error_for(flag)}
-    end
-    {:reply, reply, state}
+    # writing to an ETS table will either return true or raise
+    :ets.insert(@table_name, {name, {flag, Timestamps.now}}) 
+    {:reply, {:ok, flag}, state}
   end
 
 
   def handle_call(:flush, _from, state) do
     {:reply, :ets.delete_all_objects(@table_name), state}
-  end
-  
-
-  defp error_for(flag) do
-    "Couldn't cache the flag '#{flag.name}'"
   end
 end
