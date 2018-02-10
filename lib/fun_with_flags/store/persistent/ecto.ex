@@ -100,8 +100,9 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
 
   def all_flags do
-    flags = 
-      @repo.all(Record)
+    flags =
+      Record
+      |> @repo.all()
       |> Enum.group_by(&(&1.flag_name))
       |> Enum.map(fn ({name, records}) -> deserialize(name, records) end)
     {:ok, flags}

@@ -32,7 +32,6 @@ defmodule FunWithFlags do
   @type options :: Keyword.t
 
 
-
   @doc """
   Checks if a flag is enabled.
 
@@ -180,7 +179,6 @@ defmodule FunWithFlags do
   end
 
 
-
   @doc """
   Disables a feature flag.
 
@@ -267,7 +265,6 @@ defmodule FunWithFlags do
   end
 
 
-
   @doc """
   Clears the data of a feature flag.
 
@@ -327,7 +324,6 @@ defmodule FunWithFlags do
       false
       iex> FunWithFlags.enabled?(:wands, for: dudley)
       false
-
 
   """
   @spec clear(atom, options) :: :ok

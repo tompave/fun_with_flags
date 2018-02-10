@@ -36,7 +36,7 @@ defmodule FunWithFlags.Notifications.Redis do
   def unique_id do
     {:ok, unique_id} = GenServer.call(__MODULE__, :get_unique_id)
     unique_id
-  end  
+  end
 
 
   # Build a payload to be passed to Redis.
@@ -111,7 +111,7 @@ defmodule FunWithFlags.Notifications.Redis do
         nil
       [_id, name] ->
         # received message from another node, reload the flag
-        Logger.debug("FunWithFlags: received change notifiation for flag '#{name}'")
+        Logger.debug fn -> "FunWithFlags: received change notifiation for flag '#{name}'" end
         Task.start(Store, :reload, [String.to_atom(name)])
       _ ->
         # invalid message, ignore

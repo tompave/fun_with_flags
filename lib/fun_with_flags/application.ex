@@ -32,7 +32,7 @@ defmodule FunWithFlags.Application do
       e in [UndefinedFunctionError] ->
         Logger.error "FunWithFlags: Looks like you're trying to use #{Config.notifications_adapter} for notifications, but you haven't added its optional dependency to the Mixfile."
         Logger.error "FunWithFlags: Optionally notifications can be disabled to exclude this dependency."
-        raise e
+        reraise e, System.stacktrace
     end
   end
 

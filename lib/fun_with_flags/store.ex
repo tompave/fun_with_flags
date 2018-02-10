@@ -13,7 +13,7 @@ defmodule FunWithFlags.Store do
       {:miss, reason, stale_value_or_nil} ->
         case @persistence.get(flag_name) do
           {:ok, flag} ->
-            Cache.put(flag) 
+            Cache.put(flag)
             {:ok, flag}
           {:error, _reason} ->
             try_to_use_the_cached_value(reason, stale_value_or_nil, flag_name)
@@ -32,26 +32,30 @@ defmodule FunWithFlags.Store do
 
 
   def put(flag_name, gate) do
-    @persistence.put(flag_name, gate)
+    flag_name
+    |> @persistence.put(gate)
     |> cache_persistence_result()
   end
 
 
   def delete(flag_name, gate) do
-    @persistence.delete(flag_name, gate)
+    flag_name
+    |> @persistence.delete(gate)
     |> cache_persistence_result()
   end
 
 
   def delete(flag_name) do
-    @persistence.delete(flag_name)
+    flag_name
+    |> @persistence.delete()
     |> cache_persistence_result()
   end
 
 
   def reload(flag_name) do
-    Logger.debug("FunWithFlags: reloading cached flag '#{flag_name}' from storage ")
-    @persistence.get(flag_name)
+    Logger.debug fn -> "FunWithFlags: reloading cached flag '#{flag_name}' from storage " end
+    flag_name
+    |> @persistence.get()
     |> cache_persistence_result()
   end
 

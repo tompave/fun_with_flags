@@ -14,7 +14,7 @@ defmodule FunWithFlags.Store.Cache do
     GenServer.start_link(__MODULE__, :ok, [name: __MODULE__])
   end
 
-  
+
   # We lookup without going through the GenServer
   # for concurrency and perfomance.
   #
@@ -78,7 +78,7 @@ defmodule FunWithFlags.Store.Cache do
   def handle_call(:flush, _from, state) do
     {:reply, :ets.delete_all_objects(@table_name), state}
   end
-  
+
 
   defp error_for(flag) do
     "Couldn't cache the flag '#{flag.name}'"
