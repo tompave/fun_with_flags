@@ -101,7 +101,8 @@ defmodule FunWithFlags.Flag do
   defp check_percent_of_time_gate(gates) do
     gate = percent_of_time_gate(gates)
     if gate do
-      {:ok, bool} = Gate.enabled?(gate)
+      result = {:ok, _bool} = Gate.enabled?(gate)
+      result
     else
       :ignore
     end

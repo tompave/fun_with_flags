@@ -71,9 +71,7 @@ defmodule FunWithFlags do
 
   """
   @spec enabled?(atom, options) :: boolean
-
   def enabled?(flag_name, options \\ [])
-
 
   def enabled?(flag_name, []) when is_atom(flag_name) do
     case @store.lookup(flag_name) do

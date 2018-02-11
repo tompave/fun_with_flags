@@ -2,21 +2,21 @@ defmodule FunWithFlags.Gate do
   @moduledoc false
   alias FunWithFlags.{Actor, Group}
 
+  defmodule InvalidGroupNameError do
+    defexception [:message]
+  end
+
+  defmodule InvalidTargetError do
+    defexception [:message]
+  end
+
+
   defstruct [:type, :for, :enabled]
   @type t :: %FunWithFlags.Gate{type: atom, for: (nil | String.t), enabled: boolean}
   @type options :: Keyword.t
 
   def new(:boolean, enabled) when is_boolean(enabled) do
     %__MODULE__{type: :boolean, for: nil, enabled: enabled}
-  end
-
-  def new(:actor, actor, enabled) when is_boolean(enabled) do
-    %__MODULE__{type: :actor, for: Actor.id(actor), enabled: enabled}
-  end
-
-  def new(:group, group_name, enabled) when is_boolean(enabled) do
-    validate_group_name(group_name)
-    %__MODULE__{type: :group, for: to_string(group_name), enabled: enabled}
   end
 
   # Don't accept 0 or 1 because a boolean gate should be used instead.
@@ -31,12 +31,13 @@ defmodule FunWithFlags.Gate do
     raise InvalidTargetError, "percent_of_time gates must have a ratio in the range '0.0 < r < 1.0'."
   end
 
-  defmodule InvalidGroupNameError do
-    defexception [:message]
+  def new(:actor, actor, enabled) when is_boolean(enabled) do
+    %__MODULE__{type: :actor, for: Actor.id(actor), enabled: enabled}
   end
 
-  defmodule InvalidTargetError do
-    defexception [:message]
+  def new(:group, group_name, enabled) when is_boolean(enabled) do
+    validate_group_name(group_name)
+    %__MODULE__{type: :group, for: to_string(group_name), enabled: enabled}
   end
 
 
@@ -59,7 +60,7 @@ defmodule FunWithFlags.Gate do
   def percent_of_time?(%__MODULE__{type: _}),                do: false
 
 
-  @spec enabled?(t, options) :: boolean
+  @spec enabled?(t, options) :: {:ok, boolean}
   def enabled?(gate, options \\ [])
 
   def enabled?(%__MODULE__{type: :boolean, enabled: enabled}, []) do
@@ -85,7 +86,7 @@ defmodule FunWithFlags.Gate do
   end
 
   def enabled?(%__MODULE__{type: :percent_of_time, for: ratio}, _) do
-    roll = random_float
+    roll = random_float()
     enabled = roll <= ratio
     {:ok, enabled}
   end
