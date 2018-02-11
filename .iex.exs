@@ -6,17 +6,39 @@ alias FunWithFlags.{Actor,Group}
 alias FunWithFlags.Dev.EctoRepo, as: Repo
 alias FunWithFlags.Store.Persistent.Ecto.Record
 
+
+# When calling `respawn` in a iex session, e.g. debugging tests,
+# the .iex.exs file will be parsed and executed again, and
+# these `start_link` with explicit names will fail as already
+# started.
+#
+with_safe_restart = fn(f) ->
+  case f.() do
+    {:ok, _pid} ->
+      # IO.puts "starting"
+      :ok
+    {:error, {:already_started, _pid}} ->
+      # IO.puts "already started"
+      :ok
+  end
+end
+
 if Config.persist_in_ecto? do
-  {:ok, _pid} = FunWithFlags.Dev.EctoRepo.start_link()
+  with_safe_restart.(fn ->
+    FunWithFlags.Dev.EctoRepo.start_link()
+  end)
 else
-  {:ok, redis} =
+  with_safe_restart.(fn ->
     Redix.start_link(
       Config.redis_config,
       [name: :dev_console_redis, sync_connect: false])
+  end)
 end
 
 if Config.phoenix_pubsub? do
-  {:ok, _pid} = Phoenix.PubSub.PG2.start_link(:fwf_test, [pool_size: 1])
+  with_safe_restart.(fn ->
+    Phoenix.PubSub.PG2.start_link(:fwf_test, [pool_size: 1])
+  end)
 end
 
 alias FunWithFlags.Store.Persistent.Ecto, as: PEcto
