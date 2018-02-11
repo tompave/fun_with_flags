@@ -369,6 +369,11 @@ defmodule FunWithFlags do
     _clear_gate(flag_name, gate)
   end
 
+  def clear(flag_name, [for_percent_of_time: true]) do
+    gate = Gate.new(:percent_of_time, 0.5) # we only care about the gate id
+    _clear_gate(flag_name, gate)
+  end
+
   defp _clear_gate(flag_name, gate) do
     {:ok, _flag} = @store.delete(flag_name, gate)
     :ok

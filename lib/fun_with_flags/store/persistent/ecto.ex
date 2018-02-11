@@ -38,11 +38,11 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
       where: r.gate_type == "percent_of_time"
     )
     
-     out = @repo.transaction fn() ->
+    out = @repo.transaction fn() ->
       table_lock!()
       case @repo.one(find_one_q) do
         record = %Record{} ->
-          changeset = Ecto.Changeset.change(record, target: Record.serialize_target(target))
+          changeset = Record.update_target(record, target)
           do_update(flag_name, changeset)
         nil ->
           changeset = Record.build(flag_name, gate)
@@ -69,6 +69,26 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     do_insert(flag_name, changeset, options)
   end
 
+
+
+  def delete(flag_name, %Gate{type: :percent_of_time}) do
+    name_string = to_string(flag_name)
+
+    query = from(
+      r in Record,
+      where: r.flag_name == ^name_string
+      and r.gate_type == "percent_of_time"
+    )
+
+    try do
+      {_count, _} = @repo.delete_all(query)
+      {:ok, flag} = get(flag_name)
+      publish_change(flag_name)
+      {:ok, flag}
+    rescue
+      e in [Ecto.QueryError] -> {:error, e}
+    end
+  end
 
 
   # Deletes one gate from the toggles table in the DB.

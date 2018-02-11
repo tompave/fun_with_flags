@@ -38,6 +38,11 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
     insert_changeset(%__MODULE__{}, data)
   end
 
+
+  def update_target(record, target) do
+    change(record, target: serialize_target(target))
+  end
+
   # Do not just store NULL for `target: nil`, because the unique
   # index in the table does not see NULL values as equal.
   #
