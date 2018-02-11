@@ -29,6 +29,36 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
+  def put(flag_name, gate = %Gate{type: :percent_of_time, for: target}) do
+    name_string = to_string(flag_name)
+    
+    find_one_q = from(
+      r in Record,
+      where: r.flag_name == ^name_string,
+      where: r.gate_type == "percent_of_time"
+    )
+    
+     out = @repo.transaction fn() ->
+      table_lock!()
+      case @repo.one(find_one_q) do
+        record = %Record{} ->
+          changeset = Ecto.Changeset.change(record, target: Record.serialize_target(target))
+          do_update(flag_name, changeset)
+        nil ->
+          changeset = Record.build(flag_name, gate)
+          do_insert(flag_name, changeset)
+      end
+    end
+
+    case out do
+      {:ok, {:ok, result}} ->
+        {:ok, result}
+      {:error, _} = error ->
+        error
+    end
+  end
+
+
   def put(flag_name, gate = %Gate{}) do
     changeset = Record.build(flag_name, gate)
     options = [
@@ -36,15 +66,9 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
       conflict_target: [:flag_name, :gate_type, :target] # the unique index
     ]
 
-    case @repo.insert(changeset, options) do
-      {:ok, _struct} ->
-        {:ok, flag} = get(flag_name)
-        publish_change(flag_name)
-        {:ok, flag}
-      {:error, changeset} ->
-        {:error, changeset.errors}
-    end
+    do_insert(flag_name, changeset, options)
   end
+
 
 
   # Deletes one gate from the toggles table in the DB.
@@ -126,6 +150,39 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   defp deserialize(flag_name, records) do
     Serializer.deserialize_flag(flag_name, records)
   end
+
+
+  defp table_lock! do
+    Ecto.Adapters.SQL.query!(
+      @repo,
+      "LOCK TABLE fun_with_flags_toggles IN SHARE ROW EXCLUSIVE MODE;"
+    )
+  end
+
+
+  defp do_insert(flag_name, changeset, options \\ []) do
+    case @repo.insert(changeset, options) do
+      {:ok, %Record{}} ->
+        {:ok, flag} = get(flag_name)
+        publish_change(flag_name)
+        {:ok, flag}
+      {:error, bad_changeset} ->
+        {:error, bad_changeset.errors}
+    end
+  end
+
+
+  defp do_update(flag_name, changeset, options \\ []) do
+    case @repo.update(changeset, options) do
+      {:ok, %Record{}} ->
+        {:ok, flag} = get(flag_name)
+        publish_change(flag_name)
+        {:ok, flag}
+      {:error, bad_changeset} ->
+        {:error, bad_changeset.errors}
+    end
+  end
+
 end
 
 end # Code.ensure_loaded?

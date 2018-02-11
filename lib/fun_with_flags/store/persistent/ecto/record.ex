@@ -16,7 +16,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
 
   @fields [:flag_name, :gate_type, :target, :enabled]
 
-  def changeset(struct, params \\ %{}) do
+  def insert_changeset(struct, params \\ %{}) do
     struct
     |> cast(params, @fields)
     |> validate_required(@fields)
@@ -35,7 +35,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
       target: serialize_target(gate.for),
       enabled: gate.enabled
     }
-    changeset(%__MODULE__{}, data)
+    insert_changeset(%__MODULE__{}, data)
   end
 
   # Do not just store NULL for `target: nil`, because the unique
