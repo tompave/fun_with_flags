@@ -14,7 +14,6 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
       assert ["boolean", "false"] = Serializer.serialize(gate)
     end
 
-
     test "with an actor gate" do
       gate = %Gate{type: :actor, for: "user:42", enabled: true}
       assert ["actor/user:42", "true"] = Serializer.serialize(gate)
@@ -22,7 +21,6 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
       gate = %Gate{type: :actor, for: "user:123", enabled: false}
       assert ["actor/user:123", "false"] = Serializer.serialize(gate)
     end
-
 
     test "with a group gate" do
       gate = %Gate{type: :group, for: :runners, enabled: true}
@@ -37,7 +35,16 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
       gate = %Gate{type: :group, for: "swimmers", enabled: false}
       assert ["group/swimmers", "false"] = Serializer.serialize(gate)
     end
+
+    test "with a percent_of_time gate" do
+      gate = %Gate{type: :percent_of_time, for: 0.123, enabled: true}
+      assert ["percent_of_time", "0.123"] = Serializer.serialize(gate)
+
+      gate = %Gate{type: :percent_of_time, for: 0.42, enabled: true}
+      assert ["percent_of_time", "0.42"] = Serializer.serialize(gate)
+    end
   end
+
 
   describe "deserialize_flag(name, [gate, data])" do
     test "with empty data it returns an empty flag" do
@@ -66,6 +73,7 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
       flag = %Flag{name: :apricot, gates: [
         %Gate{type: :actor, for: "string:albicocca", enabled: true},
         %Gate{type: :boolean, enabled: false},
+        %Gate{type: :percent_of_time, for: 0.5, enabled: true},
         %Gate{type: :actor, for: "user:123", enabled: false},
         %Gate{type: :group, for: "penguins", enabled: true},
       ]}
@@ -73,6 +81,7 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
       raw_redis_data = [
         "actor/string:albicocca", "true",
         "boolean", "false",
+        "percent_of_time", "0.5",
         "actor/user:123", "false",
         "group/penguins", "true"
       ]
@@ -94,6 +103,11 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
     test "with group data" do
       assert %Gate{type: :group, for: "fishes", enabled: true} = Serializer.deserialize_gate(["group/fishes", "true"])
       assert %Gate{type: :group, for: "cetacea", enabled: false} = Serializer.deserialize_gate(["group/cetacea", "false"])
+    end
+
+    test "with percent_of_time data" do
+      assert %Gate{type: :percent_of_time, for: 0.001, enabled: true} = Serializer.deserialize_gate(["percent_of_time", "0.001"])
+      assert %Gate{type: :percent_of_time, for: 0.95, enabled: true} = Serializer.deserialize_gate(["percent_of_time", "0.95"])
     end
   end
 

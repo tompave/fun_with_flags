@@ -41,6 +41,20 @@ defmodule FunWithFlags.Store.Serializer.Redis do
   end
 
 
+  # `list` comes from redis HGETALL, and it would
+  # be something like this:
+  #
+  # [
+  #   "boolean",
+  #   "true",
+  #   "actor/user:42",
+  #   "false",
+  #   "group/bananas",
+  #   "true",
+  #   "percent_of_time",
+  #   "0.5"
+  # ]
+  # 
   def deserialize_flag(name, []), do: Flag.new(name, [])
   def deserialize_flag(name, list) when is_list(list) do
     gates =
