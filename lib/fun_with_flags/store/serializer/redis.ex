@@ -54,7 +54,7 @@ defmodule FunWithFlags.Store.Serializer.Redis do
   #   "percent_of_time",
   #   "0.5"
   # ]
-  # 
+  #
   def deserialize_flag(name, []), do: Flag.new(name, [])
   def deserialize_flag(name, list) when is_list(list) do
     gates =

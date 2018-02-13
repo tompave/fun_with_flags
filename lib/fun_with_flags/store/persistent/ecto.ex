@@ -31,13 +31,13 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   def put(flag_name, gate = %Gate{type: :percent_of_time, for: target}) do
     name_string = to_string(flag_name)
-    
+
     find_one_q = from(
       r in Record,
       where: r.flag_name == ^name_string,
       where: r.gate_type == "percent_of_time"
     )
-    
+
     out = @repo.transaction fn() ->
       table_lock!()
       case @repo.one(find_one_q) do
@@ -68,7 +68,6 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
     do_insert(flag_name, changeset, options)
   end
-
 
 
   def delete(flag_name, %Gate{type: :percent_of_time}) do
