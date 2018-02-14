@@ -153,8 +153,7 @@ defmodule FunWithFlags.GateTest do
 
 
   describe "enabled?(gate), for PercentOfTime gates" do
-    # These will be flaky. Oh, well.
-
+    @tag :flaky
     test "without extra arguments, it simply checks the value of the gate" do
       gate = %Gate{type: :percent_of_time, for: 0.99999, enabled: true}
       assert {:ok, true} = Gate.enabled?(gate)
@@ -163,6 +162,7 @@ defmodule FunWithFlags.GateTest do
       assert {:ok, false} = Gate.enabled?(gate)
     end
 
+    @tag :flaky
     test "an optional [for: something] argument is ignored" do
       gandalf = %TestUser{id: 42, email: "gandalf@travels.com" }
 

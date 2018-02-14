@@ -18,26 +18,23 @@ defmodule FunWithFlags.Flag do
 
   def enabled?(%__MODULE__{gates: []}, _), do: false
 
+  # Check the boolean gate first, as if that's enabled we
+  # can stop immediately. Also, a boolean gate is almost
+  # always present, while a percent_of_time gate is not
+  # used often.
+  #
   def enabled?(%__MODULE__{gates: gates}, []) do
-    case check_percent_of_time_gate(gates) do
-      {:ok, bool} -> bool
-      :ignore -> check_boolean_gate(gates)
-    end
+    check_boolean_gate(gates) || check_percent_of_time_gate(gates)
   end
 
 
-  def enabled?(%__MODULE__{gates: gates}, [for: item]) do
+  def enabled?(flag = %__MODULE__{gates: gates}, [for: item]) do
     case check_actor_gates(gates, item) do
       {:ok, bool} -> bool
       :ignore ->
         case check_group_gates(gates, item) do
           {:ok, bool} -> bool
-          :ignore ->
-            case check_percent_of_time_gate(gates) do
-              {:ok, bool} -> bool
-              :ignore ->
-                check_boolean_gate(gates)
-            end
+          :ignore     -> enabled?(flag)
         end
     end
   end
@@ -101,10 +98,10 @@ defmodule FunWithFlags.Flag do
   defp check_percent_of_time_gate(gates) do
     gate = percent_of_time_gate(gates)
     if gate do
-      result = {:ok, _bool} = Gate.enabled?(gate)
-      result
+      {:ok, bool} = Gate.enabled?(gate)
+      bool
     else
-      :ignore
+      false
     end
   end
 

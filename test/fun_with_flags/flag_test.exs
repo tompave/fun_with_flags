@@ -11,18 +11,44 @@ defmodule FunWithFlags.FlagTest do
 
 
   describe "enabled?(flag) - only flag parameter, no options" do
-    test "it returns true if the flag has a boolean value = true" do
+    test "it returns true if the flag only has a boolean value = true" do
       flag = %Flag{name: :banana, gates: [Gate.new(:boolean, true)]}
       assert Flag.enabled?(flag)
     end
 
-    test "it returns false if the flag has a boolean value = false" do
+    test "it returns false if the flag only has a boolean value = false" do
       flag = %Flag{name: :banana, gates: [Gate.new(:boolean, false)]}
       refute Flag.enabled?(flag)
     end
 
     test "it returns false if the flag doesn't have any gate" do
       flag = %Flag{name: :banana, gates: []}
+      refute Flag.enabled?(flag)
+    end
+
+    test "if the flag has an enabled boolean gate and a percent_of_time gate, it returns true" do
+      flag = %Flag{name: :banana, gates: [Gate.new(:boolean, true), Gate.new(:percent_of_time, 0.99999)]}
+      assert Flag.enabled?(flag)
+
+      flag = %Flag{name: :banana, gates: [Gate.new(:boolean, true), Gate.new(:percent_of_time, 0.00001)]}
+      assert Flag.enabled?(flag)
+    end
+
+    @tag :flaky
+    test "if the flag has a disabled boolean gate and a percent_of_time gate, it rolls a dice" do
+      flag = %Flag{name: :banana, gates: [Gate.new(:boolean, false), Gate.new(:percent_of_time, 0.99999)]}
+      assert Flag.enabled?(flag)
+
+      flag = %Flag{name: :banana, gates: [Gate.new(:boolean, false), Gate.new(:percent_of_time, 0.00001)]}
+      refute Flag.enabled?(flag)
+    end
+
+    @tag :flaky
+    test "if the flag has a percent_of_time gate only, it rolls a dice" do
+      flag = %Flag{name: :banana, gates: [Gate.new(:percent_of_time, 0.99999)]}
+      assert Flag.enabled?(flag)
+
+      flag = %Flag{name: :banana, gates: [Gate.new(:percent_of_time, 0.00001)]}
       refute Flag.enabled?(flag)
     end
 
@@ -90,6 +116,20 @@ defmodule FunWithFlags.FlagTest do
       refute Flag.enabled?(flag)
 
       flag = %Flag{name: :pear, gates: [Gate.new(:group, :nights_watch, false)]}
+      refute Flag.enabled?(flag, for: john)
+      refute Flag.enabled?(flag, for: arya)
+      refute Flag.enabled?(flag)
+    end
+
+
+    @tag :flaky
+    test "with only a percent_of_time gate, the gate is checked", %{john: john, arya: arya} do
+      flag = %Flag{name: :pear, gates: [Gate.new(:percent_of_time, 0.99999)]}
+      assert Flag.enabled?(flag, for: john)
+      assert Flag.enabled?(flag, for: arya)
+      assert Flag.enabled?(flag)
+
+      flag = %Flag{name: :pear, gates: [Gate.new(:percent_of_time, 0.00001)]}
       refute Flag.enabled?(flag, for: john)
       refute Flag.enabled?(flag, for: arya)
       refute Flag.enabled?(flag)
