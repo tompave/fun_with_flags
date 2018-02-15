@@ -126,10 +126,10 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
 
 # -----------------
 
-  describe "put(flag_name, %Gate{}), for percent_of_time gates" do
+  describe "put(flag_name, %Gate{}), for percentage_of_time gates" do
     setup do
       name = unique_atom()
-      pot_gate = %Gate{type: :percent_of_time, for: 0.5, enabled: true}
+      pot_gate = %Gate{type: :percentage_of_time, for: 0.5, enabled: true}
       {:ok, name: name, pot_gate: pot_gate}
     end
 
@@ -374,14 +374,14 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
 
 # -----------------
 
-  describe "delete(flag_name, %Gate{}), for percent_of_time gates" do
+  describe "delete(flag_name, %Gate{}), for percentage_of_time gates" do
     setup do
       name = unique_atom()
 
       bool_gate = %Gate{type: :boolean, enabled: false}
       group_gate = %Gate{type: :group, for: "admins", enabled: true}
       actor_gate = %Gate{type: :actor, for: "string_actor", enabled: true}
-      pot_gate = %Gate{type: :percent_of_time, for: 0.5, enabled: true}
+      pot_gate = %Gate{type: :percentage_of_time, for: 0.5, enabled: true}
 
       flag = %Flag{name: name, gates: sort_gates([bool_gate, group_gate, actor_gate, pot_gate])}
 

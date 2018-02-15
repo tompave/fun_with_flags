@@ -19,8 +19,8 @@ defmodule FunWithFlags.Store.Serializer.Redis do
     ["group/#{group}", to_string(enabled)]
   end
 
-  def serialize(%Gate{type: :percent_of_time, for: ratio}) do
-    ["percent_of_time", to_string(ratio)]
+  def serialize(%Gate{type: :percentage_of_time, for: ratio}) do
+    ["percentage_of_time", to_string(ratio)]
   end
 
 
@@ -36,8 +36,8 @@ defmodule FunWithFlags.Store.Serializer.Redis do
     %Gate{type: :group, for: group_name, enabled: parse_bool(enabled)}
   end
 
-  def deserialize_gate(["percent_of_time", ratio_s]) do
-    %Gate{type: :percent_of_time, for: parse_float(ratio_s), enabled: true}
+  def deserialize_gate(["percentage_of_time", ratio_s]) do
+    %Gate{type: :percentage_of_time, for: parse_float(ratio_s), enabled: true}
   end
 
 
@@ -51,7 +51,7 @@ defmodule FunWithFlags.Store.Serializer.Redis do
   #   "false",
   #   "group/bananas",
   #   "true",
-  #   "percent_of_time",
+  #   "percentage_of_time",
   #   "0.5"
   # ]
   #

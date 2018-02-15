@@ -21,14 +21,14 @@ defmodule FunWithFlags.Gate do
 
   # Don't accept 0 or 1 because a boolean gate should be used instead.
   #
-  def new(:percent_of_time, ratio)
+  def new(:percentage_of_time, ratio)
   when is_float(ratio) and ratio > 0 and ratio < 1 do
-    %__MODULE__{type: :percent_of_time, for: ratio, enabled: true}
+    %__MODULE__{type: :percentage_of_time, for: ratio, enabled: true}
   end
 
-  def new(:percent_of_time, ratio)
+  def new(:percentage_of_time, ratio)
   when is_float(ratio) and ratio <= 0 or ratio >= 1 do
-    raise InvalidTargetError, "percent_of_time gates must have a ratio in the range '0.0 < r < 1.0'."
+    raise InvalidTargetError, "percentage_of_time gates must have a ratio in the range '0.0 < r < 1.0'."
   end
 
   def new(:actor, actor, enabled) when is_boolean(enabled) do
@@ -56,8 +56,8 @@ defmodule FunWithFlags.Gate do
   def group?(%__MODULE__{type: :group}), do: true
   def group?(%__MODULE__{type: _}),      do: false
 
-  def percent_of_time?(%__MODULE__{type: :percent_of_time}), do: true
-  def percent_of_time?(%__MODULE__{type: _}),                do: false
+  def percentage_of_time?(%__MODULE__{type: :percentage_of_time}), do: true
+  def percentage_of_time?(%__MODULE__{type: _}),                   do: false
 
 
   @spec enabled?(t, options) :: {:ok, boolean}
@@ -85,7 +85,7 @@ defmodule FunWithFlags.Gate do
     end
   end
 
-  def enabled?(%__MODULE__{type: :percent_of_time, for: ratio}, _) do
+  def enabled?(%__MODULE__{type: :percentage_of_time, for: ratio}, _) do
     roll = random_float()
     enabled = roll <= ratio
     {:ok, enabled}

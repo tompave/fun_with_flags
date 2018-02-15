@@ -29,13 +29,13 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
-  def put(flag_name, gate = %Gate{type: :percent_of_time, for: target}) do
+  def put(flag_name, gate = %Gate{type: :percentage_of_time, for: target}) do
     name_string = to_string(flag_name)
 
     find_one_q = from(
       r in Record,
       where: r.flag_name == ^name_string,
-      where: r.gate_type == "percent_of_time"
+      where: r.gate_type == "percentage_of_time"
     )
 
     out = @repo.transaction fn() ->
@@ -70,13 +70,13 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
-  def delete(flag_name, %Gate{type: :percent_of_time}) do
+  def delete(flag_name, %Gate{type: :percentage_of_time}) do
     name_string = to_string(flag_name)
 
     query = from(
       r in Record,
       where: r.flag_name == ^name_string
-      and r.gate_type == "percent_of_time"
+      and r.gate_type == "percentage_of_time"
     )
 
     try do

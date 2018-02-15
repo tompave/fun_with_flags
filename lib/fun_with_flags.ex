@@ -177,8 +177,8 @@ defmodule FunWithFlags do
   end
 
 
-  def enable(flag_name, [for_percent_of_time: ratio]) when is_atom(flag_name) do
-    gate = Gate.new(:percent_of_time, ratio)
+  def enable(flag_name, [for_percentage_of_time: ratio]) when is_atom(flag_name) do
+    gate = Gate.new(:percentage_of_time, ratio)
     {:ok, _flag} = @store.put(flag_name, gate)
     {:ok, true}
   end
@@ -270,10 +270,10 @@ defmodule FunWithFlags do
   end
 
 
-  def disable(flag_name, [for_percent_of_time: ratio])
+  def disable(flag_name, [for_percentage_of_time: ratio])
   when is_atom(flag_name) and is_float(ratio) do
     inverted_ratio = 1.0 - ratio
-    enable(flag_name, [for_percent_of_time: inverted_ratio])
+    enable(flag_name, [for_percentage_of_time: inverted_ratio])
   end
 
 
@@ -369,8 +369,8 @@ defmodule FunWithFlags do
     _clear_gate(flag_name, gate)
   end
 
-  def clear(flag_name, [for_percent_of_time: true]) do
-    gate = Gate.new(:percent_of_time, 0.5) # we only care about the gate id
+  def clear(flag_name, [for_percentage_of_time: true]) do
+    gate = Gate.new(:percentage_of_time, 0.5) # we only care about the gate id
     _clear_gate(flag_name, gate)
   end
 

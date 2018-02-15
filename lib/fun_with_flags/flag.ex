@@ -20,11 +20,11 @@ defmodule FunWithFlags.Flag do
 
   # Check the boolean gate first, as if that's enabled we
   # can stop immediately. Also, a boolean gate is almost
-  # always present, while a percent_of_time gate is not
+  # always present, while a percentage_of_time gate is not
   # used often.
   #
   def enabled?(%__MODULE__{gates: gates}, []) do
-    check_boolean_gate(gates) || check_percent_of_time_gate(gates)
+    check_boolean_gate(gates) || check_percentage_of_time_gate(gates)
   end
 
 
@@ -95,8 +95,8 @@ defmodule FunWithFlags.Flag do
   end
 
 
-  defp check_percent_of_time_gate(gates) do
-    gate = percent_of_time_gate(gates)
+  defp check_percentage_of_time_gate(gates) do
+    gate = percentage_of_time_gate(gates)
     if gate do
       {:ok, bool} = Gate.enabled?(gate)
       bool
@@ -118,7 +118,7 @@ defmodule FunWithFlags.Flag do
     Enum.filter(gates, &Gate.group?/1)
   end
 
-  defp percent_of_time_gate(gates) do
-    Enum.find(gates, &Gate.percent_of_time?/1)
+  defp percentage_of_time_gate(gates) do
+    Enum.find(gates, &Gate.percentage_of_time?/1)
   end
 end
