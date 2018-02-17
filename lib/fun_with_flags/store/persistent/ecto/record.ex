@@ -4,6 +4,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
+  alias FunWithFlags.Gate
 
   @primary_key {:id, :id, autogenerate: true}
 
@@ -29,18 +30,21 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
 
 
   def build(flag_name, gate) do
+    {type, target} = get_type_and_target(gate)
+
     data = %{
       flag_name: to_string(flag_name),
-      gate_type: to_string(gate.type),
-      target: serialize_target(gate.for),
+      gate_type: type,
+      target: target,
       enabled: gate.enabled
     }
     changeset(%__MODULE__{}, data)
   end
 
 
-  def update_target(record, target) do
-    change(record, target: serialize_target(target))
+  def update_target(record = %__MODULE__{gate_type: "percentage"}, gate) do
+    {"percentage", target} = get_type_and_target(gate)
+    change(record, target: target)
   end
 
   # Do not just store NULL for `target: nil`, because the unique
@@ -49,7 +53,15 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   def serialize_target(nil), do: "_fwf_none"
   def serialize_target(str) when is_binary(str), do: str
   def serialize_target(atm) when is_atom(atm), do: to_string(atm)
-  def serialize_target(flo) when is_float(flo), do: to_string(flo)
+
+
+  defp get_type_and_target(%Gate{type: :percentage_of_time, for: target}) do
+    {"percentage", "time/#{to_string(target)}"}
+  end
+
+  defp get_type_and_target(%Gate{type: type, for: target}) do
+    {to_string(type), serialize_target(target)}
+  end
 end
 
 end # Code.ensure_loaded?

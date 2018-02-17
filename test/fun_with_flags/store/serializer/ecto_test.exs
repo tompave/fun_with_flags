@@ -11,7 +11,7 @@ defmodule FunWithFlags.Store.Serializer.EctoTest do
     bool_record  = %Record{enabled: true, flag_name: flag_name, gate_type: "boolean", id: 2, target: nil}
     actor_record = %Record{enabled: true, flag_name: flag_name, gate_type: "actor", id: 4,target: "user:123"}
     group_record = %Record{enabled: false, flag_name: flag_name, gate_type: "group", id: 3, target: "admins"}
-    po_time_record = %Record{enabled: true, flag_name: flag_name, gate_type: "percentage_of_time", id: 5, target: "0.42"}
+    po_time_record = %Record{enabled: true, flag_name: flag_name, gate_type: "percentage", id: 5, target: "time/0.42"}
     {:ok,
       flag_name: String.to_atom(flag_name),
       bool_record: bool_record,

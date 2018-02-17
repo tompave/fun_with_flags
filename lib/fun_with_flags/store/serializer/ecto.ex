@@ -38,7 +38,7 @@ defmodule FunWithFlags.Store.Serializer.Ecto do
     %Gate{type: :group, for: target, enabled: enabled}
   end
 
-  defp do_deserialize_gate(%Record{gate_type: "percentage_of_time", target: ratio_s}) do
+  defp do_deserialize_gate(%Record{gate_type: "percentage", target: "time/" <> ratio_s}) do
     %Gate{type: :percentage_of_time, for: parse_float(ratio_s), enabled: true}
   end
 

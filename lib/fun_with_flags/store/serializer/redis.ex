@@ -20,7 +20,7 @@ defmodule FunWithFlags.Store.Serializer.Redis do
   end
 
   def serialize(%Gate{type: :percentage_of_time, for: ratio}) do
-    ["percentage_of_time", to_string(ratio)]
+    ["percentage", "time/#{to_string(ratio)}"]
   end
 
 
@@ -36,7 +36,7 @@ defmodule FunWithFlags.Store.Serializer.Redis do
     %Gate{type: :group, for: group_name, enabled: parse_bool(enabled)}
   end
 
-  def deserialize_gate(["percentage_of_time", ratio_s]) do
+  def deserialize_gate(["percentage", "time/" <> ratio_s]) do
     %Gate{type: :percentage_of_time, for: parse_float(ratio_s), enabled: true}
   end
 

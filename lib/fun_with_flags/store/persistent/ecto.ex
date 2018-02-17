@@ -29,20 +29,20 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
-  def put(flag_name, gate = %Gate{type: :percentage_of_time, for: target}) do
+  def put(flag_name, gate = %Gate{type: :percentage_of_time}) do
     name_string = to_string(flag_name)
 
     find_one_q = from(
       r in Record,
       where: r.flag_name == ^name_string,
-      where: r.gate_type == "percentage_of_time"
+      where: r.gate_type == "percentage"
     )
 
     out = @repo.transaction fn() ->
       table_lock!()
       case @repo.one(find_one_q) do
         record = %Record{} ->
-          changeset = Record.update_target(record, target)
+          changeset = Record.update_target(record, gate)
           do_update(flag_name, changeset)
         nil ->
           changeset = Record.build(flag_name, gate)
@@ -76,7 +76,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     query = from(
       r in Record,
       where: r.flag_name == ^name_string
-      and r.gate_type == "percentage_of_time"
+      and r.gate_type == "percentage"
     )
 
     try do

@@ -38,10 +38,10 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
 
     test "with a percentage_of_time gate" do
       gate = %Gate{type: :percentage_of_time, for: 0.123, enabled: true}
-      assert ["percentage_of_time", "0.123"] = Serializer.serialize(gate)
+      assert ["percentage", "time/0.123"] = Serializer.serialize(gate)
 
       gate = %Gate{type: :percentage_of_time, for: 0.42, enabled: true}
-      assert ["percentage_of_time", "0.42"] = Serializer.serialize(gate)
+      assert ["percentage", "time/0.42"] = Serializer.serialize(gate)
     end
   end
 
@@ -81,7 +81,7 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
       raw_redis_data = [
         "actor/string:albicocca", "true",
         "boolean", "false",
-        "percentage_of_time", "0.5",
+        "percentage", "time/0.5",
         "actor/user:123", "false",
         "group/penguins", "true"
       ]
@@ -106,8 +106,8 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
     end
 
     test "with percentage_of_time data" do
-      assert %Gate{type: :percentage_of_time, for: 0.001, enabled: true} = Serializer.deserialize_gate(["percentage_of_time", "0.001"])
-      assert %Gate{type: :percentage_of_time, for: 0.95, enabled: true} = Serializer.deserialize_gate(["percentage_of_time", "0.95"])
+      assert %Gate{type: :percentage_of_time, for: 0.001, enabled: true} = Serializer.deserialize_gate(["percentage", "time/0.001"])
+      assert %Gate{type: :percentage_of_time, for: 0.95, enabled: true} = Serializer.deserialize_gate(["percentage", "time/0.95"])
     end
   end
 
