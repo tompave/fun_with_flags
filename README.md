@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/tompave/fun_with_flags.svg?branch=master)](https://travis-ci.org/tompave/fun_with_flags)
 [![Hex.pm](https://img.shields.io/hexpm/v/fun_with_flags.svg)](https://hex.pm/packages/fun_with_flags)
-[![hexdocs.pm](https://img.shields.io/badge/docs-0.10.1-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/)
+[![hexdocs.pm](https://img.shields.io/badge/docs-0.11.0-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/)
 [![ElixirWeekly](https://img.shields.io/badge/featured-ElixirWeekly-8e5ab5.svg)](https://elixirweekly.net/issues/43)
 
 FunWithFlags, the Elixir feature flag library.
@@ -457,7 +457,7 @@ In order to have a small installation footprint, the dependencies for the differ
 ```elixir
 def deps do
   [
-    {:fun_with_flags, "~> 0.10.1"},
+    {:fun_with_flags, "~> 0.11.0"},
 
     # either:
     {:redix, "~> 0.6"},
