@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+New Features:
+
+* Percentage of time gates
+
+
 ## v0.11.0
 
 * Add ability to clear the boolean gate only (useful for debugging).
