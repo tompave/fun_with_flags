@@ -287,7 +287,7 @@ defmodule FunWithFlagsTest do
       refute FunWithFlags.enabled?(flag_name, for: donald)
       refute FunWithFlags.enabled?(flag_name, for: mickey)
 
-      FunWithFlags.enable(flag_name, for_percentage_of_time: 0.99999)
+      FunWithFlags.enable(flag_name, for_percentage_of: {:time, 0.99999})
       assert FunWithFlags.enabled?(flag_name)
       assert FunWithFlags.enabled?(flag_name, for: scrooge)
       assert FunWithFlags.enabled?(flag_name, for: donald)
@@ -301,13 +301,13 @@ defmodule FunWithFlagsTest do
       refute FunWithFlags.enabled?(flag_name, for: donald)
       refute FunWithFlags.enabled?(flag_name, for: mickey)
 
-      FunWithFlags.enable(flag_name, for_percentage_of_time: 0.99999)
+      FunWithFlags.enable(flag_name, for_percentage_of: {:time, 0.99999})
       assert FunWithFlags.enabled?(flag_name)
       assert FunWithFlags.enabled?(flag_name, for: scrooge)
       assert FunWithFlags.enabled?(flag_name, for: donald)
       assert FunWithFlags.enabled?(flag_name, for: mickey)
 
-      FunWithFlags.disable(flag_name, for_percentage_of_time: 0.99999)
+      FunWithFlags.disable(flag_name, for_percentage_of: {:time, 0.99999})
       refute FunWithFlags.enabled?(flag_name)
       refute FunWithFlags.enabled?(flag_name, for: scrooge)
       refute FunWithFlags.enabled?(flag_name, for: donald)
@@ -320,7 +320,7 @@ defmodule FunWithFlagsTest do
       assert {:ok, true} = FunWithFlags.enable(flag_name)
       assert {:ok, true} = FunWithFlags.enable(flag_name, for_actor: "a string")
       assert {:ok, true} = FunWithFlags.enable(flag_name, for_group: :group_name)
-      assert {:ok, true} = FunWithFlags.enable(flag_name, for_percentage_of_time: 0.5)
+      assert {:ok, true} = FunWithFlags.enable(flag_name, for_percentage_of: {:time, 0.5})
     end
 
     test "disabling always returns the tuple {:ok, false} on success", %{flag_name: flag_name} do
@@ -328,7 +328,7 @@ defmodule FunWithFlagsTest do
       assert {:ok, false} = FunWithFlags.disable(flag_name)
       assert {:ok, false} = FunWithFlags.disable(flag_name, for_actor: "a string")
       assert {:ok, false} = FunWithFlags.disable(flag_name, for_group: :group_name)
-      assert {:ok, false} = FunWithFlags.disable(flag_name, for_percentage_of_time: 0.5)
+      assert {:ok, false} = FunWithFlags.disable(flag_name, for_percentage_of: {:time, 0.5})
     end
   end
 
@@ -353,7 +353,7 @@ defmodule FunWithFlagsTest do
       FunWithFlags.disable(name)
       FunWithFlags.enable(name, for_actor: mickey)
       FunWithFlags.enable(name, for_group: :ducks)
-      FunWithFlags.enable(name, for_percentage_of_time: 0.99999)
+      FunWithFlags.enable(name, for_percentage_of: {:time, 0.99999})
 
       assert FunWithFlags.enabled?(name)
       assert FunWithFlags.enabled?(name, for: scrooge)
@@ -462,7 +462,7 @@ defmodule FunWithFlagsTest do
 
     @tag :flaky
     test "clearing a for_percentage_of_time gate will remove its rule and not affect the other gates", %{scrooge: scrooge, donald: donald, mickey: mickey, name: name}  do
-      FunWithFlags.enable(name, for_percentage_of_time: 0.99999)
+      FunWithFlags.enable(name, for_percentage_of: {:time, 0.99999})
       FunWithFlags.disable(name, for_group: "ducks")
       FunWithFlags.enable(name, for_actor: mickey)
 
@@ -471,7 +471,7 @@ defmodule FunWithFlagsTest do
       refute FunWithFlags.enabled?(name, for: scrooge)
       assert FunWithFlags.enabled?(name, for: mickey)
 
-      :ok = FunWithFlags.clear(name, for_percentage_of_time: :true)
+      :ok = FunWithFlags.clear(name, for_percentage: true)
 
       refute FunWithFlags.enabled?(name)
       refute FunWithFlags.enabled?(name, for: donald)
@@ -496,7 +496,7 @@ defmodule FunWithFlagsTest do
 
     @tag :flaky
     test "boolean beats for_percentage_of_time when enabled, but not when disabled", %{flag_name: flag_name, hermione: hermione} do
-      FunWithFlags.enable(flag_name, for_percentage_of_time: 0.00001)
+      FunWithFlags.enable(flag_name, for_percentage_of: {:time, 0.00001})
       refute FunWithFlags.enabled?(flag_name)
       refute FunWithFlags.enabled?(flag_name, for: hermione)
 
@@ -504,7 +504,7 @@ defmodule FunWithFlagsTest do
       assert FunWithFlags.enabled?(flag_name)
       assert FunWithFlags.enabled?(flag_name, for: hermione)
 
-      FunWithFlags.enable(flag_name, for_percentage_of_time: 0.99999)
+      FunWithFlags.enable(flag_name, for_percentage_of: {:time, 0.99999})
       assert FunWithFlags.enabled?(flag_name)
       assert FunWithFlags.enabled?(flag_name, for: hermione)
 
@@ -638,7 +638,7 @@ defmodule FunWithFlagsTest do
       FunWithFlags.enable(name3, for_actor: actor)
 
       name4 = unique_atom()
-      FunWithFlags.disable(name4, for_percentage_of_time: 0.1)
+      FunWithFlags.disable(name4, for_percentage_of: {:time, 0.1})
 
       {:ok, result} = FunWithFlags.all_flags()
       assert 4 = length(result)
@@ -699,7 +699,7 @@ defmodule FunWithFlagsTest do
       FunWithFlags.enable(name3, for_actor: %{hello: "I'm an actor"})
 
       name4 = unique_atom()
-      FunWithFlags.enable(name4, for_percentage_of_time: 0.1)
+      FunWithFlags.enable(name4, for_percentage_of: {:time, 0.1})
 
       {:ok, result} = FunWithFlags.all_flag_names()
       assert 4 = length(result)
@@ -744,7 +744,7 @@ defmodule FunWithFlagsTest do
     test "with the name of an existing flag, it returns the flag", %{name: name} do
       FunWithFlags.disable(name)
       FunWithFlags.enable(name, for_group: "foobar")
-      FunWithFlags.disable(name, for_percentage_of_time: 0.25)
+      FunWithFlags.disable(name, for_percentage_of: {:time, 0.25})
 
       expected = %Flag{
         name: name,

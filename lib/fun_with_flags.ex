@@ -103,6 +103,9 @@ defmodule FunWithFlags do
   The value should be a binary or an atom (It's internally converted
   to a binary and it's stored and retrieved as a binary. Atoms are
   supported for retro-compatibility with versions <= 0.9)
+  * `:for_percentage_of` - used to enable the flag for a percentage
+  of time expressed as `{:time, float}`, where float is in the range
+  `0.0 < x < 1.0`.
 
   ## Examples
 
@@ -146,6 +149,17 @@ defmodule FunWithFlags do
       iex> FunWithFlags.enabled?(:delorean, for: doc)
       true
 
+
+  ### Enable for a percentage of the time
+
+      iex> FunWithFlags.disable(:random_glitch)
+      iex> FunWithFlags.enable(:random_glitch, for_percentage_of: {:time, 0.99999})
+      iex> FunWithFlags.enabled?(:random_glitch)
+      true
+      iex> FunWithFlags.enable(:random_glitch, for_percentage_of: {:time, 0.00001})
+      iex> FunWithFlags.enabled?(:random_glitch)
+      false
+
   """
   @spec enable(atom, options) :: {:ok, true}
   def enable(flag_name, options \\ [])
@@ -177,7 +191,7 @@ defmodule FunWithFlags do
   end
 
 
-  def enable(flag_name, [for_percentage_of_time: ratio]) when is_atom(flag_name) do
+  def enable(flag_name, [for_percentage_of: {:time, ratio}]) when is_atom(flag_name) do
     gate = Gate.new(:percentage_of_time, ratio)
     {:ok, _flag} = @store.put(flag_name, gate)
     {:ok, true}
@@ -195,6 +209,9 @@ defmodule FunWithFlags do
    The value should be a binary or an atom (It's internally converted
   to a binary and it's stored and retrieved as a binary. Atoms are
   supported for retro-compatibility with versions <= 0.9)
+  * `:for_percentage_of` - used to disable the flag for a percentage
+  of time expressed as `{:time, float}`, where float is in the range
+  `0.0 < x < 1.0`.
 
   ## Examples
 
@@ -240,6 +257,19 @@ defmodule FunWithFlags do
       iex> FunWithFlags.enabled?(:hogwarts, for: dudley)
       false
 
+  ### Disable for a percentage of the time
+
+      iex> FunWithFlags.clear(:random_glitch)
+      :ok
+      iex> FunWithFlags.disable(:random_glitch, for_percentage_of: {:time, 0.99999})
+      {:ok, false}
+      iex> FunWithFlags.enabled?(:random_glitch)
+      false
+      iex> FunWithFlags.disable(:random_glitch, for_percentage_of: {:time, 0.00001})
+      {:ok, false}
+      iex> FunWithFlags.enabled?(:random_glitch)
+      true
+
   """
   @spec disable(atom, options) :: {:ok, false}
   def disable(flag_name, options \\ [])
@@ -270,10 +300,10 @@ defmodule FunWithFlags do
   end
 
 
-  def disable(flag_name, [for_percentage_of_time: ratio])
+  def disable(flag_name, [for_percentage_of: {:time, ratio}])
   when is_atom(flag_name) and is_float(ratio) do
     inverted_ratio = 1.0 - ratio
-    {:ok, true} = enable(flag_name, [for_percentage_of_time: inverted_ratio])
+    {:ok, true} = enable(flag_name, [for_percentage_of: {:time, inverted_ratio}])
     {:ok, false}
   end
 
@@ -302,6 +332,7 @@ defmodule FunWithFlags do
   to a binary and it's stored and retrieved as a binary. Atoms are
   supported for retro-compatibility with versions <= 0.9)
   * `boolean: true` - used to clear the boolean gate.
+  * `for_percentage: true` - used to clear any percentage gate.
 
   ## Examples
 
@@ -370,7 +401,7 @@ defmodule FunWithFlags do
     _clear_gate(flag_name, gate)
   end
 
-  def clear(flag_name, [for_percentage_of_time: true]) do
+  def clear(flag_name, [for_percentage: true]) do
     gate = Gate.new(:percentage_of_time, 0.5) # we only care about the gate id
     _clear_gate(flag_name, gate)
   end
