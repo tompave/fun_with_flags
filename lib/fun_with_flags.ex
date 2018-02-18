@@ -153,10 +153,10 @@ defmodule FunWithFlags do
   ### Enable for a percentage of the time
 
       iex> FunWithFlags.disable(:random_glitch)
-      iex> FunWithFlags.enable(:random_glitch, for_percentage_of: {:time, 0.99999})
+      iex> FunWithFlags.enable(:random_glitch, for_percentage_of: {:time, 0.999999999})
       iex> FunWithFlags.enabled?(:random_glitch)
       true
-      iex> FunWithFlags.enable(:random_glitch, for_percentage_of: {:time, 0.00001})
+      iex> FunWithFlags.enable(:random_glitch, for_percentage_of: {:time, 0.000000001})
       iex> FunWithFlags.enabled?(:random_glitch)
       false
 
@@ -261,11 +261,11 @@ defmodule FunWithFlags do
 
       iex> FunWithFlags.clear(:random_glitch)
       :ok
-      iex> FunWithFlags.disable(:random_glitch, for_percentage_of: {:time, 0.99999})
+      iex> FunWithFlags.disable(:random_glitch, for_percentage_of: {:time, 0.999999999})
       {:ok, false}
       iex> FunWithFlags.enabled?(:random_glitch)
       false
-      iex> FunWithFlags.disable(:random_glitch, for_percentage_of: {:time, 0.00001})
+      iex> FunWithFlags.disable(:random_glitch, for_percentage_of: {:time, 0.000000001})
       {:ok, false}
       iex> FunWithFlags.enabled?(:random_glitch)
       true

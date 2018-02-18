@@ -287,7 +287,7 @@ defmodule FunWithFlagsTest do
       refute FunWithFlags.enabled?(flag_name, for: donald)
       refute FunWithFlags.enabled?(flag_name, for: mickey)
 
-      FunWithFlags.enable(flag_name, for_percentage_of: {:time, 0.99999})
+      FunWithFlags.enable(flag_name, for_percentage_of: {:time, 0.999999999})
       assert FunWithFlags.enabled?(flag_name)
       assert FunWithFlags.enabled?(flag_name, for: scrooge)
       assert FunWithFlags.enabled?(flag_name, for: donald)
@@ -301,13 +301,13 @@ defmodule FunWithFlagsTest do
       refute FunWithFlags.enabled?(flag_name, for: donald)
       refute FunWithFlags.enabled?(flag_name, for: mickey)
 
-      FunWithFlags.enable(flag_name, for_percentage_of: {:time, 0.99999})
+      FunWithFlags.enable(flag_name, for_percentage_of: {:time, 0.999999999})
       assert FunWithFlags.enabled?(flag_name)
       assert FunWithFlags.enabled?(flag_name, for: scrooge)
       assert FunWithFlags.enabled?(flag_name, for: donald)
       assert FunWithFlags.enabled?(flag_name, for: mickey)
 
-      FunWithFlags.disable(flag_name, for_percentage_of: {:time, 0.99999})
+      FunWithFlags.disable(flag_name, for_percentage_of: {:time, 0.999999999})
       refute FunWithFlags.enabled?(flag_name)
       refute FunWithFlags.enabled?(flag_name, for: scrooge)
       refute FunWithFlags.enabled?(flag_name, for: donald)
@@ -353,7 +353,7 @@ defmodule FunWithFlagsTest do
       FunWithFlags.disable(name)
       FunWithFlags.enable(name, for_actor: mickey)
       FunWithFlags.enable(name, for_group: :ducks)
-      FunWithFlags.enable(name, for_percentage_of: {:time, 0.99999})
+      FunWithFlags.enable(name, for_percentage_of: {:time, 0.999999999})
 
       assert FunWithFlags.enabled?(name)
       assert FunWithFlags.enabled?(name, for: scrooge)
@@ -462,7 +462,7 @@ defmodule FunWithFlagsTest do
 
     @tag :flaky
     test "clearing a for_percentage_of_time gate will remove its rule and not affect the other gates", %{scrooge: scrooge, donald: donald, mickey: mickey, name: name}  do
-      FunWithFlags.enable(name, for_percentage_of: {:time, 0.99999})
+      FunWithFlags.enable(name, for_percentage_of: {:time, 0.999999999})
       FunWithFlags.disable(name, for_group: "ducks")
       FunWithFlags.enable(name, for_actor: mickey)
 
@@ -496,7 +496,7 @@ defmodule FunWithFlagsTest do
 
     @tag :flaky
     test "boolean beats for_percentage_of_time when enabled, but not when disabled", %{flag_name: flag_name, hermione: hermione} do
-      FunWithFlags.enable(flag_name, for_percentage_of: {:time, 0.00001})
+      FunWithFlags.enable(flag_name, for_percentage_of: {:time, 0.000000001})
       refute FunWithFlags.enabled?(flag_name)
       refute FunWithFlags.enabled?(flag_name, for: hermione)
 
@@ -504,7 +504,7 @@ defmodule FunWithFlagsTest do
       assert FunWithFlags.enabled?(flag_name)
       assert FunWithFlags.enabled?(flag_name, for: hermione)
 
-      FunWithFlags.enable(flag_name, for_percentage_of: {:time, 0.99999})
+      FunWithFlags.enable(flag_name, for_percentage_of: {:time, 0.999999999})
       assert FunWithFlags.enabled?(flag_name)
       assert FunWithFlags.enabled?(flag_name, for: hermione)
 
