@@ -38,8 +38,14 @@ defmodule FunWithFlags.Store.Serializer.Ecto do
     %Gate{type: :group, for: target, enabled: enabled}
   end
 
+  defp do_deserialize_gate(%Record{gate_type: "percentage", target: "time/" <> ratio_s}) do
+    %Gate{type: :percentage_of_time, for: parse_float(ratio_s), enabled: true}
+  end
+
   def to_atom(atm) when is_atom(atm), do: atm
   def to_atom(str) when is_binary(str), do: String.to_atom(str)
+
+  defp parse_float(f_s), do: String.to_float(f_s)
 end
 
 end # Code.ensure_loaded?

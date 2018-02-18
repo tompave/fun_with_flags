@@ -4,10 +4,22 @@ defmodule FunWithFlags.GateTest do
   alias FunWithFlags.Gate
   alias FunWithFlags.TestUser
 
-  describe "new() for boolean gates" do
+  describe "new()" do
     test "new(:boolean, true|false) returns a new Boolean Gate" do
       assert %Gate{type: :boolean, for: nil, enabled: true} = Gate.new(:boolean, true)
       assert %Gate{type: :boolean, for: nil, enabled: false} = Gate.new(:boolean, false)
+    end
+
+    test "new(:percentage_of_time, ratio_f) retrurns a PercentageOfTime gate" do
+      assert %Gate{type: :percentage_of_time, for: 0.001, enabled: true} = Gate.new(:percentage_of_time, 0.001)
+      assert %Gate{type: :percentage_of_time, for: 0.1, enabled: true} = Gate.new(:percentage_of_time, 0.1)
+      assert %Gate{type: :percentage_of_time, for: 0.59, enabled: true} = Gate.new(:percentage_of_time, 0.59)
+      assert %Gate{type: :percentage_of_time, for: 0.999, enabled: true} = Gate.new(:percentage_of_time, 0.999)
+    end
+
+    test "new(:percentage_of_time, ratio_f) with an invalid ratio raises an exception" do
+      assert_raise FunWithFlags.Gate.InvalidTargetError, fn() -> Gate.new(:percentage_of_time, 0.0) end
+      assert_raise FunWithFlags.Gate.InvalidTargetError, fn() -> Gate.new(:percentage_of_time, 1.0) end
     end
 
     test "new(:actor, actor, true|false) returns a new Actor Gate" do
@@ -140,6 +152,29 @@ defmodule FunWithFlags.GateTest do
   end
 
 
+  describe "enabled?(gate), for PercentageOfTime gates" do
+    @tag :flaky
+    test "without extra arguments, it simply checks the value of the gate" do
+      gate = %Gate{type: :percentage_of_time, for: 0.99999, enabled: true}
+      assert {:ok, true} = Gate.enabled?(gate)
+
+      gate = %Gate{type: :percentage_of_time, for: 0.00001, enabled: true}
+      assert {:ok, false} = Gate.enabled?(gate)
+    end
+
+    @tag :flaky
+    test "an optional [for: something] argument is ignored" do
+      gandalf = %TestUser{id: 42, email: "gandalf@travels.com" }
+
+      gate = %Gate{type: :percentage_of_time, for: 0.99999, enabled: true}
+      assert {:ok, true} = Gate.enabled?(gate, for: gandalf)
+
+      gate = %Gate{type: :percentage_of_time, for: 0.00001, enabled: true}
+      assert {:ok, false} = Gate.enabled?(gate, for: gandalf)
+    end
+  end
+
+
   describe "boolean?(gate)" do
     test "with a boolean gate it returns true" do
       gate = %Gate{type: :boolean, for: nil, enabled: false}
@@ -172,6 +207,11 @@ defmodule FunWithFlags.GateTest do
       gate = %Gate{type: :group, for: "prosciutto", enabled: false}
       refute Gate.actor?(gate)
     end
+
+    test "with a percentage_of_time gate it returns false" do
+      gate = %Gate{type: :percentage_of_time, for: 0.5, enabled: true}
+      refute Gate.actor?(gate)
+    end
   end
 
   describe "group?(gate)" do
@@ -188,6 +228,33 @@ defmodule FunWithFlags.GateTest do
     test "with an actor gate it returns false" do
       gate = %Gate{type: :actor, for: "salami", enabled: false}
       refute Gate.group?(gate)
+    end
+
+    test "with a percentage_of_time gate it returns false" do
+      gate = %Gate{type: :percentage_of_time, for: 0.5, enabled: true}
+      refute Gate.group?(gate)
+    end
+  end
+
+  describe "percentage_of_time?(gate)" do
+    test "with a percentage_of_time gate it returns true" do
+      gate = %Gate{type: :percentage_of_time, for: 0.5, enabled: true}
+      assert Gate.percentage_of_time?(gate)
+    end
+
+    test "with a boolean gate it returns false" do
+      gate = %Gate{type: :boolean, for: nil, enabled: false}
+      refute Gate.percentage_of_time?(gate)
+    end
+
+    test "with an actor gate it returns false" do
+      gate = %Gate{type: :actor, for: "salami", enabled: false}
+      refute Gate.percentage_of_time?(gate)
+    end
+
+    test "with a group gate it returns false" do
+      gate = %Gate{type: :group, for: "prosciutto", enabled: false}
+      refute Gate.percentage_of_time?(gate)
     end
   end
 end
