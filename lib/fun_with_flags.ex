@@ -104,8 +104,8 @@ defmodule FunWithFlags do
   to a binary and it's stored and retrieved as a binary. Atoms are
   supported for retro-compatibility with versions <= 0.9)
   * `:for_percentage_of` - used to enable the flag for a percentage
-  of time expressed as `{:time, float}`, where float is in the range
-  `0.0 < x < 1.0`.
+  of time or actors, expressed as `{:time, float}` or `{:actors, float}`,
+  where float is in the range `0.0 < x < 1.0`.
 
   ## Examples
 
@@ -160,6 +160,23 @@ defmodule FunWithFlags do
       iex> FunWithFlags.enabled?(:random_glitch)
       false
 
+  ### Enable for a percentage of the actors
+
+  This example is based on the fact that the actor score for the actor-flag pair
+  `marty + :new_ui` is lower than 50%, and for the `buford + :new_ui` is higher.
+
+      iex> FunWithFlags.disable(:new_ui)
+      iex> FunWithFlags.enable(:new_ui, for_percentage_of: {:actors, 0.5})
+      iex> FunWithFlags.enabled?(:new_ui)
+      false
+      iex> alias FunWithFlags.TestUser, as: User
+      iex> marty = %User{id: 42, name: "Marty McFly"}
+      iex> buford = %User{id: 2, name: "Buford Tannen"}
+      iex> FunWithFlags.enabled?(:new_ui, for: marty)
+      true
+      iex> FunWithFlags.enabled?(:new_ui, for: buford)
+      false
+
   """
   @spec enable(atom, options) :: {:ok, true}
   def enable(flag_name, options \\ [])
@@ -197,6 +214,12 @@ defmodule FunWithFlags do
     {:ok, true}
   end
 
+  def enable(flag_name, [for_percentage_of: {:actors, ratio}]) when is_atom(flag_name) do
+    gate = Gate.new(:percentage_of_actors, ratio)
+    {:ok, _flag} = @store.put(flag_name, gate)
+    {:ok, true}
+  end
+
 
   @doc """
   Disables a feature flag.
@@ -210,8 +233,8 @@ defmodule FunWithFlags do
   to a binary and it's stored and retrieved as a binary. Atoms are
   supported for retro-compatibility with versions <= 0.9)
   * `:for_percentage_of` - used to disable the flag for a percentage
-  of time expressed as `{:time, float}`, where float is in the range
-  `0.0 < x < 1.0`.
+  of time or actors, expressed as `{:time, float}` or `{:actors, float}`,
+  where float is in the range `0.0 < x < 1.0`.
 
   ## Examples
 
@@ -270,6 +293,11 @@ defmodule FunWithFlags do
       iex> FunWithFlags.enabled?(:random_glitch)
       true
 
+  ### Disable for a percentage of the actors
+
+      iex> FunWithFlags.disable(:new_ui, for_percentage_of: {:actors, 0.3})
+      {:ok, false}
+
   """
   @spec disable(atom, options) :: {:ok, false}
   def disable(flag_name, options \\ [])
@@ -300,10 +328,10 @@ defmodule FunWithFlags do
   end
 
 
-  def disable(flag_name, [for_percentage_of: {:time, ratio}])
+  def disable(flag_name, [for_percentage_of: {type, ratio}])
   when is_atom(flag_name) and is_float(ratio) do
     inverted_ratio = 1.0 - ratio
-    {:ok, true} = enable(flag_name, [for_percentage_of: {:time, inverted_ratio}])
+    {:ok, true} = enable(flag_name, [for_percentage_of: {type, inverted_ratio}])
     {:ok, false}
   end
 
