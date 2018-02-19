@@ -29,7 +29,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
-  def put(flag_name, gate = %Gate{type: :percentage_of_time}) do
+  def put(flag_name, gate = %Gate{type: type})
+  when type in [:percentage_of_time, :percentage_of_actors] do
     name_string = to_string(flag_name)
 
     find_one_q = from(
@@ -70,7 +71,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
-  def delete(flag_name, %Gate{type: :percentage_of_time}) do
+  def delete(flag_name, %Gate{type: type})
+  when type in [:percentage_of_time, :percentage_of_actors] do
     name_string = to_string(flag_name)
 
     query = from(

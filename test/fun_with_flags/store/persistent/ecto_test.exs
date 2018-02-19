@@ -244,6 +244,124 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
 
 # -----------------
 
+  describe "put(flag_name, %Gate{}), for percentage_of_actors gates" do
+    setup do
+      name = unique_atom()
+      poa_gate = %Gate{type: :percentage_of_actors, for: 0.5, enabled: true}
+      {:ok, name: name, poa_gate: poa_gate}
+    end
+
+
+    test "put() can change the value of a flag", %{name: name, poa_gate: poa_gate} do
+      assert {:ok, %Flag{name: ^name, gates: []}} = PersiEcto.get(name)
+
+      PersiEcto.put(name, poa_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^poa_gate]}} = PersiEcto.get(name)
+
+      other_poa_gate = %Gate{poa_gate | for: 0.42}
+      PersiEcto.put(name, other_poa_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^other_poa_gate]}} = PersiEcto.get(name)
+      refute match? {:ok, %Flag{name: ^name, gates: [^poa_gate]}}, PersiEcto.get(name)
+
+      actor_gate = %Gate{type: :actor, for: "string:qwerty", enabled: true}
+      PersiEcto.put(name, actor_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^other_poa_gate]}} = PersiEcto.get(name)
+
+      PersiEcto.put(name, poa_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^poa_gate]}} = PersiEcto.get(name)
+    end
+
+
+    test "put() returns the tuple {:ok, %Flag{}}", %{name: name, poa_gate: poa_gate} do
+      assert {:ok, %Flag{name: ^name, gates: [^poa_gate]}} = PersiEcto.put(name, poa_gate)
+    end
+
+    
+    test "put()'ing more gates will return an increasily updated flag", %{name: name, poa_gate: poa_gate} do
+      bool_gate = Gate.new(:boolean, false)
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = PersiEcto.put(name, bool_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^poa_gate]}} = PersiEcto.put(name, poa_gate)
+    end
+
+
+    @tag phoenix_pubsub: "with_ecto"
+    test "when change notifications are enabled, put() will publish a notification to Phoenix.PubSub", %{name: name, poa_gate: poa_gate} do
+      assert Config.change_notifications_enabled?
+
+      u_id = NotifiPhoenix.unique_id()
+      flag = %Flag{name: name, gates: [poa_gate]}
+
+      with_mocks([
+        {Phoenix.PubSub, [:passthrough], []}
+      ]) do
+        assert {:ok, ^flag} = PersiEcto.put(name, poa_gate)
+        :timer.sleep(10)
+
+        assert called(
+          Phoenix.PubSub.broadcast!(
+            :fwf_test,
+            "fun_with_flags_changes",
+            {:fwf_changes, {:updated, name, u_id}}
+          )
+        )
+      end
+    end
+
+
+    @tag phoenix_pubsub: "with_ecto"
+    test "when change notifications are enabled, put() will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name, poa_gate: poa_gate} do
+      assert Config.change_notifications_enabled?
+
+      channel = "fun_with_flags_changes"
+      u_id = NotifiPhoenix.unique_id()
+      flag = %Flag{name: name, gates: [poa_gate]}
+
+      # Subscribe to the notifications
+
+      :ok = Phoenix.PubSub.subscribe(:fwf_test, channel) # implicit self
+
+
+      assert {:ok, ^flag} = PersiEcto.put(name, poa_gate)
+
+      payload = {:updated, name, u_id}
+      
+      receive do
+        {:fwf_changes, ^payload} -> :ok
+      after
+        500 -> flunk "Haven't received any message after 0.5 seconds"
+      end
+
+      # cleanup
+
+      :ok = Phoenix.PubSub.unsubscribe(:fwf_test, channel) # implicit self
+    end
+
+
+    @tag phoenix_pubsub: "with_ecto"
+    test "when change notifications are NOT enabled, put() will NOT publish a notification to Phoenix.PubSub", %{name: name, poa_gate: poa_gate} do
+      u_id = NotifiPhoenix.unique_id()
+      flag = %Flag{name: name, gates: [poa_gate]}
+
+      with_mocks([
+        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {Phoenix.PubSub, [:passthrough], []}
+      ]) do
+        assert {:ok, ^flag} = PersiEcto.put(name, poa_gate)
+        :timer.sleep(10)
+
+        refute called(
+          Phoenix.PubSub.broadcast!(
+            :fwf_test,
+            "fun_with_flags_changes",
+            {:fwf_changes, {:updated, name, u_id}}
+          )
+        )
+      end
+    end
+  end
+
+# -----------------
+
   describe "delete(flag_name, %Gate{}), for boolean, actor and group gates" do
     setup do
       name = unique_atom()
@@ -494,6 +612,141 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, pot_gate)
+        :timer.sleep(10)
+
+        refute called(
+          Phoenix.PubSub.broadcast!(
+            :fwf_test,
+            "fun_with_flags_changes",
+            {:fwf_changes, {:updated, name, u_id}}
+          )
+        )
+      end
+    end
+  end
+
+# -----------------
+
+  describe "delete(flag_name, %Gate{}), for percentage_of_actors gates" do
+    setup do
+      name = unique_atom()
+
+      bool_gate = %Gate{type: :boolean, enabled: false}
+      group_gate = %Gate{type: :group, for: "admins", enabled: true}
+      actor_gate = %Gate{type: :actor, for: "string_actor", enabled: true}
+      poa_gate = %Gate{type: :percentage_of_actors, for: 0.5, enabled: true}
+
+      flag = %Flag{name: name, gates: sort_gates([bool_gate, group_gate, actor_gate, poa_gate])}
+
+      {:ok, %Flag{name: ^name}} = PersiEcto.put(name, bool_gate)
+      {:ok, %Flag{name: ^name}} = PersiEcto.put(name, group_gate)
+      {:ok, %Flag{name: ^name}} = PersiEcto.put(name, actor_gate)
+      {:ok, ^flag} = PersiEcto.put(name, poa_gate)
+      {:ok, ^flag} = PersiEcto.get(name)
+
+      {:ok, name: name, flag: flag, bool_gate: bool_gate, group_gate: group_gate, actor_gate: actor_gate, poa_gate: poa_gate}
+    end
+
+
+    test "delete(flag_name, gate) can change the value of a flag",
+         %{name: name, bool_gate: bool_gate, group_gate: group_gate, actor_gate: actor_gate, poa_gate: poa_gate} do
+
+      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate, ^poa_gate]}} = PersiEcto.get(name)
+
+      PersiEcto.delete(name, group_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^poa_gate]}} = PersiEcto.get(name)
+
+      PersiEcto.delete(name, poa_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate]}} = PersiEcto.get(name)
+    end
+
+
+    test "delete(flag_name, gate) returns the tuple {:ok, %Flag{}}",
+         %{name: name, bool_gate: bool_gate, group_gate: group_gate, actor_gate: actor_gate, poa_gate: poa_gate} do
+
+      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate, ^poa_gate]}} = PersiEcto.get(name)          
+      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate]}} = PersiEcto.delete(name, poa_gate)
+    end
+
+
+    test "deleting()'ing more gates will return an increasily simpler flag",
+         %{name: name, bool_gate: bool_gate, group_gate: group_gate, actor_gate: actor_gate, poa_gate: poa_gate} do
+
+      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate, ^poa_gate]}} = PersiEcto.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate, ^poa_gate]}} = PersiEcto.delete(name, actor_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = PersiEcto.delete(name, poa_gate)
+    end
+
+
+    test "deleting()'ing the same gate multiple time is a no-op. In other words: deleting a gate is idempotent
+          and it's safe to try and delete non-present gates without errors",
+          %{name: name, bool_gate: bool_gate, group_gate: group_gate, actor_gate: actor_gate, poa_gate: poa_gate} do
+
+      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate, ^poa_gate]}} = PersiEcto.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate]}} = PersiEcto.delete(name, poa_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate]}} = PersiEcto.delete(name, poa_gate)
+    end
+
+
+    @tag phoenix_pubsub: "with_ecto"
+    test "when change notifications are enabled, delete(flag_name, gate) will publish a notification to PhoenixPubSub", %{name: name, poa_gate: poa_gate} do
+      assert Config.change_notifications_enabled?
+
+      u_id = NotifiPhoenix.unique_id()
+
+      with_mocks([
+        {Phoenix.PubSub, [:passthrough], []}
+      ]) do
+        assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, poa_gate)
+        :timer.sleep(10)
+
+        assert called(
+          Phoenix.PubSub.broadcast!(
+            :fwf_test,
+            "fun_with_flags_changes",
+            {:fwf_changes, {:updated, name, u_id}}
+          )
+        )
+      end
+    end
+
+
+    @tag phoenix_pubsub: "with_ecto"
+    test "when change notifications are enabled, delete(flag_name, gate) will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name, poa_gate: poa_gate} do
+      assert Config.change_notifications_enabled?
+      channel = "fun_with_flags_changes"
+      u_id = NotifiPhoenix.unique_id()
+
+      # Subscribe to the notifications
+
+      :ok = Phoenix.PubSub.subscribe(:fwf_test, channel) # implicit self
+
+
+      assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, poa_gate)
+
+      payload = {:updated, name, u_id}
+      
+      receive do
+        {:fwf_changes, ^payload} -> :ok
+      after
+        500 -> flunk "Haven't received any message after 0.5 seconds"
+      end
+
+      # cleanup
+
+      :ok = Phoenix.PubSub.unsubscribe(:fwf_test, channel) # implicit self
+    end
+
+
+    @tag phoenix_pubsub: "with_ecto"
+    test "when change notifications are NOT enabled, delete(flag_name, gate) will NOT publish a notification to Phoenix.PubSub ", %{name: name, poa_gate: poa_gate} do
+      u_id = NotifiPhoenix.unique_id()
+
+      with_mocks([
+        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {Phoenix.PubSub, [:passthrough], []}
+      ]) do
+        assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, poa_gate)
         :timer.sleep(10)
 
         refute called(
