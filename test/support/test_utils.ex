@@ -13,9 +13,12 @@ defmodule FunWithFlags.TestUtils do
   # atoms are not garbage collected.
   #
   def unique_atom do
+    String.to_atom(random_string())
+  end
+
+  def random_string do
     :crypto.strong_rand_bytes(7)
     |> Base.encode32(padding: false, case: :lower)
-    |> String.to_atom
   end
 
   def use_redis_test_db do

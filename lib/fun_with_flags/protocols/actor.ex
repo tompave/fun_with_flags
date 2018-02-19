@@ -112,4 +112,59 @@ defprotocol FunWithFlags.Actor do
   """
   @spec id(term) :: binary
   def id(actor)
+
+  defdelegate score(actor, flag_name), to: FunWithFlags.Actor.Percentage
+end
+
+
+
+defmodule FunWithFlags.Actor.Percentage do
+  @moduledoc false
+
+  alias FunWithFlags.Actor
+
+  # Combine an actor id and a flag name to get
+  # a score. The flag name must be included to
+  # ensure that the same actors get different
+  # scores for different flags, but with
+  # deterministic and predictable results.
+  #
+  @spec score(term, atom) :: float
+  def score(actor, flag_name) do
+    blob = Actor.id(actor) <> to_string(flag_name)
+    _actor_score(blob)
+  end
+
+  # first 16 bits:
+  # 2 ** 16 = 65_536
+  #
+  # %_ratio : 1.0 = 16_bits : 65_536
+  #
+  defp _actor_score(string) do
+    <<score :: size(16), _rest :: binary>> = :crypto.hash(:sha256, string)
+    score / 65_536
+  end
+
+
+  # To verify that the distribution is uniform
+  #
+  def distributions(count, flag_name) do
+    key_fun = fn(i) ->
+      a = %{actor_id: i}
+      score = FunWithFlags.Actor.score(a, flag_name)
+      round(score * 100)
+    end
+
+    1..count
+    |> Enum.group_by(key_fun)
+    |> Enum.map(fn({perc, items}) ->
+      {perc, length(items)}
+    end)
+    |> Enum.sort()
+    |> Enum.each(fn({perc, count}) ->
+      IO.puts("#{perc}  -  #{count}")
+    end)
+
+    nil
+  end
 end

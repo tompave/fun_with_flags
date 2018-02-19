@@ -34,4 +34,48 @@ defmodule FunWithFlags.ActorTest do
       assert "map:F0107BBFB094FC97376CFC461E33ABF5" = Actor.id(map)
     end
   end
+
+  describe "score(actor, flag_name), auto-delegated to a private worker module" do
+    import FunWithFlags.TestUtils
+
+    test "it returns a float" do
+      map = %{actor_id: 42}
+      assert is_float(Actor.score(map, :foobar))
+    end
+
+    test "the float is between 0.0 and 1.0" do
+      for _ <- (0..100) do
+        map = %{actor_id: random_string()}
+        score = Actor.score(map, :foobar)
+        assert score <= 1.0
+        assert score >= 0.0
+      end
+    end
+
+    test "the same actor-flag combination always produces the same score", %{user: user} do
+      score = Actor.score(user, :foobar)
+
+      for _ <- (1..100) do
+        assert ^score = Actor.score(user, :foobar)
+      end
+    end
+
+    test "different actors produce different scores", %{user: user} do
+      user2 = %TestUser{id: 2, email: "alfred@wayne.com"}
+      user3 = %TestUser{id: 3, email: "dick@wayne.com"}
+
+      assert Actor.score(user, :foobar) != Actor.score(user2, :foobar)
+      assert Actor.score(user, :foobar) != Actor.score(user3, :foobar)
+      assert Actor.score(user2, :foobar) != Actor.score(user3, :foobar)
+    end
+
+    test "the same actor produces different scores with different flags", %{user: user} do
+      assert Actor.score(user, :one) != Actor.score(user, :two)
+      assert Actor.score(user, :one) != Actor.score(user, :three)
+      assert Actor.score(user, :two) != Actor.score(user, :three)
+      assert Actor.score(user, :two) != Actor.score(user, :four)
+      assert Actor.score(user, :four) != Actor.score(user, :one)
+      assert Actor.score(user, :four) != Actor.score(user, :three)
+    end
+  end
 end
