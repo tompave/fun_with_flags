@@ -43,6 +43,14 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
       gate = %Gate{type: :percentage_of_time, for: 0.42, enabled: true}
       assert ["percentage", "time/0.42"] = Serializer.serialize(gate)
     end
+
+    test "with a percentage_of_actors gate" do
+      gate = %Gate{type: :percentage_of_actors, for: 0.123, enabled: true}
+      assert ["percentage", "actors/0.123"] = Serializer.serialize(gate)
+
+      gate = %Gate{type: :percentage_of_actors, for: 0.42, enabled: true}
+      assert ["percentage", "actors/0.42"] = Serializer.serialize(gate)
+    end
   end
 
 
@@ -86,6 +94,22 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
         "group/penguins", "true"
       ]
       assert ^flag = Serializer.deserialize_flag(:apricot, raw_redis_data)
+
+
+      flag = %Flag{name: :apricot, gates: [
+        %Gate{type: :actor, for: "string:albicocca", enabled: true},
+        %Gate{type: :boolean, enabled: false},
+        %Gate{type: :percentage_of_actors, for: 0.5, enabled: true},
+        %Gate{type: :group, for: "penguins", enabled: true},
+      ]}
+
+      raw_redis_data = [
+        "actor/string:albicocca", "true",
+        "boolean", "false",
+        "percentage", "actors/0.5",
+        "group/penguins", "true"
+      ]
+      assert ^flag = Serializer.deserialize_flag(:apricot, raw_redis_data)
     end
   end
 
@@ -108,6 +132,11 @@ defmodule FunWithFlags.Store.Serializer.RedisTest do
     test "with percentage_of_time data" do
       assert %Gate{type: :percentage_of_time, for: 0.001, enabled: true} = Serializer.deserialize_gate(["percentage", "time/0.001"])
       assert %Gate{type: :percentage_of_time, for: 0.95, enabled: true} = Serializer.deserialize_gate(["percentage", "time/0.95"])
+    end
+
+    test "with percentage_of_actors data" do
+      assert %Gate{type: :percentage_of_actors, for: 0.001, enabled: true} = Serializer.deserialize_gate(["percentage", "actors/0.001"])
+      assert %Gate{type: :percentage_of_actors, for: 0.95, enabled: true} = Serializer.deserialize_gate(["percentage", "actors/0.95"])
     end
   end
 
