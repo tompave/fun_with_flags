@@ -402,7 +402,7 @@ defmodule FunWithFlagsTest do
       assert FunWithFlags.enabled?(flag_name, for: donald)
       assert FunWithFlags.enabled?(flag_name, for: mickey)
 
-      FunWithFlags.disable(flag_name, for_percentage_of: {:time, 0.99}) # disabled for all
+      FunWithFlags.disable(flag_name, for_percentage_of: {:actors, 0.99}) # disabled for all
       refute FunWithFlags.enabled?(flag_name)
       refute FunWithFlags.enabled?(flag_name, for: scrooge)
       refute FunWithFlags.enabled?(flag_name, for: donald)
