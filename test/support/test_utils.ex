@@ -13,9 +13,12 @@ defmodule FunWithFlags.TestUtils do
   # atoms are not garbage collected.
   #
   def unique_atom do
+    String.to_atom(random_string())
+  end
+
+  def random_string do
     :crypto.strong_rand_bytes(7)
     |> Base.encode32(padding: false, case: :lower)
-    |> String.to_atom
   end
 
   def use_redis_test_db do
@@ -35,6 +38,12 @@ defmodule FunWithFlags.TestUtils do
   defp delete_keys([]), do: 0
   defp delete_keys(keys) do
     Redix.command!(@redis, ["DEL" | keys])
+  end
+
+  def clear_cache do
+    if Config.cache? do
+      FunWithFlags.Store.Cache.flush()
+    end
   end
 
 

@@ -12,12 +12,14 @@ defmodule FunWithFlags.Store.Serializer.EctoTest do
     actor_record = %Record{enabled: true, flag_name: flag_name, gate_type: "actor", id: 4,target: "user:123"}
     group_record = %Record{enabled: false, flag_name: flag_name, gate_type: "group", id: 3, target: "admins"}
     po_time_record = %Record{enabled: true, flag_name: flag_name, gate_type: "percentage", id: 5, target: "time/0.42"}
+    po_actors_record = %Record{enabled: true, flag_name: flag_name, gate_type: "percentage", id: 5, target: "actors/0.42"}
     {:ok,
       flag_name: String.to_atom(flag_name),
       bool_record: bool_record,
       actor_record: actor_record,
       group_record: group_record,
-      percentage_of_time_record: po_time_record
+      percentage_of_time_record: po_time_record,
+      percentage_of_actors_record: po_actors_record
     }
   end
 
@@ -43,7 +45,8 @@ defmodule FunWithFlags.Store.Serializer.EctoTest do
     test "with more than one gate it returns a composite flag",
          %{flag_name: flag_name, bool_record: bool_record,
          actor_record: actor_record, group_record: group_record,
-         percentage_of_time_record: percentage_of_time_record} do
+         percentage_of_time_record: percentage_of_time_record,
+         percentage_of_actors_record: percentage_of_actors_record} do
 
       flag = %Flag{name: flag_name, gates: [
         %Gate{type: :actor, for: "user:123", enabled: true},
@@ -73,6 +76,26 @@ defmodule FunWithFlags.Store.Serializer.EctoTest do
           actor_record_2,
           group_record_2,
           percentage_of_time_record
+        ]
+      )
+
+      flag = %Flag{name: flag_name, gates: [
+        %Gate{type: :actor, for: "string:albicocca", enabled: false},
+        %Gate{type: :boolean, enabled: true},
+        %Gate{type: :group, for: "penguins", enabled: true},
+        %Gate{type: :percentage_of_actors, for: 0.42, enabled: true},
+      ]}
+
+      actor_record_2 = %{actor_record | id: 5, target: "string:albicocca", enabled: false}
+      group_record_2 = %{group_record | id: 6, target: "penguins", enabled: true}
+
+      assert ^flag = Serializer.deserialize_flag(
+        flag_name,
+        [
+          bool_record,
+          actor_record_2,
+          group_record_2,
+          percentage_of_actors_record
         ]
       )
     end
@@ -110,6 +133,10 @@ defmodule FunWithFlags.Store.Serializer.EctoTest do
 
     test "with percentage_of_time data", %{flag_name: flag_name, percentage_of_time_record: percentage_of_time_record} do
       assert %Gate{type: :percentage_of_time, for: 0.42, enabled: true} = Serializer.deserialize_gate(flag_name, percentage_of_time_record)
+    end
+
+    test "with percentage_of_actors data", %{flag_name: flag_name, percentage_of_actors_record: percentage_of_actors_record} do
+      assert %Gate{type: :percentage_of_actors, for: 0.42, enabled: true} = Serializer.deserialize_gate(flag_name, percentage_of_actors_record)
     end
   end
 end

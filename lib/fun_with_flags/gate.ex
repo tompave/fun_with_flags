@@ -31,6 +31,16 @@ defmodule FunWithFlags.Gate do
     raise InvalidTargetError, "percentage_of_time gates must have a ratio in the range '0.0 < r < 1.0'."
   end
 
+  def new(:percentage_of_actors, ratio)
+  when is_float(ratio) and ratio > 0 and ratio < 1 do
+    %__MODULE__{type: :percentage_of_actors, for: ratio, enabled: true}
+  end
+
+  def new(:percentage_of_actors, ratio)
+  when is_float(ratio) and ratio <= 0 or ratio >= 1 do
+    raise InvalidTargetError, "percentage_of_actors gates must have a ratio in the range '0.0 < r < 1.0'."
+  end
+
   def new(:actor, actor, enabled) when is_boolean(enabled) do
     %__MODULE__{type: :actor, for: Actor.id(actor), enabled: enabled}
   end
@@ -58,6 +68,9 @@ defmodule FunWithFlags.Gate do
 
   def percentage_of_time?(%__MODULE__{type: :percentage_of_time}), do: true
   def percentage_of_time?(%__MODULE__{type: _}),                   do: false
+
+  def percentage_of_actors?(%__MODULE__{type: :percentage_of_actors}), do: true
+  def percentage_of_actors?(%__MODULE__{type: _}),                   do: false
 
 
   @spec enabled?(t, options) :: {:ok, boolean}
@@ -87,6 +100,15 @@ defmodule FunWithFlags.Gate do
 
   def enabled?(%__MODULE__{type: :percentage_of_time, for: ratio}, _) do
     roll = random_float()
+    enabled = roll <= ratio
+    {:ok, enabled}
+  end
+
+  def enabled?(%__MODULE__{type: :percentage_of_actors, for: ratio}, opts) do
+    actor     = Keyword.fetch!(opts, :for)
+    flag_name = Keyword.fetch!(opts, :flag_name)
+
+    roll = Actor.score(actor, flag_name)
     enabled = roll <= ratio
     {:ok, enabled}
   end

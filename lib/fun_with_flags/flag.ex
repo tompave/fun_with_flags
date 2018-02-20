@@ -28,14 +28,25 @@ defmodule FunWithFlags.Flag do
   end
 
 
-  def enabled?(flag = %__MODULE__{gates: gates}, [for: item]) do
+  def enabled?(%__MODULE__{gates: gates, name: flag_name}, [for: item]) do
     case check_actor_gates(gates, item) do
       {:ok, bool} -> bool
       :ignore ->
         case check_group_gates(gates, item) do
           {:ok, bool} -> bool
-          :ignore     -> enabled?(flag)
+          :ignore ->
+            check_boolean_gate(gates) || check_percentage_gate(gates, item, flag_name)
         end
+    end
+  end
+
+
+  defp check_percentage_gate(gates, item, flag_name) do
+    case percentage_of_actors_gate(gates) do
+      nil ->
+        check_percentage_of_time_gate(gates)
+      gate ->
+        check_percentage_of_actors_gate(gate, item, flag_name)
     end
   end
 
@@ -106,6 +117,12 @@ defmodule FunWithFlags.Flag do
   end
 
 
+  defp check_percentage_of_actors_gate(gate, item, flag_name) do
+    {:ok, bool} = Gate.enabled?(gate, for: item, flag_name: flag_name)
+    bool
+  end
+
+
   defp boolean_gate(gates) do
     Enum.find(gates, &Gate.boolean?/1)
   end
@@ -120,5 +137,9 @@ defmodule FunWithFlags.Flag do
 
   defp percentage_of_time_gate(gates) do
     Enum.find(gates, &Gate.percentage_of_time?/1)
+  end
+
+  defp percentage_of_actors_gate(gates) do
+    Enum.find(gates, &Gate.percentage_of_actors?/1)
   end
 end

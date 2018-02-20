@@ -59,6 +59,10 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
     {"percentage", "time/#{to_string(target)}"}
   end
 
+  defp get_type_and_target(%Gate{type: :percentage_of_actors, for: target}) do
+    {"percentage", "actors/#{to_string(target)}"}
+  end
+
   defp get_type_and_target(%Gate{type: type, for: target}) do
     {to_string(type), serialize_target(target)}
   end
