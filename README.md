@@ -17,12 +17,15 @@ It stores flag information in Redis or a RDBMS (with Ecto) for persistence and s
 
 ## Content
 
-* [What's a feature flag](#whats-a-feature-flag)
+* [What's a Feature Flag](#whats-a-feature-flag)
 * [Usage](#usage)
   - [Boolean Gate](#boolean-gate)
   - [Actor Gate](#actor-gate)
   - [Group Gate](#group-gate)
-  - [Clearing a feature flag's rules](#clearing-a-feature-flags-rules)
+  - [Percentage of Time Gate](#percentage-of-time-gate)
+  - [Percentage of Actors Gate](#percentage-of-actors-gate)
+  - [Clearing a Feature Flag's Rules](#clearing-a-feature-flags-rules)
+  - [Gate Priority and Interactions](#gate-priority-and-interactions)
 * [Web Dashboard](#web-dashboard)
 * [Origin](#origin)
 * [So, caching, huh?](#so-caching-huh)
@@ -34,7 +37,7 @@ It stores flag information in Redis or a RDBMS (with Ecto) for persistence and s
 * [Testing](#testing)
 * [Common Issues](#common-issues)
 
-## What's a feature flag?
+## What's a Feature Flag?
 
 Feature flags, or feature toggles, are boolean values associated to a name. They should be used to control whether some application feature is enabled or disabled, and they are meant to be modified at runtime while an application is running. This is usually done by the people who control the application.
 
@@ -52,15 +55,16 @@ FunWithFlags has a simple API to query and toggle feature flags. Most of the tim
 Different kinds of toggle gates are supported:
 
 * **Boolean**: globally on and off.
-* **Actors**: on or off for specific structs or data. The `FunWithFlags.Actor` protocol can be
-implemented for types and structs that should have specific rules. For example, in web applications it's common to use a `%User{}` struct or equivalent as an actor, or perhaps the current country of the request.
+* **Actors**: on or off for specific structs or data. The `FunWithFlags.Actor` protocol can be implemented for types and structs that should have specific rules. For example, in web applications it's common to use a `%User{}` struct or equivalent as an actor, or perhaps the current country of the request.
 * **Groups**: or or off for structs or data that belong to a category or satisfy a condition. The `FunWithFlags.Group` protocol can be implemented for types and structs that belong to groups for which a feature flag can be enabled or disabled. For example, one could implement the protocol for a `%User{}` struct to identify administrators.
+* **%-of-Time**: globally on for a percentage of the time. It ignores actors and groups. Mutually exclusive with the %-of-actors gate.
+* **%-of-Actors**: globally on for a percentage of the actors. It only applies when the flag is checked with a specific actor and is ignored when the flag is checked without actor arguments. Mutually exclusive with the %-of-time gate.
 
-The priority order is from most to least specific: `Actors > Groups > Boolean`, and it applies to both enabled and disabled gates. For example, a disabled group gate takes precendence over an enabled boolean (global) gate for the entities in the group, and a further enabled actor gate overrides the disabled group gate for a specific entity. When an entity belongs to multiple groups with conflicting toggle status, the disabled group gates have precedence over the enabled ones.
+Boolean, Actor and Group gates can express either an enabled or disabled state. The percentage gates can only express an enabled state, as disabling something for a percentage of time or actors is logically equivalent to enabling it for the complementary percentage.
 
 ### Boolean Gate
 
-The boolean gate is the simplest one. It's either enabled or disabled, globally. It's also the gate with the lowest priority. If a flag is undefined, it defaults to be globally disabled.
+The boolean gate is the simplest one. It's either enabled or disabled, globally. It's also the gate with the second lowest priority (it can mask the percentage gates). If a flag is undefined, it defaults to be globally disabled.
 
 ```elixir
 FunWithFlags.enabled?(:cool_new_feature)
@@ -222,7 +226,45 @@ FunWithFlags.enabled?(:database_access, for: elisabeth)
 true
 ```
 
-### Clearing a feature flag's rules
+### Percentage of Time Gate
+
+%-of-time gates are similar to boolean gates, but they allow to enable a flag for a percentage of time. In practical terms, this means that a percentage of the `enabled?()` calls will return true.
+
+```elixir
+FunWithFlags.clear(:alternative_implementation)
+FunWithFlags.enable(:alternative_implementation, for_percentage_of: {:time, 0.05})
+
+def foo(bar) do
+  if FunWithFlags.enabled?(:alternative_implementation) do
+    new_foo(bar)
+  else
+    old_foo(bar)
+  end
+end
+```
+
+### Percentage of Actors Gate
+
+```elixir
+FunWithFlags.clear(:new_design)
+FunWithFlags.enable(:new_design, for_percentage_of: {:actors, 0.2})
+FunWithFlags.enable(:new_design, for_group: "employees")
+
+
+defmodule MyPhoenixApp.MyView do
+  use MyPhoenixApp, :view
+
+  def render("my_template.html", assigns) do
+    if FunWithFlags.enabled?(:new_design, for: assigns.user) do
+      render("new_template.html", assigns)
+    else
+      render("old_template.html", assigns)
+    end
+  end
+end
+```
+
+### Clearing a Feature Flag's Rules
 
 Sometimes enabling or disabling a gate is not what you want, and removing that gate's rules would be more correct. For example, if you don't need anymore to explicitly enable or disable a flag for an actor or for a group, and the default state should be used instead, clearing the gate is the right choice.
 
@@ -299,6 +341,15 @@ false
 FunWithFlags.enabled?(:wands, for: dudley)
 false
 ```
+
+
+### Gate Priority and Interactions
+
+The priority order is from most to least specific: `Actors > Groups > Boolean > Percentage`, and it applies to both enabled and disabled gates.
+
+For example, a disabled group gate takes precendence over an enabled boolean (global) gate for the entities in the group, and a further enabled actor gate overrides the disabled group gate for a specific entity. When an entity belongs to multiple groups with conflicting toggle status, the disabled group gates have precedence over the enabled ones. The percentage gates are checked last, if present, and they're only checked if no other gate is enabled.
+
+As another example, a flag can have a disabled boolean gate and a 50% enabled %-of-actors gate. When the flag is checked with an actor, it has a (deterministic, consistent and repeatable) 50% chance to be enabled, but when checked without any actor is will always be disabled. If we add to the flag an enabled actor gate or an enabled group gates, the actor matching any of them will ignore the %-of-actors gate.
 
 ## Web Dashboard
 

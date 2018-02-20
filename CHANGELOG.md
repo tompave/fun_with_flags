@@ -4,7 +4,8 @@
 
 New Features:
 
-* Percentage of time gates
+* Percentage of time gate
+* Percentage of actors gate
 
 
 ## v0.11.0
