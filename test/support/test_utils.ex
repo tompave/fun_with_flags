@@ -40,6 +40,12 @@ defmodule FunWithFlags.TestUtils do
     Redix.command!(@redis, ["DEL" | keys])
   end
 
+  def clear_cache do
+    if Config.cache? do
+      FunWithFlags.Store.Cache.flush()
+    end
+  end
+
 
   
   defmacro timetravel([by: offset], [do: body]) do

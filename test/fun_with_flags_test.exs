@@ -7,7 +7,16 @@ defmodule FunWithFlagsTest do
   doctest FunWithFlags
 
   setup_all do
-    on_exit(__MODULE__, fn() -> clear_test_db() end)
+    on_exit(__MODULE__, fn() ->
+      clear_test_db()
+      clear_cache()
+    end)
+    :ok
+  end
+
+  setup do
+    clear_test_db()
+    clear_cache()
     :ok
   end
 
@@ -172,6 +181,40 @@ defmodule FunWithFlagsTest do
       refute FunWithFlags.enabled?(flag_name, for: evron)
       refute FunWithFlags.enabled?(flag_name, for: batman)
     end
+
+    # percentage of actors ------------------------------------
+    #
+    # FunWithFlags.Actor.score scrooge, :potato
+    # 0.72467041015625
+    # FunWithFlags.Actor.score donald, :potato
+    # 0.3559112548828125
+
+    test "when flag doesn't have a general value, it returns true and false for actors based on their scores",
+         %{scrooge: scrooge, donald: donald} do
+      FunWithFlags.clear(:potato)
+      FunWithFlags.enable(:potato, for_percentage_of: {:actors, 0.36})
+      refute FunWithFlags.enabled?(:potato)
+      refute FunWithFlags.enabled?(:potato, for: scrooge)
+      assert FunWithFlags.enabled?(:potato, for: donald)
+    end
+
+    test "when flag is disabled, it returns true and false for actors based on their scores",
+         %{scrooge: scrooge, donald: donald} do
+      FunWithFlags.disable(:potato)
+      FunWithFlags.enable(:potato, for_percentage_of: {:actors, 0.36})
+      refute FunWithFlags.enabled?(:potato)
+      refute FunWithFlags.enabled?(:potato, for: scrooge)
+      assert FunWithFlags.enabled?(:potato, for: donald)
+    end
+
+    test "when the flag is fully enabled, it ignores the percentage_of_actors gate",
+         %{scrooge: scrooge, donald: donald} do
+      FunWithFlags.enable(:potato)
+      FunWithFlags.enable(:potato, for_percentage_of: {:actors, 0.01}) # disabled for both
+      assert FunWithFlags.enabled?(:potato)
+      assert FunWithFlags.enabled?(:potato, for: scrooge)
+      assert FunWithFlags.enabled?(:potato, for: donald)
+    end
   end
 
 
@@ -315,12 +358,65 @@ defmodule FunWithFlagsTest do
     end
 
 
+    # FunWithFlags.Actor.score donald, :turnip
+    # 0.7209625244140625
+    #
+    # FunWithFlags.Actor.score scrooge, :turnip
+    # 0.298553466796875
+    #
+    # FunWithFlags.Actor.score mickey, :turnip
+    # 0.3033447265625
+    #
+    test "flags can be enabled for a percentage of the actors", %{scrooge: scrooge, donald: donald, mickey: mickey} do
+      flag_name = :turnip
+
+      refute FunWithFlags.enabled?(flag_name)
+      refute FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+      refute FunWithFlags.enabled?(flag_name, for: mickey)
+
+      FunWithFlags.enable(flag_name, for_percentage_of: {:actors, 0.73}) # enabled for all
+      refute FunWithFlags.enabled?(flag_name)
+      assert FunWithFlags.enabled?(flag_name, for: scrooge)
+      assert FunWithFlags.enabled?(flag_name, for: donald)
+      assert FunWithFlags.enabled?(flag_name, for: mickey)
+
+      FunWithFlags.enable(flag_name, for_percentage_of: {:actors, 0.299}) # enabled for scrooge
+      refute FunWithFlags.enabled?(flag_name)
+      assert FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+      refute FunWithFlags.enabled?(flag_name, for: mickey)
+    end
+
+    test "flags can be disabled for a percentage of the actors", %{scrooge: scrooge, donald: donald, mickey: mickey} do
+      flag_name = :turnip
+
+      refute FunWithFlags.enabled?(flag_name)
+      refute FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+      refute FunWithFlags.enabled?(flag_name, for: mickey)
+
+      FunWithFlags.enable(flag_name, for_percentage_of: {:actors, 0.73}) # enabled for all
+      refute FunWithFlags.enabled?(flag_name)
+      assert FunWithFlags.enabled?(flag_name, for: scrooge)
+      assert FunWithFlags.enabled?(flag_name, for: donald)
+      assert FunWithFlags.enabled?(flag_name, for: mickey)
+
+      FunWithFlags.disable(flag_name, for_percentage_of: {:time, 0.99}) # disabled for all
+      refute FunWithFlags.enabled?(flag_name)
+      refute FunWithFlags.enabled?(flag_name, for: scrooge)
+      refute FunWithFlags.enabled?(flag_name, for: donald)
+      refute FunWithFlags.enabled?(flag_name, for: mickey)
+    end
+
+
     test "enabling always returns the tuple {:ok, true} on success", %{flag_name: flag_name} do
       assert {:ok, true} = FunWithFlags.enable(flag_name)
       assert {:ok, true} = FunWithFlags.enable(flag_name)
       assert {:ok, true} = FunWithFlags.enable(flag_name, for_actor: "a string")
       assert {:ok, true} = FunWithFlags.enable(flag_name, for_group: :group_name)
       assert {:ok, true} = FunWithFlags.enable(flag_name, for_percentage_of: {:time, 0.5})
+      assert {:ok, true} = FunWithFlags.enable(flag_name, for_percentage_of: {:actors, 0.5})
     end
 
     test "disabling always returns the tuple {:ok, false} on success", %{flag_name: flag_name} do
@@ -329,6 +425,7 @@ defmodule FunWithFlagsTest do
       assert {:ok, false} = FunWithFlags.disable(flag_name, for_actor: "a string")
       assert {:ok, false} = FunWithFlags.disable(flag_name, for_group: :group_name)
       assert {:ok, false} = FunWithFlags.disable(flag_name, for_percentage_of: {:time, 0.5})
+      assert {:ok, false} = FunWithFlags.disable(flag_name, for_percentage_of: {:actors, 0.5})
     end
   end
 
@@ -478,6 +575,26 @@ defmodule FunWithFlagsTest do
       refute FunWithFlags.enabled?(name, for: scrooge)
       assert FunWithFlags.enabled?(name, for: mickey)
     end
+
+    test "clearing a for_percentage_of_actors gate will remove its rule and not affect the other gates", %{scrooge: scrooge, donald: donald, mickey: mickey}  do
+      name = :potato
+
+      FunWithFlags.enable(name, for_percentage_of: {:actors, 0.90}) # enabled for all
+      FunWithFlags.disable(name, for_group: "billionaires")
+      FunWithFlags.enable(name, for_actor: mickey)
+
+      refute FunWithFlags.enabled?(name)
+      assert FunWithFlags.enabled?(name, for: donald)
+      refute FunWithFlags.enabled?(name, for: scrooge)
+      assert FunWithFlags.enabled?(name, for: mickey)
+
+      :ok = FunWithFlags.clear(name, for_percentage: true)
+
+      refute FunWithFlags.enabled?(name)
+      refute FunWithFlags.enabled?(name, for: donald)
+      refute FunWithFlags.enabled?(name, for: scrooge)
+      assert FunWithFlags.enabled?(name, for: mickey)
+    end
   end
 
 
@@ -513,14 +630,48 @@ defmodule FunWithFlagsTest do
       assert FunWithFlags.enabled?(flag_name, for: hermione)
     end
 
-    test "group beats boolean, actor beats all", %{flag_name: flag_name, harry: harry, hermione: hermione, voldemort: voldemort, draco: draco, dumbledore: dumbledore} do
+    test "boolean beats for_percentage_of_actors when enabled, but not when disabled", %{hermione: hermione} do
+      FunWithFlags.enable(:pumpkin, for_percentage_of: {:actors, 0.01}) # disabled for hermione
+      refute FunWithFlags.enabled?(:pumpkin)
+      refute FunWithFlags.enabled?(:pumpkin, for: hermione)
+
+      FunWithFlags.enable(:pumpkin)
+      assert FunWithFlags.enabled?(:pumpkin)
+      assert FunWithFlags.enabled?(:pumpkin, for: hermione)
+
+      FunWithFlags.enable(:pumpkin, for_percentage_of: {:actors, 0.90}) # enabled for hermione
+      assert FunWithFlags.enabled?(:pumpkin)
+      assert FunWithFlags.enabled?(:pumpkin, for: hermione)
+
+      FunWithFlags.disable(:pumpkin)
+      refute FunWithFlags.enabled?(:pumpkin)
+      assert FunWithFlags.enabled?(:pumpkin, for: hermione)
+    end
+
+    test "group beats boolean, actor beats all", %{harry: harry, hermione: hermione, voldemort: voldemort, draco: draco, dumbledore: dumbledore} do
+      flag_name = :bromstick
+
       refute FunWithFlags.enabled?(flag_name, for: harry)
       refute FunWithFlags.enabled?(flag_name, for: hermione)
       refute FunWithFlags.enabled?(flag_name, for: voldemort)
       refute FunWithFlags.enabled?(flag_name, for: draco)
       refute FunWithFlags.enabled?(flag_name, for: dumbledore)
 
+      FunWithFlags.enable(flag_name, for_percentage_of: {:actors, 0.38}) # enabled for voldemort and draco
+      refute FunWithFlags.enabled?(flag_name, for: harry)
+      refute FunWithFlags.enabled?(flag_name, for: hermione)
+      assert FunWithFlags.enabled?(flag_name, for: voldemort)
+      assert FunWithFlags.enabled?(flag_name, for: draco)
+      refute FunWithFlags.enabled?(flag_name, for: dumbledore)
+
       FunWithFlags.enable(flag_name, for_group: :students)
+      assert FunWithFlags.enabled?(flag_name, for: harry)
+      assert FunWithFlags.enabled?(flag_name, for: hermione)
+      assert FunWithFlags.enabled?(flag_name, for: voldemort)
+      assert FunWithFlags.enabled?(flag_name, for: draco)
+      refute FunWithFlags.enabled?(flag_name, for: dumbledore)
+
+      FunWithFlags.enable(flag_name, for_percentage_of: {:actors, 0.01}) # disabled for all
       assert FunWithFlags.enabled?(flag_name, for: harry)
       assert FunWithFlags.enabled?(flag_name, for: hermione)
       refute FunWithFlags.enabled?(flag_name, for: voldemort)
