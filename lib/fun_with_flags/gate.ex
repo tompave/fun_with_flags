@@ -113,9 +113,12 @@ defmodule FunWithFlags.Gate do
     {:ok, enabled}
   end
 
-  # Returns a float (3 digit precision) between 0.0 and 1.0
+  # Returns a float (4 digit precision) between 0.0 and 1.0
+  #
+  # Alternative:
+  # :crypto.rand_uniform(1, 10_000) / 10_000
   #
   defp random_float do
-    (:rand.uniform(10_000) / 10_000)
+    :rand.uniform(10_000) / 10_000
   end
 end
