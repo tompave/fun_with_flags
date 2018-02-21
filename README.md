@@ -68,7 +68,7 @@ The priority order is from most to least specific: `Actors > Groups > Boolean > 
 
 For example, a disabled group gate takes precendence over an enabled boolean (global) gate for the entities in the group, and a further enabled actor gate overrides the disabled group gate for a specific entity. When an entity belongs to multiple groups with conflicting toggle status, the disabled group gates have precedence over the enabled ones. The percentage gates are checked last, if present, and they're only checked if no other gate is enabled.
 
-As another example, a flag can have a disabled boolean gate and a 50% enabled %-of-actors gate. When the flag is checked with an actor, it has a (deterministic, consistent and repeatable) 50% chance to be enabled, but when checked without an actor argument it will always be disabled. If we add to the flag a disabled actor gate and an enabled group gate, the flag will be always disabled for the the actor, always enabled for any other actor matching the group, have a 50% change to be enabled for any other actor, and always disabled when checked without actor arguments. If, then, we replace the 50%-of-actors gate with a 50%-of-time gate, the flag will be always disabled for the the actor, always enabled for any other actor matching the group, and have a 50% chance to be enabled for any other actor or when checked without an actor argument.
+As another example, a flag can have a disabled boolean gate and a 50% enabled %-of-actors gate. When the flag is checked with an actor, it has a (deterministic, consistent and repeatable) 50% chance to be enabled, but when checked without an actor argument it will always be disabled. If we add to the flag a disabled actor gate and an enabled group gate, the flag will be always disabled for the the actor, always enabled for any other actor matching the group, have a 50% change to be enabled for any other actor, and always be disabled when checked without actor arguments. If, then, we replace the 50%-of-actors gate with a 50%-of-time gate, the flag will be always disabled for the the actor, always enabled for any other actor matching the group, and have a 50% chance to be enabled for any other actor or when checked without an actor argument.
 
 ### Boolean Gate
 
@@ -109,8 +109,8 @@ defimpl FunWithFlags.Actor, for: MyApp.User do
   end
 end
 
-bruce = %User{id: 1, name: "Bruce"}
-alfred = %User{id: 2, name: "Alfred"}
+bruce = %MyApp.User{id: 1, name: "Bruce"}
+alfred = %MyApp.User{id: 2, name: "Alfred"}
 
 FunWithFlags.Actor.id(bruce)
 "user:1"
@@ -203,7 +203,7 @@ defimpl FunWithFlags.Group, for: MyApp.User do
   def in?(%{groups: list}, group_name), do: group_name in list
 end
 
-elisabeth = %User{email: "elisabeth@mycompany.com", admin: true, groups: ["engineering", "product"]}
+elisabeth = %MyApp.User{email: "elisabeth@mycompany.com", admin: true, groups: ["engineering", "product"]}
 FunWithFlags.Group.in?(elisabeth, "employee")
 true
 FunWithFlags.Group.in?(elisabeth, "admin")
@@ -238,7 +238,7 @@ true
 
 %-of-time gates are similar to boolean gates, but they allow to enable a flag for a percentage of the time. In practical terms, this means that a percentage of the `enabled?()` calls for a flag will return true, regardless of the presence of an actor argument.
 
-When the gates are checked a [pseudo-random number is generated](http://erlang.org/doc/man/rand.html#uniform-1) and compared with the gate percentage. If the result of the random roll is lower than the gate percentage value, the gate is considered enabled. So, at the risk of stating the obvious and for the sake of clarity, a 90% gate is enabled more often than a 10% gate.
+When a %-of-time gate is checked a [pseudo-random number is generated](http://erlang.org/doc/man/rand.html#uniform-1) and compared with the percentage value of the gate. If the result of the random roll is lower than the gate's percentage value, the gate is considered enabled. So, at the risk of stating the obvious and for the sake of clarity, a 90% gate is enabled more often than a 10% gate.
 
 %-of-time gates are useful to gradually introduce alternative code paths that either have the same effects of the old ones, or don't have effects visible to the users. This last point is important, because with a %-of-time gate the application will behave differently on a pseudo-random basis.
 
@@ -274,7 +274,59 @@ actor
 
 Since the scores depend on both the actor ID and the flag name, they're guaranteed to always be the same for each actor-flag combination. At the same time, the same actor will have different scores for different flags, and each flag will have a uniform distribution of scores for all the actors.
 
-Just like for the %-of-time gates, an actor's score is compared with the gate percentage value and, if lower, the gate will result enabled.
+Just like for the %-of-time gates, an actor's score is compared with the gate's percentage value and, if lower, the gate will result enabled.
+
+A practical example, based on the `FunWithFlags.Actor` protocol set up from the previous sections:
+
+```elixir
+defmodule MyApp.User do
+  defstruct [:id, :name]
+end
+
+defimpl FunWithFlags.Actor, for: MyApp.User do
+  def id(%{id: id}) do
+    "user:#{id}"
+  end
+end
+
+frodo  = %MyApp.User{id: 1, name: "Frodo Baggins"}
+sam    = %MyApp.User{id: 2, name: "Samwise Gamgee"}
+pippin = %MyApp.User{id: 3, name: "Peregrin Took"}
+merry  = %MyApp.User{id: 4, name: "Meriadoc Brandybuck"}
+
+FunWithFlags.Actor.score(frodo, :pipeweed)
+0.8658294677734375
+FunWithFlags.Actor.score(sam, :pipeweed)
+0.68426513671875
+FunWithFlags.Actor.score(pippin, :pipeweed)
+0.510528564453125
+FunWithFlags.Actor.score(merry, :pipeweed)
+0.2617645263671875
+
+{:ok, true} = FunWithFlags.enable(:pipeweed, for_percentage_of: {:actors, 0.60})
+
+FunWithFlags.enabled?(:pipeweed, for: frodo)
+false
+FunWithFlags.enabled?(:pipeweed, for: sam)
+false
+FunWithFlags.enabled?(:pipeweed, for: pippin)
+true
+FunWithFlags.enabled?(:pipeweed, for: merry)
+true
+
+{:ok, true} = FunWithFlags.enable(:pipeweed, for_percentage_of: {:actors, 0.685})
+
+FunWithFlags.enabled?(:pipeweed, for: sam)
+true
+
+FunWithFlags.Actor.score(pippin, :pipeweed)
+0.510528564453125
+FunWithFlags.Actor.score(pippin, :mushrooms)
+0.6050872802734375
+FunWithFlags.Actor.score(pippin, :palantir)
+0.144073486328125
+```
+
 
 Once a %-of-actors gate has been defined for a flag, the same actor will always see the same result (unless its actor or group gates are set, or the flag gets globally enabled). Also, this means that as long the percentage value of the gate will increase and never decrease, actors for which the gate has been enabled will always see it enabled.
 
