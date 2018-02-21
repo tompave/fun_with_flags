@@ -53,6 +53,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
     case out do
       {:ok, {:ok, result}} ->
+        publish_change(flag_name)
         {:ok, result}
       {:error, _} = error ->
         error
@@ -67,7 +68,13 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
       conflict_target: [:flag_name, :gate_type, :target] # the unique index
     ]
 
-    do_insert(flag_name, changeset, options)
+    case do_insert(flag_name, changeset, options) do
+      {:ok, flag} ->
+        publish_change(flag_name)
+        {:ok, flag}
+      other ->
+        other
+    end
   end
 
 
@@ -198,9 +205,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   defp handle_write(result, flag_name) do
     case result do
       {:ok, %Record{}} ->
-        {:ok, flag} = get(flag_name)
-        publish_change(flag_name)
-        {:ok, flag}
+        get(flag_name) # {:ok, flag}
       {:error, bad_changeset} ->
         {:error, bad_changeset.errors}
     end

@@ -35,6 +35,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
 
 
   def publish_change(flag_name) do
+    Logger.debug fn -> "FunWithFlags.Notifications: publish change for '#{flag_name}'" end
     Task.start fn() ->
       Phoenix.PubSub.broadcast!(client(), @channel,
         {:fwf_changes, {:updated, flag_name, unique_id()}}
