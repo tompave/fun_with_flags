@@ -476,8 +476,6 @@ FunWithFlags uses three mechanisms to deal with the problem:
 ## To Do
 
 * Add some optional randomness to the TTL, so that Redis or the DB don't get hammered at constant intervals after a server restart.
-* % of actors gate.
-* % of time gate.
 
 
 ## Configuration
