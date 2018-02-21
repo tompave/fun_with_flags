@@ -68,7 +68,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = PersiRedis.put(name, gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         assert called(
           Redix.command(
@@ -89,7 +89,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = PersiRedis.put(name, gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         assert called(
           Phoenix.PubSub.broadcast!(
@@ -177,7 +177,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = PersiRedis.put(name, gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
         refute called NotifiRedis.payload_for(name)
 
         refute called(
@@ -198,7 +198,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = PersiRedis.put(name, gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         refute called(
           Phoenix.PubSub.broadcast!(
@@ -278,7 +278,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiRedis.delete(name, group_gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         assert called(
           Redix.command(
@@ -299,7 +299,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiRedis.delete(name, group_gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         assert called(
           Phoenix.PubSub.broadcast!(
@@ -387,7 +387,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiRedis.delete(name, group_gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
         refute called NotifiRedis.payload_for(name)
 
         refute called(
@@ -408,7 +408,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiRedis.delete(name, group_gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         refute called(
           Phoenix.PubSub.broadcast!(
@@ -474,7 +474,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name, gates: []}} = PersiRedis.delete(name)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         assert called(
           Redix.command(
@@ -495,7 +495,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name, gates: []}} = PersiRedis.delete(name)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         assert called(
           Phoenix.PubSub.broadcast!(
@@ -581,7 +581,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
         {Redix, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name, gates: []}} = PersiRedis.delete(name)
-        :timer.sleep(10)
+        :timer.sleep(20)
         refute called NotifiRedis.payload_for(name)
 
         refute called(
@@ -602,7 +602,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name, gates: []}} = PersiRedis.delete(name)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         refute called(
           Phoenix.PubSub.broadcast!(

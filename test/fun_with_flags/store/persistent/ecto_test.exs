@@ -62,7 +62,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = PersiEcto.put(name, gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         assert called(
           Phoenix.PubSub.broadcast!(
@@ -111,7 +111,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = PersiEcto.put(name, gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         refute called(
           Phoenix.PubSub.broadcast!(
@@ -177,7 +177,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = PersiEcto.put(name, pot_gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         assert called(
           Phoenix.PubSub.broadcast!(
@@ -229,7 +229,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = PersiEcto.put(name, pot_gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         refute called(
           Phoenix.PubSub.broadcast!(
@@ -295,7 +295,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = PersiEcto.put(name, poa_gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         assert called(
           Phoenix.PubSub.broadcast!(
@@ -347,7 +347,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = PersiEcto.put(name, poa_gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         refute called(
           Phoenix.PubSub.broadcast!(
@@ -428,7 +428,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, group_gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         assert called(
           Phoenix.PubSub.broadcast!(
@@ -477,7 +477,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, group_gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         refute called(
           Phoenix.PubSub.broadcast!(
@@ -563,7 +563,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, pot_gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         assert called(
           Phoenix.PubSub.broadcast!(
@@ -612,7 +612,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, pot_gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         refute called(
           Phoenix.PubSub.broadcast!(
@@ -698,7 +698,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, poa_gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         assert called(
           Phoenix.PubSub.broadcast!(
@@ -747,7 +747,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, poa_gate)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         refute called(
           Phoenix.PubSub.broadcast!(
@@ -814,7 +814,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name, gates: []}} = PersiEcto.delete(name)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         assert called(
           Phoenix.PubSub.broadcast!(
@@ -862,7 +862,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name, gates: []}} = PersiEcto.delete(name)
-        :timer.sleep(10)
+        :timer.sleep(20)
 
         refute called(
           Phoenix.PubSub.broadcast!(
