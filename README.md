@@ -19,13 +19,13 @@ It stores flag information in Redis or a RDBMS (with Ecto) for persistence and s
 
 * [What's a Feature Flag](#whats-a-feature-flag)
 * [Usage](#usage)
+  - [Gate Priority and Interactions](#gate-priority-and-interactions)
   - [Boolean Gate](#boolean-gate)
   - [Actor Gate](#actor-gate)
   - [Group Gate](#group-gate)
   - [Percentage of Time Gate](#percentage-of-time-gate)
   - [Percentage of Actors Gate](#percentage-of-actors-gate)
   - [Clearing a Feature Flag's Rules](#clearing-a-feature-flags-rules)
-  - [Gate Priority and Interactions](#gate-priority-and-interactions)
 * [Web Dashboard](#web-dashboard)
 * [Origin](#origin)
 * [So, caching, huh?](#so-caching-huh)
@@ -61,6 +61,14 @@ Different kinds of toggle gates are supported:
 * **%-of-Actors**: globally on for a percentage of the actors. It only applies when the flag is checked with a specific actor and is ignored when the flag is checked without actor arguments. Mutually exclusive with the %-of-time gate.
 
 Boolean, Actor and Group gates can express either an enabled or disabled state. The percentage gates can only express an enabled state, as disabling something for a percentage of time or actors is logically equivalent to enabling it for the complementary percentage.
+
+### Gate Priority and Interactions
+
+The priority order is from most to least specific: `Actors > Groups > Boolean > Percentage`, and it applies to both enabled and disabled gates.
+
+For example, a disabled group gate takes precendence over an enabled boolean (global) gate for the entities in the group, and a further enabled actor gate overrides the disabled group gate for a specific entity. When an entity belongs to multiple groups with conflicting toggle status, the disabled group gates have precedence over the enabled ones. The percentage gates are checked last, if present, and they're only checked if no other gate is enabled.
+
+As another example, a flag can have a disabled boolean gate and a 50% enabled %-of-actors gate. When the flag is checked with an actor, it has a (deterministic, consistent and repeatable) 50% chance to be enabled, but when checked without an actor argument it will always be disabled. If we add to the flag a disabled actor gate and an enabled group gate, the flag will be always disabled for the the actor, always enabled for any other actor matching the group, have a 50% change to be enabled for any other actor, and always disabled when checked without actor arguments. If, then, we replace the 50%-of-actors gate with a 50%-of-time gate, the flag will be always disabled for the the actor, always enabled for any other actor matching the group, and have a 50% chance to be enabled for any other actor or when checked without an actor argument.
 
 ### Boolean Gate
 
@@ -228,7 +236,15 @@ true
 
 ### Percentage of Time Gate
 
-%-of-time gates are similar to boolean gates, but they allow to enable a flag for a percentage of time. In practical terms, this means that a percentage of the `enabled?()` calls will return true.
+%-of-time gates are similar to boolean gates, but they allow to enable a flag for a percentage of the time. In practical terms, this means that a percentage of the `enabled?()` calls for a flag will return true, regardless of the presence of an actor argument.
+
+When the gates are checked a [pseudo-random number is generated](http://erlang.org/doc/man/rand.html#uniform-1) and compared with the gate percentage. If the result of the random roll is lower than the gate percentage value, the gate is considered enabled. So, at the risk of stating the obvious and for the sake of clarity, a 90% gate is enabled more often than a 10% gate.
+
+%-of-time gates are useful to gradually introduce alternative code paths that either have the same effects of the old ones, or don't have effects visible to the users. This last point is important, because with a %-of-time gate the application will behave differently on a pseudo-random basis.
+
+A good use case for %-of-time gates is to safely test the correctedness or performance and load characteristics of an alternative implementation of a functionality.
+
+For example:
 
 ```elixir
 FunWithFlags.clear(:alternative_implementation)
@@ -243,12 +259,33 @@ def foo(bar) do
 end
 ```
 
+The %-of-time gate is incompatible and mutually exclusive with the %-of-actors gate, and it replaces it when it gets set. While there are ways to make them work together, it would needlessly overcomplicate the priority rules.
+
 ### Percentage of Actors Gate
+
+%-of-actors gates are similar to the %-of-time gates, but instead of using a pseudo-random chance they calculate the actor scores using a deterministic, consistent and repeatable function that factors in the flag name. At a high level:
+
+```elixir
+actor
+|> FunWithFlags.Actor.id()
+|> sha256_hash(flag_name)
+|> hash_to_percentage()
+```
+
+Since the scores depend on both the actor ID and the flag name, they're guaranteed to always be the same for each actor-flag combination. At the same time, the same actor will have different scores for different flags, and each flag will have a uniform distribution of scores for all the actors.
+
+Just like for the %-of-time gates, an actor's score is compared with the gate percentage value and, if lower, the gate will result enabled.
+
+Once a %-of-actors gate has been defined for a flag, the same actor will always see the same result (unless its actor or group gates are set, or the flag gets globally enabled). Also, this means that as long the percentage value of the gate will increase and never decrease, actors for which the gate has been enabled will always see it enabled.
+
+This is ideal to gradually roll out new functionality to users.
+
+For example, in a Phoenix application:
 
 ```elixir
 FunWithFlags.clear(:new_design)
 FunWithFlags.enable(:new_design, for_percentage_of: {:actors, 0.2})
-FunWithFlags.enable(:new_design, for_group: "employees")
+FunWithFlags.enable(:new_design, for_group: "beta_testers")
 
 
 defmodule MyPhoenixApp.MyView do
@@ -263,6 +300,8 @@ defmodule MyPhoenixApp.MyView do
   end
 end
 ```
+
+The %-of-actors gate is incompatible and mutually exclusive with the %-of-time gate, and it replaces it when it gets set. While there are ways to make them work together, it would needlessly overcomplicate the priority rules.
 
 ### Clearing a Feature Flag's Rules
 
@@ -299,6 +338,9 @@ FunWithFlags.enabled?(:wands, for: hagrid)
 false
 FunWithFlags.enabled?(:wands, for: harry)
 false
+
+FunWithFlags.enable(:magic_powers, for_percentage_of: {:time, 0.0001})
+FunWithFlags.clear(:magic_powers, for_percentage: true)
 ```
 
 For completeness, clearing the boolean gate is also supported.
@@ -341,15 +383,6 @@ false
 FunWithFlags.enabled?(:wands, for: dudley)
 false
 ```
-
-
-### Gate Priority and Interactions
-
-The priority order is from most to least specific: `Actors > Groups > Boolean > Percentage`, and it applies to both enabled and disabled gates.
-
-For example, a disabled group gate takes precendence over an enabled boolean (global) gate for the entities in the group, and a further enabled actor gate overrides the disabled group gate for a specific entity. When an entity belongs to multiple groups with conflicting toggle status, the disabled group gates have precedence over the enabled ones. The percentage gates are checked last, if present, and they're only checked if no other gate is enabled.
-
-As another example, a flag can have a disabled boolean gate and a 50% enabled %-of-actors gate. When the flag is checked with an actor, it has a (deterministic, consistent and repeatable) 50% chance to be enabled, but when checked without any actor is will always be disabled. If we add to the flag an enabled actor gate or an enabled group gates, the actor matching any of them will ignore the %-of-actors gate.
 
 ## Web Dashboard
 
