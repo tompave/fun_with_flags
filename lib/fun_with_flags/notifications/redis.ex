@@ -50,6 +50,7 @@ defmodule FunWithFlags.Notifications.Redis do
 
 
   def publish_change(flag_name) do
+    Logger.debug fn -> "FunWithFlags.Notifications: publish change for '#{flag_name}'" end
     Task.start fn() ->
       Redix.command(
         @write_conn,
