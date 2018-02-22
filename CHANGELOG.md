@@ -2,7 +2,11 @@
 
 ## v1.0.0
 
-New Features:
+This release introduces the last two gates that were initially planned and marks a milestone for the project. The API is now stable, and the project can graduate to `1.0.0`.
+
+This release doesn't introduce any breaking change, however, and users of the library should be able to upgrade without problems. If you're also using [`FunWithFlags.UI`](https://github.com/tompave/fun_with_flags_ui) then make sure to also upgrade that to version `0.4.0`, which adds GUI support for the new features.
+
+New Gates:
 
 * Percentage of time gate
 * Percentage of actors gate
