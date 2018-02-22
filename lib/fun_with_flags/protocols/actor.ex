@@ -113,6 +113,7 @@ defprotocol FunWithFlags.Actor do
   @spec id(term) :: binary
   def id(actor)
 
+  @doc false
   defdelegate score(actor, flag_name), to: FunWithFlags.Actor.Percentage
 end
 
