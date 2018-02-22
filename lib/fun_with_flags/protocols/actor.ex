@@ -117,7 +117,6 @@ defprotocol FunWithFlags.Actor do
 end
 
 
-
 defmodule FunWithFlags.Actor.Percentage do
   @moduledoc false
 
