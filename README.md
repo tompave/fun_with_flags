@@ -56,7 +56,7 @@ Different kinds of toggle gates are supported:
 
 * **Boolean**: globally on and off.
 * **Actors**: on or off for specific structs or data. The `FunWithFlags.Actor` protocol can be implemented for types and structs that should have specific rules. For example, in web applications it's common to use a `%User{}` struct or equivalent as an actor, or perhaps the current country of the request.
-* **Groups**: or or off for structs or data that belong to a category or satisfy a condition. The `FunWithFlags.Group` protocol can be implemented for types and structs that belong to groups for which a feature flag can be enabled or disabled. For example, one could implement the protocol for a `%User{}` struct to identify administrators.
+* **Groups**: on or off for structs or data that belong to a category or satisfy a condition. The `FunWithFlags.Group` protocol can be implemented for types and structs that belong to groups for which a feature flag can be enabled or disabled. For example, one could implement the protocol for a `%User{}` struct to identify administrators.
 * **%-of-Time**: globally on for a percentage of the time. It ignores actors and groups. Mutually exclusive with the %-of-actors gate.
 * **%-of-Actors**: globally on for a percentage of the actors. It only applies when the flag is checked with a specific actor and is ignored when the flag is checked without actor arguments. Mutually exclusive with the %-of-time gate.
 
