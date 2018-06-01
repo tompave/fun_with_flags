@@ -28,6 +28,12 @@ defmodule FunWithFlags.ConfigTest do
     assert            2000 == Config.redis_config[:port]
     assert              42 == Config.redis_config[:database]
 
+    # Whe configured with a {:system, env} tuple it looks up the value in the env
+    System.put_env("123_TEST_REDIS_URL", url)
+    configure_redis_with({:system, "123_TEST_REDIS_URL"})
+    assert url == Config.redis_config
+    System.delete_env("123_TEST_REDIS_URL")
+
     # cleanup
     configure_redis_with(defaults)
   end
