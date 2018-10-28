@@ -9,7 +9,6 @@ otp_release:
   - 20.3
   - 20.2
   - 20.1
-  - 19.3
 env:
   - CACHE_ENABLED=true  TEST_OPTS='--exclude phoenix_pubsub --exclude ecto_persistence'
   - CACHE_ENABLED=false TEST_OPTS='--only integration'
@@ -25,8 +24,6 @@ matrix:
       otp_release: 20.2
     - elixir: 1.7
       otp_release: 20.1
-    - elixir: 1.7
-      otp_release: 19.3
     - elixir: 1.6
       otp_release: 21.1
     - elixir: 1.6
