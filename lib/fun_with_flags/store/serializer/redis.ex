@@ -67,7 +67,7 @@ defmodule FunWithFlags.Store.Serializer.Redis do
   def deserialize_flag(name, list) when is_list(list) do
     gates =
       list
-      |> Enum.chunk(2)
+      |> Enum.chunk_every(2)
       |> Enum.map(&deserialize_gate/1)
     Flag.new(name, gates)
   end
