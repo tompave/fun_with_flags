@@ -36,7 +36,6 @@ defmodule FunWithFlags.GroupTest do
   describe "the fallback Any implementation" do
     test "returns false for any argument, so that nothing is in any group" do
       refute Group.in? 123, :group_name
-      refute Group.in? "ciao", :group_name
       refute Group.in? [], :group_name
     end
   end
