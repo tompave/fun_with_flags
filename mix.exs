@@ -8,7 +8,7 @@ defmodule FunWithFlags.Mixfile do
       app: :fun_with_flags,
       source_url: "https://github.com/tompave/fun_with_flags",
       version: @version,
-      elixir: "~> 1.4",
+      elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env),
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,

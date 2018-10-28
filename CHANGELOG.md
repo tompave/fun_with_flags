@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.0 (unreleased)
+
+* Drop support for Elixir 1.5. Elixir >= 1.6 is now required.
+
 ## v1.0.0
 
 This release introduces the last two gates that were initially planned and marks a milestone for the project. The API is now stable, and the project can graduate to `1.0.0`.
