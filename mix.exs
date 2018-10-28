@@ -56,8 +56,8 @@ defmodule FunWithFlags.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:ex_doc, "~> 0.16", only: :dev},
-      {:mock, "~> 0.2", only: :test},
+      {:ex_doc, "~> 0.19", only: :dev},
+      {:mock, "~> 0.3", only: :test},
 
       {:redix, "~> 0.6", optional: true},
       {:ecto, "~> 2.1", optional: true},
@@ -66,7 +66,7 @@ defmodule FunWithFlags.Mixfile do
       {:redix_pubsub, "~> 0.4", optional: true},
       {:phoenix_pubsub, "~> 1.0", optional: true},
 
-      {:credo, "~> 0.9.0", only: :dev, runtime: false},
+      {:credo, "~> 0.10", only: :dev, runtime: false},
     ]
   end
 
