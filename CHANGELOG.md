@@ -3,6 +3,7 @@
 ## v1.1.0 (unreleased)
 
 * Drop support for Elixir 1.5. Elixir >= 1.6 is now required.
+* Ecto persistence: add `NOT NULL` constraints to the table definition in the Ecto migration. This is not a breaking change: the constraints have been added because those values are never null anyway. If users of the library want to add them, they can do so by adding [this migration](https://github.com/tompave/fun_with_flags/blob/master/priv/ecto_repo/migrations/00000000000001_ensure_columns_are_not_null.exs) to their projects.
 
 ## v1.0.0
 
