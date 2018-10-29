@@ -17,6 +17,6 @@
   "poison": {:hex, :poison, "3.1.0", "d9eb636610e096f86f25d9a46f35a9facac35609a7591b3be3326e99a0484665", [:mix], [], "hexpm"},
   "poolboy": {:hex, :poolboy, "1.5.1", "6b46163901cfd0a1b43d692657ed9d7e599853b3b21b95ae5ae0a777cf9b6ca8", [:rebar], [], "hexpm"},
   "postgrex": {:hex, :postgrex, "0.13.5", "3d931aba29363e1443da167a4b12f06dcd171103c424de15e5f3fc2ba3e6d9c5", [:mix], [{:connection, "~> 1.0", [hex: :connection, repo: "hexpm", optional: false]}, {:db_connection, "~> 1.1", [hex: :db_connection, repo: "hexpm", optional: false]}, {:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: false]}], "hexpm"},
-  "redix": {:hex, :redix, "0.6.1", "20986b0e02f02b13e6f53c79a1ae70aa83147488c408f40275ec261f5bb0a6d0", [:mix], [{:connection, "~> 1.0", [hex: :connection, repo: "hexpm", optional: false]}], "hexpm"},
-  "redix_pubsub": {:hex, :redix_pubsub, "0.4.2", "1fa2b79fdca4c8a7722da92c2afb98ce531a9653c261629e131335dfdc061d1d", [:mix], [{:connection, "~> 1.0", [hex: :connection, repo: "hexpm", optional: false]}, {:redix, "~> 0.6.0", [hex: :redix, repo: "hexpm", optional: false]}], "hexpm"},
+  "redix": {:hex, :redix, "0.8.2", "c25158f905bcf8842e9a11411d65b9257ac70057c4330521d1a4d2a44b4f7ecf", [:mix], [], "hexpm"},
+  "redix_pubsub": {:hex, :redix_pubsub, "0.5.0", "ce238708d8c0c98a13e912e1d5ff093fc7958816e3cdffae5763c33a439f7701", [:mix], [{:redix, "~> 0.8", [hex: :redix, repo: "hexpm", optional: false]}], "hexpm"},
 }

@@ -110,11 +110,11 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
 
       # Subscribe to the notifications
 
-      {:ok, receiver} = Redix.PubSub.start_link(Config.redis_config, [sync_connect: true])
-      :ok = Redix.PubSub.subscribe(receiver, channel, self())
+      {:ok, receiver} = Redix.PubSub.start_link(Keyword.merge(Config.redis_config, [sync_connect: true]))
+      {:ok, ref} = Redix.PubSub.subscribe(receiver, channel, self())
 
       receive do
-        {:redix_pubsub, ^receiver, :subscribed, %{channel: ^channel}} -> :ok
+        {:redix_pubsub, ^receiver, ^ref, :subscribed, %{channel: ^channel}} -> :ok
       after
         500 -> flunk "Subscribe didn't work"
       end
@@ -124,7 +124,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       payload = "#{u_id}:#{to_string(name)}"
       
       receive do
-        {:redix_pubsub, ^receiver, :message, %{channel: ^channel, payload: ^payload}} -> :ok
+        {:redix_pubsub, ^receiver, ^ref, :message, %{channel: ^channel, payload: ^payload}} -> :ok
       after
         500 -> flunk "Haven't received any message after 0.5 seconds"
       end
@@ -134,7 +134,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       Redix.PubSub.unsubscribe(receiver, channel, self())
 
       receive do
-        {:redix_pubsub, ^receiver, :unsubscribed, %{channel: ^channel}} -> :ok
+        {:redix_pubsub, ^receiver, ^ref, :unsubscribed, %{channel: ^channel}} -> :ok
       after
         500 -> flunk "Unsubscribe didn't work"
       end
@@ -320,11 +320,11 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
 
       # Subscribe to the notifications
 
-      {:ok, receiver} = Redix.PubSub.start_link(Config.redis_config, [sync_connect: true])
-      :ok = Redix.PubSub.subscribe(receiver, channel, self())
+      {:ok, receiver} = Redix.PubSub.start_link(Keyword.merge(Config.redis_config, [sync_connect: true]))
+      {:ok, ref} = Redix.PubSub.subscribe(receiver, channel, self())
 
       receive do
-        {:redix_pubsub, ^receiver, :subscribed, %{channel: ^channel}} -> :ok
+        {:redix_pubsub, ^receiver, ^ref, :subscribed, %{channel: ^channel}} -> :ok
       after
         500 -> flunk "Subscribe didn't work"
       end
@@ -334,7 +334,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       payload = "#{u_id}:#{to_string(name)}"
       
       receive do
-        {:redix_pubsub, ^receiver, :message, %{channel: ^channel, payload: ^payload}} -> :ok
+        {:redix_pubsub, ^receiver, ^ref, :message, %{channel: ^channel, payload: ^payload}} -> :ok
       after
         500 -> flunk "Haven't received any message after 0.5 seconds"
       end
@@ -344,7 +344,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       Redix.PubSub.unsubscribe(receiver, channel, self())
 
       receive do
-        {:redix_pubsub, ^receiver, :unsubscribed, %{channel: ^channel}} -> :ok
+        {:redix_pubsub, ^receiver, ^ref, :unsubscribed, %{channel: ^channel}} -> :ok
       after
         500 -> flunk "Unsubscribe didn't work"
       end
@@ -515,11 +515,11 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
 
       # Subscribe to the notifications
 
-      {:ok, receiver} = Redix.PubSub.start_link(Config.redis_config, [sync_connect: true])
-      :ok = Redix.PubSub.subscribe(receiver, channel, self())
+      {:ok, receiver} = Redix.PubSub.start_link(Keyword.merge(Config.redis_config, [sync_connect: true]))
+      {:ok, ref} = Redix.PubSub.subscribe(receiver, channel, self())
 
       receive do
-        {:redix_pubsub, ^receiver, :subscribed, %{channel: ^channel}} -> :ok
+        {:redix_pubsub, ^receiver, ^ref, :subscribed, %{channel: ^channel}} -> :ok
       after
         500 -> flunk "Subscribe didn't work"
       end
@@ -529,7 +529,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       payload = "#{u_id}:#{to_string(name)}"
       
       receive do
-        {:redix_pubsub, ^receiver, :message, %{channel: ^channel, payload: ^payload}} -> :ok
+        {:redix_pubsub, ^receiver, ^ref, :message, %{channel: ^channel, payload: ^payload}} -> :ok
       after
         500 -> flunk "Haven't received any message after 0.5 seconds"
       end
@@ -539,7 +539,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       Redix.PubSub.unsubscribe(receiver, channel, self())
 
       receive do
-        {:redix_pubsub, ^receiver, :unsubscribed, %{channel: ^channel}} -> :ok
+        {:redix_pubsub, ^receiver, ^ref, :unsubscribed, %{channel: ^channel}} -> :ok
       after
         500 -> flunk "Unsubscribe didn't work"
       end

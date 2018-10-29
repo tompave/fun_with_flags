@@ -79,11 +79,11 @@ defmodule FunWithFlags.Notifications.RedisTest do
       channel = "fun_with_flags_changes"
       u_id = NotifiRedis.unique_id()
 
-      {:ok, receiver} = Redix.PubSub.start_link(FunWithFlags.Config.redis_config, [sync_connect: true])
-      :ok = Redix.PubSub.subscribe(receiver, channel, self())
+      {:ok, receiver} = Redix.PubSub.start_link(Keyword.merge(FunWithFlags.Config.redis_config, [sync_connect: true]))
+      {:ok, ref} = Redix.PubSub.subscribe(receiver, channel, self())
 
       receive do
-        {:redix_pubsub, ^receiver, :subscribed, %{channel: ^channel}} -> :ok
+        {:redix_pubsub, ^receiver, ^ref, :subscribed, %{channel: ^channel}} -> :ok
       after
         500 -> flunk "Subscribe didn't work"
       end
@@ -93,7 +93,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
       payload = "#{u_id}:#{to_string(name)}"
       
       receive do
-        {:redix_pubsub, ^receiver, :message, %{channel: ^channel, payload: ^payload}} -> :ok
+        {:redix_pubsub, ^receiver, ^ref, :message, %{channel: ^channel, payload: ^payload}} -> :ok
       after
         500 -> flunk "Haven't received any message after 0.5 seconds"
       end
@@ -103,7 +103,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
       Redix.PubSub.unsubscribe(receiver, channel, self())
 
       receive do
-        {:redix_pubsub, ^receiver, :unsubscribed, %{channel: ^channel}} -> :ok
+        {:redix_pubsub, ^receiver, ^ref, :unsubscribed, %{channel: ^channel}} -> :ok
       after
         500 -> flunk "Unsubscribe didn't work"
       end
@@ -121,6 +121,8 @@ defmodule FunWithFlags.Notifications.RedisTest do
     pubsub_receiver_pid = GenServer.whereis(:fun_with_flags_notifications)
     message = "foobar"
 
+    {^u_id, ref} = :sys.get_state(FunWithFlags.Notifications.Redis)
+
     with_mock(NotifiRedis, [:passthrough], []) do
       Redix.command(PersiRedis, ["PUBLISH", channel, message])
       :timer.sleep(1)
@@ -130,10 +132,11 @@ defmodule FunWithFlags.Notifications.RedisTest do
           {
             :redix_pubsub,
             pubsub_receiver_pid,
+            ref,
             :message,
             %{channel: channel, payload: message}
           },
-          u_id
+          {u_id, ref}
         )
       )
     end

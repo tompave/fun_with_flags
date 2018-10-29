@@ -66,28 +66,35 @@ defmodule FunWithFlags.Notifications.Redis do
   # The unique_id will become the state of the GenServer
   #
   def init(unique_id) do
-    {:ok, _pid} = Redix.PubSub.start_link(Config.redis_config, @conn_options)
-    :ok = Redix.PubSub.subscribe(@conn, @channel, self())
-    {:ok, unique_id}
+    {:ok, _pid} = case Config.redis_config do
+      uri when is_binary(uri) ->
+        Redix.PubSub.start_link(uri, @conn_options)
+      opts when is_list(opts) ->
+        Redix.PubSub.start_link(Keyword.merge(opts, @conn_options))
+    end
+
+    {:ok, ref} = Redix.PubSub.subscribe(@conn, @channel, self())
+    state = {unique_id, ref}
+    {:ok, state}
   end
 
 
-  def handle_call(:get_unique_id, _from, unique_id) do
-    {:reply, {:ok, unique_id}, unique_id}
+  def handle_call(:get_unique_id, _from, state = {unique_id, _ref}) do
+    {:reply, {:ok, unique_id}, state}
   end
 
 
-  def handle_info({:redix_pubsub, _from, :subscribed, %{channel: @channel}}, unique_id) do
-    {:noreply, unique_id}
+  def handle_info({:redix_pubsub, _from, ref, :subscribed, %{channel: @channel}}, state = {_, ref}) do
+    {:noreply, state}
   end
 
-  def handle_info({:redix_pubsub, _from, :unsubscribed, %{channel: @channel}}, unique_id) do
-    {:noreply, unique_id}
+  def handle_info({:redix_pubsub, _from, ref, :unsubscribed, %{channel: @channel}}, state = {_, ref}) do
+    {:noreply, state}
   end
 
-  def handle_info({:redix_pubsub, _from, :disconnected, %{error: error}}, unique_id) do
+  def handle_info({:redix_pubsub, _from, ref, :disconnected, %{error: error}}, state = {_, ref}) do
     Logger.error("FunWithFlags: Redis pub-sub connection interrupted, reason: '#{Redix.ConnectionError.message(error)}'.")
-    {:noreply, unique_id}
+    {:noreply, state}
   end
 
 
@@ -95,9 +102,9 @@ defmodule FunWithFlags.Notifications.Redis do
   # Another node has updated a flag and published an event.
   # We react to it by validating the unique_id in the message.
   #
-  def handle_info({:redix_pubsub, _from, :message, %{channel: @channel, payload: msg}}, unique_id) do
+  def handle_info({:redix_pubsub, _from, ref, :message, %{channel: @channel, payload: msg}}, state = {unique_id, ref}) do
     validate_message(msg, unique_id)
-    {:noreply, unique_id}
+    {:noreply, state}
   end
 
   # 2/2

@@ -59,11 +59,11 @@ defmodule FunWithFlags.Mixfile do
       {:ex_doc, "~> 0.19", only: :dev},
       {:mock, "~> 0.3", only: :test},
 
-      {:redix, "~> 0.6", optional: true},
+      {:redix, "~> 0.8", optional: true},
       {:ecto, "~> 2.1", optional: true},
       {:postgrex, "~> 0.13", optional: true, only: [:dev, :test]},
 
-      {:redix_pubsub, "~> 0.4", optional: true},
+      {:redix_pubsub, "~> 0.5", optional: true},
       {:phoenix_pubsub, "~> 1.0", optional: true},
 
       {:credo, "~> 0.10", only: :dev, runtime: false},

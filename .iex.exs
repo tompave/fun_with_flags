@@ -30,8 +30,11 @@ if Config.persist_in_ecto? do
 else
   with_safe_restart.(fn ->
     Redix.start_link(
-      Config.redis_config,
-      [name: :dev_console_redis, sync_connect: false])
+      Keyword.merge(
+        Config.redis_config,
+        [name: :dev_console_redis, sync_connect: false]
+      )
+    )
   end)
 end
 
