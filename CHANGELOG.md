@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.1.0 (unreleased)
+## v1.1.0
 
 * Drop support for Elixir 1.5. Elixir >= 1.6 is now required.
 * Drop support for OTP 19. OTP >= 20 is now required.
