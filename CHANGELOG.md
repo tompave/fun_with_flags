@@ -31,7 +31,7 @@ New Gates:
 
 Improvements:
 
-* Ecto persistence: explicitly set the table primary key as an integer type. This improves the compatibility with Ecto repos where primary keys default to a binary type. (e.g. UUID)
+* Ecto persistence: explicitly set the table primary key as an integer type. This improves the compatibility with Ecto repos where primary keys default to a binary type, e.g. UUID. (Thanks @coryodaniel, https://github.com/tompave/fun_with_flags/pull/23)
 
 ## v0.10.0
 
