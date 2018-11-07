@@ -33,13 +33,13 @@ defmodule FunWithFlags.Mixfile do
   defp extra_applications(:dev),  do: local_extra_applications()
   defp extra_applications(_),     do: [:logger]
 
-  # When working locally with the Ecto adapter, start the postgrex
-  # application. It's not started automatically because it's
-  # optional, I think.
+  # When working locally with the Ecto adapter, start the ecto_sql
+  # and postgrex applications. They're not started automatically
+  # because they're optional, I think.
   #
   defp local_extra_applications do
     if System.get_env("PERSISTENCE") == "ecto" do
-      [:logger, :ecto, :postgrex]
+      [:logger, :ecto, :ecto_sql, :postgrex]
     else
       [:logger]
     end
@@ -60,7 +60,7 @@ defmodule FunWithFlags.Mixfile do
       {:mock, "~> 0.3", only: :test},
 
       {:redix, "~> 0.8", optional: true},
-      {:ecto, "~> 2.1", optional: true},
+      {:ecto_sql, "~> 3.0", optional: true},
       {:postgrex, "~> 0.13", optional: true, only: [:dev, :test]},
 
       {:redix_pubsub, "~> 0.5", optional: true},

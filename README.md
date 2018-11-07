@@ -596,7 +596,7 @@ def deps do
     # either:
     {:redix, "~> 0.6"},
     # or:
-    {:ecto, "~> 2.1"},
+    {:ecto_sql, "~> 3.0}",
 
     # either:
     {:redix_pubsub, "~> 0.4"}, # depends on :redix
