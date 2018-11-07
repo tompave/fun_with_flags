@@ -4,9 +4,10 @@
 
 * Drop support for Elixir 1.5. Elixir >= 1.6 is now required.
 * Drop support for OTP 19. OTP >= 20 is now required.
-* Ecto persistence: add `NOT NULL` constraints to the table definition in the Ecto migration. This is not a breaking change: the constraints have been added because those values are never null anyway. If users of the library want to add them, they can do so by adding [this migration](https://github.com/tompave/fun_with_flags/blob/master/priv/ecto_repo/migrations/00000000000001_ensure_columns_are_not_null.exs) to their projects.
 * Update to Ecto 3 with the `ecto_sql` package.
 * Update to Redix 0.8 and Redis.PubSub 0.5.
+* Ecto persistence: add `NOT NULL` constraints to the table definition in the Ecto migration. This is not a breaking change: the constraints have been added because those values are never null anyway. If users of the library want to add them, they can do so by adding [this migration](https://github.com/tompave/fun_with_flags/blob/master/priv/ecto_repo/migrations/00000000000001_ensure_columns_are_not_null.exs) to their projects.
+* Redis persistence: allow to configure the Redis URL with a system tuple to read it from an environment variable. (Thanks @seangeo, https://github.com/tompave/fun_with_flags/pull/29)
 
 ## v1.0.0
 
