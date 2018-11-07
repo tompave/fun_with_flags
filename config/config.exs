@@ -55,7 +55,6 @@ if with_ecto do
   config :fun_with_flags, ecto_repos: [FunWithFlags.Dev.EctoRepo]
 
   config :fun_with_flags, FunWithFlags.Dev.EctoRepo,
-    adapter: Ecto.Adapters.Postgres,
     username: "postgres",
     password: "postgres",
     database: "fun_with_flags_dev",
