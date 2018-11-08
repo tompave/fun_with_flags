@@ -597,19 +597,19 @@ def deps do
     {:fun_with_flags, "~> 1.1.0"},
 
     # either:
-    {:redix, "~> 0.6"},
+    {:redix, "~> 0.8"},
     # or:
     {:ecto_sql, "~> 3.0}",
 
     # either:
-    {:redix_pubsub, "~> 0.4"}, # depends on :redix
+    {:redix_pubsub, "~> 0.5"}, # depends on :redix
     # or:
     {:phoenix_pubsub, "~> 1.0"},
   ]
 end
 ```
 
-Since FunWithFlags depends on Elixir `1.4`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
+Since FunWithFlags depends on Elixir `>= 1.6`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
 
 ## Testing
 
