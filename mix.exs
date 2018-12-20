@@ -59,11 +59,10 @@ defmodule FunWithFlags.Mixfile do
       {:ex_doc, "~> 0.19", only: :dev},
       {:mock, "~> 0.3", only: :test},
 
-      {:redix, "~> 0.8", optional: true},
+      {:redix, "~> 0.9.0", optional: true},
       {:ecto_sql, "~> 3.0", optional: true},
       {:postgrex, "~> 0.13", optional: true, only: [:dev, :test]},
 
-      {:redix_pubsub, "~> 0.5", optional: true},
       {:phoenix_pubsub, "~> 1.0", optional: true},
 
       {:credo, "~> 1.0", only: :dev, runtime: false},
@@ -80,6 +79,7 @@ defmodule FunWithFlags.Mixfile do
       ]},
       {:"test.phx", [&run_tests__redis_pers__phoenix_pubsub/1]},
       {:"test.ecto", [&run_tests__ecto_pers__phoenix_pubsub/1]},
+      {:"test.redis", [&run_tests__redis_pers__redis_pubsub/1]},
     ]
   end
 

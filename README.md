@@ -551,7 +551,7 @@ It's also necessary to create the DB table that will hold the feature flag data.
 
 ### PubSub Adapters
 
-The library comes with two PubSub adapters for the [`Redix.PubSub`](https://hex.pm/packages/redix_pubsub) and [`Phoenix.PubSub`](https://hex.pm/packages/phoenix_pubsub) libraries. In order to use any of them, you must declare the correct optional dependency in the Mixfile. (see the [installation](#installation) instructions, below)
+The library comes with two PubSub adapters for the [`Redix`](https://hex.pm/packages/redix) and [`Phoenix.PubSub`](https://hex.pm/packages/phoenix_pubsub) libraries. In order to use any of them, you must declare the correct optional dependency in the Mixfile. (see the [installation](#installation) instructions, below)
 
 The Redis PubSub adapter is the default and doesn't need to be excplicity configured. It can only be used in conjunction with the Redis persistence adapter however, and is not available when using Ecto for persistence. When used, it connects directly to the Redis instance used for persisting the the flag data.
 
@@ -597,14 +597,12 @@ def deps do
     {:fun_with_flags, "~> 1.1.0"},
 
     # either:
-    {:redix, "~> 0.8"},
+    {:redix, "~> 0.9"},
     # or:
     {:ecto_sql, "~> 3.0}",
 
-    # either:
-    {:redix_pubsub, "~> 0.5"}, # depends on :redix
-    # or:
-    {:phoenix_pubsub, "~> 1.0"},
+    # optionally, if you don't want to use Redis' builtin pubsub
+    {:phoenix_pubsub, "~> 1.1"},
   ]
 end
 ```
