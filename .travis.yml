@@ -1,14 +1,15 @@
 dist: trusty
 language: elixir
 elixir:
+  - 1.8
   - 1.7
   - 1.6
 otp_release:
+  - 21.2
   - 21.1
   - 21.0
   - 20.3
   - 20.2
-  - 20.1
 env:
   - CACHE_ENABLED=true  TEST_OPTS='--exclude phoenix_pubsub --exclude ecto_persistence'
   - CACHE_ENABLED=false TEST_OPTS='--only integration'
@@ -18,12 +19,18 @@ env:
   - CACHE_ENABLED=false PUBSUB_BROKER=phoenix_pubsub PERSISTENCE=ecto TEST_OPTS='--no-start --only integration'
 matrix:
   exclude:
+    - elixir: 1.8
+      otp_release: 21.0
+    - elixir: 1.8
+      otp_release: 20.3
+    - elixir: 1.8
+      otp_release: 20.2
     - elixir: 1.7
       otp_release: 20.3
     - elixir: 1.7
       otp_release: 20.2
-    - elixir: 1.7
-      otp_release: 20.1
+    - elixir: 1.6
+      otp_release: 21.2
     - elixir: 1.6
       otp_release: 21.1
     - elixir: 1.6
