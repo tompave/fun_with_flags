@@ -594,7 +594,7 @@ In order to have a small installation footprint, the dependencies for the differ
 ```elixir
 def deps do
   [
-    {:fun_with_flags, "~> 1.1.0"},
+    {:fun_with_flags, "~> 1.2.0"},
 
     # either:
     {:redix, "~> 0.9"},

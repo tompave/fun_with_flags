@@ -1,8 +1,11 @@
 # Changelog
 
-## Unreleased
+## v1.2.0
 
 * Redis persistence: upgrade to Redix 0.9, which deprecates Redix.PubSub. The pubsub capabilities are now part of the base Redix package. This means that FunWithFlags also needs to drop the dependency on Redix.PubSub.
+* Compatibility updates in the tests for Elixir 1.8.
+
+There is no other change in this release, but this is a minor version bump because upgrading Redix and dropping Redix.PubSub will require applications to also update their dependencies.
 
 ## v1.1.0
 
