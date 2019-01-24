@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-* Redis persistence: upgrade to Redix 0.9, which deprecates Redix.PubSub. The pubsub capabilities are not part of the base Redix package. This means that FunWithFlags also needs to drop the dependency on Redix.PubSub.
+* Redis persistence: upgrade to Redix 0.9, which deprecates Redix.PubSub. The pubsub capabilities are now part of the base Redix package. This means that FunWithFlags also needs to drop the dependency on Redix.PubSub.
 
 ## v1.1.0
 
