@@ -5,7 +5,7 @@ defmodule FunWithFlags.Store.Serializer.Redis do
 
   @type redis_hash_pair :: [String.t]
 
-  @spec serialize(FunWithFlags::Gate.t) :: redis_hash_pair
+  @spec serialize(fun_with_flags :: Gate.t()) :: redis_hash_pair
 
   def serialize(%Gate{type: :boolean, for: nil, enabled: enabled}) do
     ["boolean", to_string(enabled)]
