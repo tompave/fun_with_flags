@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.2.1 (unreleased)
+## v1.2.1
 
 Fix invalid typespec thaty was causing compiler warnings on Elixir 1.8.
 
