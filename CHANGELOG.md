@@ -2,7 +2,7 @@
 
 ## v1.2.1
 
-Fix invalid typespec thaty was causing compiler warnings on Elixir 1.8.
+* Fix invalid typespec that was causing compiler warnings on Elixir 1.8. (Thanks [asummers](https://github.com/asummers), [pull/34](https://github.com/tompave/fun_with_flags/pull/34))
 
 ## v1.2.0
 
