@@ -94,10 +94,11 @@ defmodule FunWithFlags.Store.CacheTest do
   test "flush() empties the cache", %{flag: flag}  do
     Cache.put(flag)
 
-    assert [{n, {f, t}}|_] = Cache.dump()
+    assert [{n, {f, t, x}}|_] = Cache.dump()
     assert is_atom(n)    # name
     assert %Flag{} = f   # value
     assert is_integer(t) # timestamp
+    assert is_integer(x) # ttl
 
     Cache.flush()
     assert [] = Cache.dump()
@@ -107,10 +108,11 @@ defmodule FunWithFlags.Store.CacheTest do
   test "dump() returns a List with the cached keys", %{name: name1, flag: flag1} do
     # because the test is faster than one second
     now = Timestamps.now
+    ttl = Config.cache_ttl
 
     Cache.put(flag1)
 
-    assert [{^name1, {^flag1, ^now}}|_] = Cache.dump()
+    assert [{^name1, {^flag1, ^now, ^ttl}}|_] = Cache.dump()
 
     name2 = unique_atom()
     gate2 = %Gate{type: :boolean, enabled: true}
@@ -122,15 +124,16 @@ defmodule FunWithFlags.Store.CacheTest do
     flag3 = %Flag{name: name3, gates: [gate3]}
     Cache.put(flag3)
 
-    assert [{n, {f, t}}|_] = Cache.dump()
+    assert [{n, {f, t, x}}|_] = Cache.dump()
     assert is_atom(n)    # name
     assert %Flag{} = f   # value
     assert is_integer(t) # timestamp
+    assert is_integer(x) # ttl
 
     kw = Cache.dump()
     assert is_list(kw)
-    assert {^flag1, ^now} = Keyword.get(kw, name1)
-    assert {^flag2, ^now} = Keyword.get(kw, name2)
-    assert {^flag3, ^now} = Keyword.get(kw, name3)
+    assert {^flag1, ^now, ^ttl} = Keyword.get(kw, name1)
+    assert {^flag2, ^now, ^ttl} = Keyword.get(kw, name2)
+    assert {^flag3, ^now, ^ttl} = Keyword.get(kw, name3)
   end
 end

@@ -676,7 +676,7 @@ Why does this happen?
 
 This library tries to be fast and performant, and will optimize as many things as possible at compile time by conditionally compiling different references to values and modules.
 
-For example, disabling or enabling the cache will cause a different module to be used, and the same applies to choosing different persistence or PubSub adapters. Setting other values can have a similar effect (e.g. the cache TTL).
+For example, disabling or enabling the cache will cause a different module to be used, and the same applies to choosing different persistence or PubSub adapters.
 
 While it would be possible to read everything dynamically with [`Application.get_env/3`](https://hexdocs.pm/elixir/Application.html#get_env/3) (which holds the config in the main application GenServer's state), that would require a few extra calls that should not really be necessary for data that never changes while the application is running.
 
