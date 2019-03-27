@@ -122,6 +122,49 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
         )
       end
     end
+
+    test "put() will UPSERT gates, inserting new ones and editing existing ones", %{name: name, gate: first_bool_gate} do
+      assert {:ok, %Flag{name: ^name, gates: []}} = PersiEcto.get(name)
+
+      PersiEcto.put(name, first_bool_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^first_bool_gate]}} = PersiEcto.get(name)
+
+      other_bool_gate = %Gate{first_bool_gate | enabled: false}
+      PersiEcto.put(name, other_bool_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^other_bool_gate]}} = PersiEcto.get(name)
+      refute match? {:ok, %Flag{name: ^name, gates: [^first_bool_gate]}}, PersiEcto.get(name)
+
+      first_actor_gate = %Gate{type: :actor, for: "string:qwerty", enabled: true}
+      PersiEcto.put(name, first_actor_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^first_actor_gate, ^other_bool_gate]}} = PersiEcto.get(name)
+
+      PersiEcto.put(name, first_bool_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^first_actor_gate, ^first_bool_gate]}} = PersiEcto.get(name)
+
+
+      other_actor_gate = %Gate{type: :actor, for: "string:asd", enabled: true}
+      PersiEcto.put(name, other_actor_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^other_actor_gate, ^first_actor_gate, ^first_bool_gate]}} = PersiEcto.get(name)
+
+      first_actor_gate_disabled = %Gate{first_actor_gate | enabled: false}
+      PersiEcto.put(name, first_actor_gate_disabled)
+      assert {:ok, %Flag{name: ^name, gates: [^other_actor_gate, ^first_actor_gate_disabled, ^first_bool_gate]}} = PersiEcto.get(name)
+      refute match? {:ok, %Flag{name: ^name, gates: [^other_actor_gate, ^first_actor_gate, ^first_bool_gate]}}, PersiEcto.get(name)
+
+
+      first_group_gate = %Gate{type: :group, for: "smurfs", enabled: true}
+      PersiEcto.put(name, first_group_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^other_actor_gate, ^first_actor_gate_disabled, ^first_bool_gate, ^first_group_gate]}} = PersiEcto.get(name)
+
+      other_group_gate = %Gate{type: :group, for: "gnomes", enabled: true}
+      PersiEcto.put(name, other_group_gate)
+      assert {:ok, %Flag{name: ^name, gates: [^other_actor_gate, ^first_actor_gate_disabled, ^first_bool_gate, ^other_group_gate, ^first_group_gate]}} = PersiEcto.get(name)
+
+      first_group_gate_disabled = %Gate{first_group_gate | enabled: false}
+      PersiEcto.put(name, first_group_gate_disabled)
+      assert {:ok, %Flag{name: ^name, gates: [^other_actor_gate, ^first_actor_gate_disabled, ^first_bool_gate, ^other_group_gate, ^first_group_gate_disabled]}} = PersiEcto.get(name)
+      refute match? {:ok, %Flag{name: ^name, gates: [^other_actor_gate, ^first_actor_gate_disabled, ^first_bool_gate, ^other_group_gate, ^first_group_gate]}}, PersiEcto.get(name)
+    end
   end
 
 # -----------------
