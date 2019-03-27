@@ -63,10 +63,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   def put(flag_name, gate = %Gate{}) do
     changeset = Record.build(flag_name, gate)
-    options = [
-      on_conflict: [set: [enabled: gate.enabled]],
-      conflict_target: [:flag_name, :gate_type, :target] # the unique index
-    ]
+    options = upsert_options(gate)
 
     case do_insert(flag_name, changeset, options) do
       {:ok, flag} ->
@@ -185,6 +182,21 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
       @repo,
       "LOCK TABLE fun_with_flags_toggles IN SHARE ROW EXCLUSIVE MODE;"
     )
+  end
+
+
+  defp upsert_options(gate = %Gate{}) do
+    options = [on_conflict: [set: [enabled: gate.enabled]]]
+
+    case @repo.__adapter__ do
+      # MySQL's UPSERT support doesn't allow a specific conflict_target
+      Ecto.Adapters.MySQL ->
+        options
+
+      # For other databases, specify the unique index
+      _ ->
+        options ++ [conflict_target: [:flag_name, :gate_type, :target]]
+    end
   end
 
 
