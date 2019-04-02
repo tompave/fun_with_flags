@@ -39,6 +39,7 @@ matrix:
       otp_release: 21.1
 services:
   - redis-server
+  - mysql
 addons:
   postgresql: "9.6"
 script:
