@@ -616,7 +616,9 @@ This library depends on Redis and PostgreSQL, and you'll need them installed and
 To setup the test DB for the Ecto persistence tests, run:
 
 ```
-$ MIX_ENV=test PERSISTENCE=ecto mix do ecto.create, ecto.migrate
+MIX_ENV=test PERSISTENCE=ecto mix do ecto.create, ecto.migrate              # for postgres
+rm -rf _build/test/lib/fun_with_flags/
+MIX_ENV=test PERSISTENCE=ecto RDBMS=mysql mix do ecto.create, ecto.migrate  # for mysql
 ```
 
 Then, to run all the tests:

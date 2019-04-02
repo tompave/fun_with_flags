@@ -55,11 +55,20 @@ if with_ecto do
   config :fun_with_flags, ecto_repos: [FunWithFlags.Dev.EctoRepo]
 
   config :fun_with_flags, FunWithFlags.Dev.EctoRepo,
-    username: "postgres",
-    password: "postgres",
     database: "fun_with_flags_dev",
     hostname: "localhost",
     pool_size: 10
+
+  case System.get_env("RDBMS") do
+    "mysql" ->
+      config :fun_with_flags, FunWithFlags.Dev.EctoRepo,
+        username: "root",
+        password: ""
+    _ ->
+      config :fun_with_flags, FunWithFlags.Dev.EctoRepo,
+        username: "postgres",
+        password: "postgres"
+  end
 end
 
 # -------------------------------------------------
