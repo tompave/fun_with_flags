@@ -185,17 +185,25 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
+  # PostgreSQL's UPSERTs require an explicit conflict target.
+  # MySQL's UPSERTs don't need it.
+  #
   defp upsert_options(gate = %Gate{}) do
     options = [on_conflict: [set: [enabled: gate.enabled]]]
 
-    case @repo.__adapter__ do
-      # MySQL's UPSERT support doesn't allow a specific conflict_target
-      Ecto.Adapters.MySQL ->
-        options
-
-      # For other databases, specify the unique index
-      _ ->
+    case db_type() do
+      :postgres ->
         options ++ [conflict_target: [:flag_name, :gate_type, :target]]
+      :mysql ->
+        options
+    end
+  end
+
+
+  defp db_type do
+    case @repo.__adapter__() do
+      Ecto.Adapters.MySQL -> :mysql
+      _ -> :postgres
     end
   end
 
