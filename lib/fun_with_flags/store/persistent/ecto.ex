@@ -36,16 +36,28 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   when type in [:percentage_of_time, :percentage_of_actors] do
     name_string = to_string(flag_name)
 
-    find_one_q = from(
-      r in Record,
-      where: r.flag_name == ^name_string,
-      where: r.gate_type == "percentage"
-    )
-
-    out = case db_type() do
-      :postgres -> _put_percentage_postgres(flag_name, gate, find_one_q)
-      :mysql    -> _put_percentage_mysql(flag_name, gate, find_one_q)
+    transaction_fn = case db_type() do
+      :postgres -> &_transaction_with_lock_postgres/1
+      :mysql -> &_transaction_with_lock_mysql/1
     end
+
+    out = transaction_fn.(fn() ->
+      find_one_q = from(
+        r in Record,
+        where: r.flag_name == ^name_string,
+        where: r.gate_type == "percentage"
+      )
+
+      case @repo.one(find_one_q) do
+        record = %Record{} ->
+          changeset = Record.update_target(record, gate)
+          do_update(flag_name, changeset)
+        nil ->
+          changeset = Record.build(flag_name, gate)
+          do_insert(flag_name, changeset)
+      end
+    end)
+
 
     case out do
       {:ok, {:ok, result}} ->
@@ -71,32 +83,18 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
-  defp _put_percentage_postgres(flag_name, gate, find_one_q) do
+  defp _transaction_with_lock_postgres(upsert_fn) do
     @repo.transaction fn() ->
       postgres_table_lock!()
-      case @repo.one(find_one_q) do
-        record = %Record{} ->
-          changeset = Record.update_target(record, gate)
-          do_update(flag_name, changeset)
-        nil ->
-          changeset = Record.build(flag_name, gate)
-          do_insert(flag_name, changeset)
-      end
+      upsert_fn.()
     end
   end
 
-  defp _put_percentage_mysql(flag_name, gate, find_one_q) do
+  defp _transaction_with_lock_mysql(upsert_fn) do
     @repo.transaction fn() ->
       if mysql_lock!() do
         try do
-          case @repo.one(find_one_q) do
-            record = %Record{} ->
-              changeset = Record.update_target(record, gate)
-              do_update(flag_name, changeset)
-            nil ->
-              changeset = Record.build(flag_name, gate)
-              do_insert(flag_name, changeset)
-          end
+          upsert_fn.()
         rescue
           e ->
             @repo.rollback("Exception: #{inspect(e)}")
@@ -106,6 +104,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
           {:ok, value} ->
             {:ok, value}
         after
+          # This is not guaranteed to run if the VM crashes, but at least the
+          # lock gets released when the MySQL client session is terminated.
           mysql_unlock!()
         end
       else
