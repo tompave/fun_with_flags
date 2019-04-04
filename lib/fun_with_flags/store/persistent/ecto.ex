@@ -9,7 +9,10 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   import Ecto.Query
 
+  require Logger
+
   @repo Config.ecto_repo()
+  @mysql_lock_timeout_s 3
 
   def worker_spec do
     nil
@@ -39,16 +42,9 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
       where: r.gate_type == "percentage"
     )
 
-    out = @repo.transaction fn() ->
-      table_lock!()
-      case @repo.one(find_one_q) do
-        record = %Record{} ->
-          changeset = Record.update_target(record, gate)
-          do_update(flag_name, changeset)
-        nil ->
-          changeset = Record.build(flag_name, gate)
-          do_insert(flag_name, changeset)
-      end
+    out = case db_type() do
+      :postgres -> _put_percentage_postgres(flag_name, gate, find_one_q)
+      :mysql    -> _put_percentage_mysql(flag_name, gate, find_one_q)
     end
 
     case out do
@@ -71,6 +67,51 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
         {:ok, flag}
       other ->
         other
+    end
+  end
+
+
+  defp _put_percentage_postgres(flag_name, gate, find_one_q) do
+    @repo.transaction fn() ->
+      postgres_table_lock!()
+      case @repo.one(find_one_q) do
+        record = %Record{} ->
+          changeset = Record.update_target(record, gate)
+          do_update(flag_name, changeset)
+        nil ->
+          changeset = Record.build(flag_name, gate)
+          do_insert(flag_name, changeset)
+      end
+    end
+  end
+
+  defp _put_percentage_mysql(flag_name, gate, find_one_q) do
+    @repo.transaction fn() ->
+      if mysql_lock!() do
+        try do
+          case @repo.one(find_one_q) do
+            record = %Record{} ->
+              changeset = Record.update_target(record, gate)
+              do_update(flag_name, changeset)
+            nil ->
+              changeset = Record.build(flag_name, gate)
+              do_insert(flag_name, changeset)
+          end
+        rescue
+          e ->
+            @repo.rollback("Exception: #{inspect(e)}")
+        else
+          {:error, reason} ->
+            @repo.rollback("Error while upserting the gate: #{inspect(reason)}")
+          {:ok, value} ->
+            {:ok, value}
+        after
+          mysql_unlock!()
+        end
+      else
+        Logger.error("Couldn't acquire lock with 'SELECT GET_LOCK()' after #{@mysql_lock_timeout_s} seconds")
+        @repo.rollback("couldn't acquire lock")
+      end
     end
   end
 
@@ -177,11 +218,33 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
-  defp table_lock! do
+  defp postgres_table_lock! do
     Ecto.Adapters.SQL.query!(
       @repo,
       "LOCK TABLE fun_with_flags_toggles IN SHARE ROW EXCLUSIVE MODE;"
     )
+  end
+
+
+  defp mysql_lock! do
+    result = Ecto.Adapters.SQL.query!(
+      @repo,
+      "SELECT GET_LOCK('fun_with_flags_percentage_gate_upsert', #{@mysql_lock_timeout_s})"
+    )
+
+    %Mariaex.Result{rows: [[i]]} = result
+    i == 1
+  end
+
+
+  defp mysql_unlock! do
+    result = Ecto.Adapters.SQL.query!(
+      @repo,
+      "SELECT RELEASE_LOCK('fun_with_flags_percentage_gate_upsert');"
+    )
+
+    %Mariaex.Result{rows: [[i]]} = result
+    i == 1
   end
 
 
