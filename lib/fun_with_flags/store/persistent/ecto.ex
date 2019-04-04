@@ -232,7 +232,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
       "SELECT GET_LOCK('fun_with_flags_percentage_gate_upsert', #{@mysql_lock_timeout_s})"
     )
 
-    %Mariaex.Result{rows: [[i]]} = result
+    %{rows: [[i]]} = result
     i == 1
   end
 
@@ -243,7 +243,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
       "SELECT RELEASE_LOCK('fun_with_flags_percentage_gate_upsert');"
     )
 
-    %Mariaex.Result{rows: [[i]]} = result
+    %{rows: [[i]]} = result
     i == 1
   end
 
