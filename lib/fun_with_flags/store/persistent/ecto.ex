@@ -36,18 +36,18 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   when type in [:percentage_of_time, :percentage_of_actors] do
     name_string = to_string(flag_name)
 
+    find_one_q = from(
+      r in Record,
+      where: r.flag_name == ^name_string,
+      where: r.gate_type == "percentage"
+    )
+
     transaction_fn = case db_type() do
       :postgres -> &_transaction_with_lock_postgres/1
       :mysql -> &_transaction_with_lock_mysql/1
     end
 
     out = transaction_fn.(fn() ->
-      find_one_q = from(
-        r in Record,
-        where: r.flag_name == ^name_string,
-        where: r.gate_type == "percentage"
-      )
-
       case @repo.one(find_one_q) do
         record = %Record{} ->
           changeset = Record.update_target(record, gate)
