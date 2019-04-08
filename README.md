@@ -460,7 +460,7 @@ Just as Elixir and Phoenix are meant to scale better than Ruby on Rails with hig
 
 The reason to add an ETS cache is that, most of the time, feature flags can be considered static values. Doing a round-trip to the DB (Redis or PostgreSQL) is expensive in terms of time and in terms of resources, expecially if multiple flags must be checked during a single web request. In the worst cases, the load on the DB can become a cause of concern, a performance bottleneck or the source of a system failure.
 
-Often the solution is to memoize the flag values _in the context of the web request_, but the apprach can be extended to the scope of the entire server.
+Often the solution is to memoize the flag values _in the context of the web request_, but the approach can be extended to the scope of the entire server.
 
 Of course, caching adds a different kind of complexity and there are some pros and cons. When a flag is created or updated the ETS cache on the local node is updated immediately, and the main problem is syncronizing the flag data across the other application nodes that should share the same view of the world.
 
