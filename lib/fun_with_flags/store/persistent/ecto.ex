@@ -265,8 +265,10 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   defp db_type do
     case @repo.__adapter__() do
-      Ecto.Adapters.MySQL -> :mysql
-      _ -> :postgres
+      Ecto.Adapters.Postgres -> :postgres
+      Ecto.Adapters.MySQL -> :mysql # legacy, Mariaex
+      Ecto.Adapters.MyXQL -> :mysql # new in ecto_sql 3.1
+      other -> raise "Ecto adapter #{inspect(other)} is not supported"
     end
   end
 
