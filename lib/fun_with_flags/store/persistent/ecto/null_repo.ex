@@ -13,5 +13,5 @@ defmodule FunWithFlags.NullEctoRepo do
   def delete_all(_),   do: raise(@error_msg)
   def transaction(_),  do: raise(@error_msg)
   def rollback(_),     do: raise(@error_msg)
-  def __adapter__(),   do: raise(@error_msg)
+  def __adapter__,     do: raise(@error_msg)
 end
