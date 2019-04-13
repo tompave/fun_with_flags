@@ -9,7 +9,10 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   import Ecto.Query
 
+  require Logger
+
   @repo Config.ecto_repo()
+  @mysql_lock_timeout_s 3
 
   def worker_spec do
     nil
@@ -39,8 +42,12 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
       where: r.gate_type == "percentage"
     )
 
-    out = @repo.transaction fn() ->
-      table_lock!()
+    transaction_fn = case db_type() do
+      :postgres -> &_transaction_with_lock_postgres/1
+      :mysql -> &_transaction_with_lock_mysql/1
+    end
+
+    out = transaction_fn.(fn() ->
       case @repo.one(find_one_q) do
         record = %Record{} ->
           changeset = Record.update_target(record, gate)
@@ -49,7 +56,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
           changeset = Record.build(flag_name, gate)
           do_insert(flag_name, changeset)
       end
-    end
+    end)
+
 
     case out do
       {:ok, {:ok, result}} ->
@@ -63,10 +71,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   def put(flag_name, gate = %Gate{}) do
     changeset = Record.build(flag_name, gate)
-    options = [
-      on_conflict: [set: [enabled: gate.enabled]],
-      conflict_target: [:flag_name, :gate_type, :target] # the unique index
-    ]
+    options = upsert_options(gate)
 
     case do_insert(flag_name, changeset, options) do
       {:ok, flag} ->
@@ -74,6 +79,39 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
         {:ok, flag}
       other ->
         other
+    end
+  end
+
+
+  defp _transaction_with_lock_postgres(upsert_fn) do
+    @repo.transaction fn() ->
+      postgres_table_lock!()
+      upsert_fn.()
+    end
+  end
+
+  defp _transaction_with_lock_mysql(upsert_fn) do
+    @repo.transaction fn() ->
+      if mysql_lock!() do
+        try do
+          upsert_fn.()
+        rescue
+          e ->
+            @repo.rollback("Exception: #{inspect(e)}")
+        else
+          {:error, reason} ->
+            @repo.rollback("Error while upserting the gate: #{inspect(reason)}")
+          {:ok, value} ->
+            {:ok, value}
+        after
+          # This is not guaranteed to run if the VM crashes, but at least the
+          # lock gets released when the MySQL client session is terminated.
+          mysql_unlock!()
+        end
+      else
+        Logger.error("Couldn't acquire lock with 'SELECT GET_LOCK()' after #{@mysql_lock_timeout_s} seconds")
+        @repo.rollback("couldn't acquire lock")
+      end
     end
   end
 
@@ -180,11 +218,58 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
-  defp table_lock! do
+  defp postgres_table_lock! do
     Ecto.Adapters.SQL.query!(
       @repo,
       "LOCK TABLE fun_with_flags_toggles IN SHARE ROW EXCLUSIVE MODE;"
     )
+  end
+
+
+  defp mysql_lock! do
+    result = Ecto.Adapters.SQL.query!(
+      @repo,
+      "SELECT GET_LOCK('fun_with_flags_percentage_gate_upsert', #{@mysql_lock_timeout_s})"
+    )
+
+    %{rows: [[i]]} = result
+    i == 1
+  end
+
+
+  defp mysql_unlock! do
+    result = Ecto.Adapters.SQL.query!(
+      @repo,
+      "SELECT RELEASE_LOCK('fun_with_flags_percentage_gate_upsert');"
+    )
+
+    %{rows: [[i]]} = result
+    i == 1
+  end
+
+
+  # PostgreSQL's UPSERTs require an explicit conflict target.
+  # MySQL's UPSERTs don't need it.
+  #
+  defp upsert_options(gate = %Gate{}) do
+    options = [on_conflict: [set: [enabled: gate.enabled]]]
+
+    case db_type() do
+      :postgres ->
+        options ++ [conflict_target: [:flag_name, :gate_type, :target]]
+      :mysql ->
+        options
+    end
+  end
+
+
+  defp db_type do
+    case @repo.__adapter__() do
+      Ecto.Adapters.Postgres -> :postgres
+      Ecto.Adapters.MySQL -> :mysql # legacy, Mariaex
+      Ecto.Adapters.MyXQL -> :mysql # new in ecto_sql 3.1
+      other -> raise "Ecto adapter #{inspect(other)} is not supported"
+    end
   end
 
 
