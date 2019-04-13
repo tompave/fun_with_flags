@@ -13,7 +13,7 @@ This readme refers to the `master` branch. For the latest version released on He
 
 FunWithFlags is an OTP application that provides a 2-level storage to save and retrieve feature flags, an Elixir API to toggle and query them, and a [web dashboard](#web-dashboard) as control panel.
 
-It stores flag information in Redis or PostgreSQL (with Ecto) for persistence and syncronization across different nodes, but it also maintains a local cache in an ETS table for fast lookups. When flags are added or toggled on a node, the other nodes are notified via PubSub and reload their local ETS caches.
+It stores flag information in Redis or a relational DB (PostgreSQL or MySQL, with Ecto) for persistence and syncronization across different nodes, but it also maintains a local cache in an ETS table for fast lookups. When flags are added or toggled on a node, the other nodes are notified via PubSub and reload their local ETS caches.
 
 ## Content
 
@@ -458,7 +458,7 @@ Just as Elixir and Phoenix are meant to scale better than Ruby on Rails with hig
 >
 > -- Phil Karlton
 
-The reason to add an ETS cache is that, most of the time, feature flags can be considered static values. Doing a round-trip to the DB (Redis or PostgreSQL) is expensive in terms of time and in terms of resources, expecially if multiple flags must be checked during a single web request. In the worst cases, the load on the DB can become a cause of concern, a performance bottleneck or the source of a system failure.
+The reason to add an ETS cache is that, most of the time, feature flags can be considered static values. Doing a round-trip to the DB (Redis, PostgreSQL or MySQL) is expensive in terms of time and in terms of resources, expecially if multiple flags must be checked during a single web request. In the worst cases, the load on the DB can become a cause of concern, a performance bottleneck or the source of a system failure.
 
 Often the solution is to memoize the flag values _in the context of the web request_, but the approach can be extended to the scope of the entire server.
 
@@ -519,29 +519,29 @@ config :fun_with_flags, :redis, {:system, "REDIS_URL"}
 
 ### Persistence Adapters
 
-The library comes with two persistence adapters for the the [`Redix`](https://hex.pm/packages/redix) and [`Ecto`](https://hex.pm/packages/ecto) libraries, that allow to persist feature flag data in Redis and PostgreSQL, respectively. In order to use any of them, you must declare the correct optional dependency in the Mixfile (see the [installation](#installation) instructions, below).
+The library comes with two persistence adapters for the the [`Redix`](https://hex.pm/packages/redix) and [`Ecto`](https://hex.pm/packages/ecto) libraries, that allow to persist feature flag data in Redis, PostgreSQL or MySQL. In order to use any of them, you must declare the correct optional dependency in the Mixfile (see the [installation](#installation) instructions, below).
 
 The Redis adapter is the default and there is no need to explicitly declare it. All it needs is the Redis connection configuration.
 
 In order to use the Ecto adapter, an Ecto repo must be provided in the configuration. FunWithFlags expects the Ecto repo to be initialized by the host application, which also needs to start and supervise any required processes. If using Phoenix this is managed automatically by the framework, and it's fine to use the same repo used by the rest of the application.
 
-Only PostgreSQL (via [`postgrex`](https://hex.pm/packages/postgrex)) is supported at the moment. Support for other RDBMSs might come in the future.
+Only PostgreSQL (via [`postgrex`](https://hex.pm/packages/postgrex)) and MySQL (via [`mariaex`](https://hex.pm/packages/mariaex)) are supported at the moment. Support for other RDBMSs might come in the future.
 
 To configure the Ecto adapter:
 
 ```elixir
 
-# normal Phoenix configuration
+# Normal Phoenix and Ecto configuration.
+# The repo can either use the Postgres or MySQL adapter.
 config :my_app, ecto_repos: [MyApp.Repo]
 config :my_app, MyApp.Repo,
-  adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
+  username: "my_db_user",
+  password: "my secret db password",
   database: "my_app_dev",
   hostname: "localhost",
   pool_size: 10
 
-# FunWithFlags configuration
+# FunWithFlags configuration.
 config :fun_with_flags, :persistence,
   adapter: FunWithFlags.Store.Persistent.Ecto,
   repo: MyApp.Repo
@@ -589,7 +589,7 @@ config :fun_with_flags, :cache_bust_notifications,
 
 The package can be installed by adding `fun_with_flags` to your list of dependencies in `mix.exs`.
 
-In order to have a small installation footprint, the dependencies for the different adapters are all optional and it's required to explicitly require the one you wish to use.
+In order to have a small installation footprint, the dependencies for the different adapters are all optional. You must explicitly require the ones you wish to use.
 
 ```elixir
 def deps do
@@ -607,11 +607,13 @@ def deps do
 end
 ```
 
+Using `ecto_sql` for persisting the flags also requires an ecto adapter, e.g. `postgrex` or `mariaex`. Please refer to the Ecto documentation for the details.
+
 Since FunWithFlags depends on Elixir `>= 1.6`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
 
 ## Testing
 
-This library depends on Redis and PostgreSQL, and you'll need them installed and running on your system in order to run the complete test suite. The tests will use the [Redis db number 5](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_utils.ex#L2) and then clean after themselves, but it's safer to start Redis in a directory where there is no `dump.rdb` file you care about to avoid issues. The Ecto tests will use the SQL sandbox and all transactions will be automatically rolled back.
+This library depends on Redis, PostgreSQL and MySQL, and you'll need them installed and running on your system in order to run the complete test suite. The tests will use the [Redis db number 5](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_utils.ex#L2) and then clean after themselves, but it's safer to start Redis in a directory where there is no `dump.rdb` file you care about to avoid issues. The Ecto tests will use the SQL sandbox and all transactions will be automatically rolled back.
 
 To setup the test DB for the Ecto persistence tests, run:
 
@@ -627,6 +629,8 @@ $ mix test.all
 ```
 
 The `test.all` task will run the test suite multiple times with different configurations to exercise a matrix of options and adapters.
+
+The Mixfile defines a few other helper tasks that allow to run the test suite with some more specific configurations.
 
 ## Common Issues
 
