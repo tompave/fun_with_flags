@@ -525,7 +525,7 @@ The Redis adapter is the default and there is no need to explicitly declare it. 
 
 In order to use the Ecto adapter, an Ecto repo must be provided in the configuration. FunWithFlags expects the Ecto repo to be initialized by the host application, which also needs to start and supervise any required processes. If using Phoenix this is managed automatically by the framework, and it's fine to use the same repo used by the rest of the application.
 
-Only PostgreSQL (via [`postgrex`](https://hex.pm/packages/postgrex)) and MySQL (via [`mariaex`](https://hex.pm/packages/mariaex)) are supported at the moment. Support for other RDBMSs might come in the future.
+Only PostgreSQL (via [`postgrex`](https://hex.pm/packages/postgrex)) and MySQL (via [`mariaex`](https://hex.pm/packages/mariaex) or [`myxql`](https://hex.pm/packages/myxql)) are supported at the moment. Support for other RDBMSs might come in the future.
 
 To configure the Ecto adapter:
 
@@ -607,7 +607,7 @@ def deps do
 end
 ```
 
-Using `ecto_sql` for persisting the flags also requires an ecto adapter, e.g. `postgrex` or `mariaex`. Please refer to the Ecto documentation for the details.
+Using `ecto_sql` for persisting the flags also requires an ecto adapter, e.g. `postgrex`, `mariaex` or `myxql`. Please refer to the Ecto documentation for the details.
 
 Since FunWithFlags depends on Elixir `>= 1.6`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
 

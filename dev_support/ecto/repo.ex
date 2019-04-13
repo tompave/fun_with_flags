@@ -4,8 +4,11 @@ if FunWithFlags.Config.persist_in_ecto? do
     # Only for dev and test.
     #
     @variant (case System.get_env("RDBMS") do
-      "mysql" -> Ecto.Adapters.MySQL
-      _ -> Ecto.Adapters.Postgres
+      "mysql" ->
+        # Ecto.Adapters.MySQL # mariaex, legacy
+        Ecto.Adapters.MyXQL # myxql, introduced in ecto_sql 3.1
+      _ ->
+        Ecto.Adapters.Postgres
     end)
 
     use Ecto.Repo, otp_app: :fun_with_flags, adapter: @variant
