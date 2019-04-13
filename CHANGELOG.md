@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.3.0 (unreleased)
+
+* Ecto persistence: added support for MySQL. (Thanks [stewart](https://github.com/stewart) for starting this work with [pull/41](https://github.com/tompave/fun_with_flags/pull/41), and for helping out on [pull/42](https://github.com/tompave/fun_with_flags/pull/42)).
+
 ## v1.2.1
 
 * Fix invalid typespec that was causing compiler warnings on Elixir 1.8. (Thanks [asummers](https://github.com/asummers), [pull/34](https://github.com/tompave/fun_with_flags/pull/34))
