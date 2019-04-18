@@ -10,6 +10,19 @@ defmodule FunWithFlags.Store.Cache do
   ]
   @ttl FunWithFlags.Config.cache_ttl
 
+
+  def worker_spec do
+    if FunWithFlags.Config.cache? do
+      %{
+        id: __MODULE__,
+        start: {__MODULE__, :start_link, []},
+        restart: :permanent,
+        type: :worker,
+      }
+    end
+  end
+
+
   def start_link do
     GenServer.start_link(__MODULE__, :ok, [name: __MODULE__])
   end
