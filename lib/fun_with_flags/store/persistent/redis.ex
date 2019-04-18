@@ -15,18 +15,14 @@ defmodule FunWithFlags.Store.Persistent.Redis do
   def worker_spec do
     conf = case Config.redis_config do
       uri when is_binary(uri) ->
-        [uri, @conn_options]
+        {uri, @conn_options}
       opts when is_list(opts) ->
-        [Keyword.merge(opts, @conn_options)]
+        Keyword.merge(opts, @conn_options)
     end
 
-    %{
-      id: Redix,
-      start: {Redix, :start_link, conf},
-      restart: :permanent,
-      type: :worker,
-    }
+    Redix.child_spec(conf)
   end
+
 
   def get(flag_name) do
     case Redix.command(@conn, ["HGETALL", format(flag_name)]) do
