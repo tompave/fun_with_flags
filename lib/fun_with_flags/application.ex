@@ -39,10 +39,13 @@ defmodule FunWithFlags.Application do
 
 
   defp cache_spec do
-    import Supervisor.Spec, only: [worker: 3]
-
     if Config.cache? do
-      worker(FunWithFlags.Store.Cache, [], restart: :permanent)
+      %{
+        id: FunWithFlags.Store.Cache,
+        start: {FunWithFlags.Store.Cache, :start_link, []},
+        restart: :permanent,
+        type: :worker,
+      }
     end
   end
 end

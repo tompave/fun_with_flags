@@ -13,8 +13,6 @@ defmodule FunWithFlags.Store.Persistent.Redis do
 
 
   def worker_spec do
-    import Supervisor.Spec, only: [worker: 3]
-
     conf = case Config.redis_config do
       uri when is_binary(uri) ->
         [uri, @conn_options]
@@ -22,7 +20,12 @@ defmodule FunWithFlags.Store.Persistent.Redis do
         [Keyword.merge(opts, @conn_options)]
     end
 
-    worker(Redix, conf, [restart: :permanent])
+    %{
+      id: Redix,
+      start: {Redix, :start_link, conf},
+      restart: :permanent,
+      type: :worker,
+    }
   end
 
   def get(flag_name) do

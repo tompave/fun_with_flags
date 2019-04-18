@@ -11,8 +11,12 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
 
 
   def worker_spec do
-    import Supervisor.Spec, only: [worker: 3]
-    worker(__MODULE__, [], [restart: :permanent])
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, []},
+      restart: :permanent,
+      type: :worker,
+    }
   end
 
 

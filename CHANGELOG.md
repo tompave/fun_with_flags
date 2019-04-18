@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.4.0 (unreleased)
+
+* Update supervision tree to use [Elixir v1.5 style child specs](https://github.com/elixir-lang/elixir/blob/v1.5/CHANGELOG.md#streamlined-child-specs).
+
 ## v1.3.0
 
 * Ecto persistence: added support for MySQL, via either `mariaex` or `myxql`. While both are working today, the test suite uses `myxql` because `ecto_sql` is going to deprecate the `mariaex` adapter in the future. (Thanks [stewart](https://github.com/stewart) for starting this work with [pull/41](https://github.com/tompave/fun_with_flags/pull/41) and for helping out on [pull/42](https://github.com/tompave/fun_with_flags/pull/42)).
