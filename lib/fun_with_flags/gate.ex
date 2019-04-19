@@ -1,5 +1,11 @@
 defmodule FunWithFlags.Gate do
-  @moduledoc false
+  @moduledoc """
+  Represents a feature flag gate, that is one of several conditions
+  attached to a feature flag.
+
+  This module is not meant to be used directly.
+  """
+
   alias FunWithFlags.{Actor, Group}
 
   defmodule InvalidGroupNameError do
@@ -13,8 +19,10 @@ defmodule FunWithFlags.Gate do
 
   defstruct [:type, :for, :enabled]
   @type t :: %FunWithFlags.Gate{type: atom, for: (nil | String.t), enabled: boolean}
-  @type options :: Keyword.t
+  @typep options :: Keyword.t
 
+  @doc false
+  @spec new(atom, boolean | float) :: t
   def new(:boolean, enabled) when is_boolean(enabled) do
     %__MODULE__{type: :boolean, for: nil, enabled: enabled}
   end
@@ -41,6 +49,8 @@ defmodule FunWithFlags.Gate do
     raise InvalidTargetError, "percentage_of_actors gates must have a ratio in the range '0.0 < r < 1.0'."
   end
 
+  @doc false
+  @spec new(atom, binary | term, boolean) :: t
   def new(:actor, actor, enabled) when is_boolean(enabled) do
     %__MODULE__{type: :actor, for: Actor.id(actor), enabled: enabled}
   end
@@ -57,22 +67,28 @@ defmodule FunWithFlags.Gate do
   end
 
 
+  @doc false
   def boolean?(%__MODULE__{type: :boolean}), do: true
   def boolean?(%__MODULE__{type: _}),        do: false
 
+  @doc false
   def actor?(%__MODULE__{type: :actor}), do: true
   def actor?(%__MODULE__{type: _}),      do: false
 
+  @doc false
   def group?(%__MODULE__{type: :group}), do: true
   def group?(%__MODULE__{type: _}),      do: false
 
+  @doc false
   def percentage_of_time?(%__MODULE__{type: :percentage_of_time}), do: true
   def percentage_of_time?(%__MODULE__{type: _}),                   do: false
 
+  @doc false
   def percentage_of_actors?(%__MODULE__{type: :percentage_of_actors}), do: true
   def percentage_of_actors?(%__MODULE__{type: _}),                   do: false
 
 
+  @doc false
   @spec enabled?(t, options) :: {:ok, boolean}
   def enabled?(gate, options \\ [])
 

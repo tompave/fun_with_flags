@@ -1,18 +1,24 @@
 defmodule FunWithFlags.Flag do
-  @moduledoc false
+  @moduledoc """
+  Represents a feature flag.
+
+  This module is not meant to be used directly.
+  """
 
   alias FunWithFlags.Gate
 
   defstruct [name: nil, gates: []]
   @type t :: %FunWithFlags.Flag{name: atom, gates: [FunWithFlags.Gate.t]}
-  @type options :: Keyword.t
+  @typep options :: Keyword.t
 
 
+  @doc false
   def new(name, gates \\ []) when is_atom(name) do
     %__MODULE__{name: name, gates: gates}
   end
 
 
+  @doc false
   @spec enabled?(t, options) :: boolean
   def enabled?(flag, options \\ [])
 
