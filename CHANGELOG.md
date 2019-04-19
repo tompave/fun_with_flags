@@ -3,6 +3,7 @@
 ## v1.4.0 (unreleased)
 
 * Update supervision tree to use [Elixir v1.5 style child specs](https://github.com/elixir-lang/elixir/blob/v1.5/CHANGELOG.md#streamlined-child-specs).
+* Print a helpful error if a project is configured to use a persistence adapter without including its dependency packages. This mirrors what happens when the dependencies for a notifications adapter are missing.
 
 ## v1.3.0
 

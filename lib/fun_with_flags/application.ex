@@ -13,13 +13,27 @@ defmodule FunWithFlags.Application do
 
   defp children do
     [
-      FunWithFlags.Store.Persistent.adapter.worker_spec(),
       FunWithFlags.Store.Cache.worker_spec(),
+      persistence_spec(),
       notifications_spec(),
     ]
     |> Enum.reject(&(!&1))
   end
 
+
+  defp persistence_spec do
+    adapter = FunWithFlags.Store.Persistent.adapter()
+
+    try do
+      adapter.worker_spec()
+    rescue
+      e in [UndefinedFunctionError] ->
+        Logger.error "FunWithFlags: It looks like you're trying to use #{inspect(adapter)} " <>
+         "to persist flags, but you haven't added its optional dependency to the Mixfile " <>
+         "of your project."
+        reraise e, System.stacktrace
+    end
+  end
 
   # If the change notifications are enabled AND the adapter can
   # be supervised, then return a spec for the supervisor.
@@ -31,9 +45,10 @@ defmodule FunWithFlags.Application do
       Config.change_notifications_enabled? && Config.notifications_adapter.worker_spec()
     rescue
       e in [UndefinedFunctionError] ->
-        Logger.error "FunWithFlags: Looks like you're trying to use #{Config.notifications_adapter} " <>
-         "for notifications, but you haven't added its optional dependency to the Mixfile. Optionally " <>
-         "notifications can be disabled to exclude this dependency."
+        Logger.error "FunWithFlags: It looks like you're trying to use #{inspect(Config.notifications_adapter)} " <>
+         "for the cache-busting notifications, but you haven't added its optional dependency to the Mixfile " <>
+         "of your project. If you don't need cache-busting notifications, they can be disabled to make this " <>
+         "error go away."
         reraise e, System.stacktrace
     end
   end
