@@ -2,8 +2,11 @@
 
 ## v1.4.0 (unreleased)
 
+This release focuses on making it easier to extend the package, for example with custom peristence adapters.
+
 * Update supervision tree to use [Elixir v1.5 style child specs](https://github.com/elixir-lang/elixir/blob/v1.5/CHANGELOG.md#streamlined-child-specs).
 * Print a helpful error if a project is configured to use a persistence adapter without including its dependency packages. This mirrors what happens when the dependencies for a notifications adapter are missing.
+* Define a [behaviour](https://hexdocs.pm/elixir/typespecs.html#behaviours) in the `FunWithFlags.Store.Persistence` module that can be implemented by custom persistence adapters.
 
 ## v1.3.0
 
