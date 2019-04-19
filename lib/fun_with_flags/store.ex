@@ -3,6 +3,8 @@ defmodule FunWithFlags.Store do
 
   require Logger
   alias FunWithFlags.Store.Cache
+  alias FunWithFlags.{Flag, Config}
+
   @persistence FunWithFlags.Store.Persistent.adapter
 
 
@@ -34,6 +36,7 @@ defmodule FunWithFlags.Store do
   def put(flag_name, gate) do
     flag_name
     |> @persistence.put(gate)
+    |> publish_change()
     |> cache_persistence_result()
   end
 
@@ -41,6 +44,7 @@ defmodule FunWithFlags.Store do
   def delete(flag_name, gate) do
     flag_name
     |> @persistence.delete(gate)
+    |> publish_change()
     |> cache_persistence_result()
   end
 
@@ -48,6 +52,7 @@ defmodule FunWithFlags.Store do
   def delete(flag_name) do
     flag_name
     |> @persistence.delete()
+    |> publish_change()
     |> cache_persistence_result()
   end
 
@@ -71,5 +76,18 @@ defmodule FunWithFlags.Store do
       {:error, _reason} = error ->
         error
     end
+  end
+
+
+  defp publish_change(result = {:ok, %Flag{name: flag_name}}) do
+    if Config.change_notifications_enabled? do
+      Config.notifications_adapter.publish_change(flag_name)
+    end
+
+    result
+  end
+
+  defp publish_change(result) do
+    result
   end
 end

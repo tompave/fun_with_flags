@@ -51,7 +51,6 @@ defmodule FunWithFlags.Store.Persistent.Redis do
     case result do
       {:ok, ["OK", "QUEUED", "QUEUED", [a, b]]} when a in [0, 1] and b in [0, 1] ->
         {:ok, flag} = get(flag_name)
-        publish_change(flag_name)
         {:ok, flag}
       {:error, reason} ->
         {:error, redis_error(reason)}
@@ -73,7 +72,6 @@ defmodule FunWithFlags.Store.Persistent.Redis do
     case Redix.command(@conn, ["HDEL", hash_key, field_key]) do
       {:ok, _number} ->
         {:ok, flag} = get(flag_name)
-        publish_change(flag_name)
         {:ok, flag}
       {:error, reason} ->
         {:error, redis_error(reason)}
@@ -98,7 +96,6 @@ defmodule FunWithFlags.Store.Persistent.Redis do
     case result do
       {:ok, ["OK", "QUEUED", "QUEUED", [a, b]]} when a in [0, 1] and b in [0, 1] ->
         {:ok, flag} = get(flag_name)
-        publish_change(flag_name)
         {:ok, flag}
       {:error, reason} ->
         {:error, redis_error(reason)}
@@ -124,13 +121,6 @@ defmodule FunWithFlags.Store.Persistent.Redis do
     {:ok, strings} = Redix.command(@conn, ["SMEMBERS", @flags_set])
     atoms = Enum.map(strings, &String.to_atom(&1))
     {:ok, atoms}
-  end
-
-
-  defp publish_change(flag_name) do
-    if Config.change_notifications_enabled? do
-      Config.notifications_adapter.publish_change(flag_name)
-    end
   end
 
 
