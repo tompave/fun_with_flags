@@ -3,6 +3,8 @@ if Code.ensure_loaded?(Ecto) do
 defmodule FunWithFlags.Store.Persistent.Ecto do
   @moduledoc false
 
+  @behaviour FunWithFlags.Store.Persistent
+
   alias FunWithFlags.{Config, Gate}
   alias FunWithFlags.Store.Persistent.Ecto.Record
   alias FunWithFlags.Store.Serializer.Ecto, as: Serializer
@@ -14,11 +16,14 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   @repo Config.ecto_repo()
   @mysql_lock_timeout_s 3
 
+
+  @impl true
   def worker_spec do
     nil
   end
 
 
+  @impl true
   def get(flag_name) do
     name_string = to_string(flag_name)
     query = from(r in Record, where: r.flag_name == ^name_string)
@@ -32,6 +37,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
+  @impl true
   def put(flag_name, gate = %Gate{type: type})
   when type in [:percentage_of_time, :percentage_of_actors] do
     name_string = to_string(flag_name)
@@ -69,6 +75,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
+  @impl true
   def put(flag_name, gate = %Gate{}) do
     changeset = Record.build(flag_name, gate)
     options = upsert_options(gate)
@@ -116,6 +123,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
+  @impl true
   def delete(flag_name, %Gate{type: type})
   when type in [:percentage_of_time, :percentage_of_actors] do
     name_string = to_string(flag_name)
@@ -141,6 +149,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   # Deleting gates is idempotent and deleting unknown gates is safe.
   # A flag will continue to exist even though it has no gates.
   #
+  @impl true
   def delete(flag_name, gate = %Gate{}) do
     name_string = to_string(flag_name)
     gate_type = to_string(gate.type)
@@ -170,6 +179,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   # After the operation fetching the now-deleted flag will return the default
   # empty flag structure.
   #
+  @impl true
   def delete(flag_name) do
     name_string = to_string(flag_name)
 
@@ -189,6 +199,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
+  @impl true
   def all_flags do
     flags =
       Record
@@ -199,6 +210,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
+  @impl true
   def all_flag_names do
     query = from(r in Record, select: r.flag_name, distinct: true)
     strings = @repo.all(query)
