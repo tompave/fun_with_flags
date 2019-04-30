@@ -62,7 +62,6 @@ defmodule FunWithFlags.Mixfile do
       {:redix, "~> 0.9.1", optional: true},
       {:ecto_sql, "~> 3.0", optional: true},
       {:postgrex, "~> 0.13", optional: true, only: [:dev, :test]},
-      {:mariaex, "~> 0.9.1", optional: true, only: [:dev, :test]},
       {:myxql, "~> 0.2", optional: true, only: [:dev, :test]},
 
       {:phoenix_pubsub, "~> 1.0", optional: true},
