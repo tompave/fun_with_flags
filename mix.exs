@@ -41,7 +41,7 @@ defmodule FunWithFlags.Mixfile do
     if System.get_env("PERSISTENCE") == "ecto" do
       [:logger, :ecto, :ecto_sql, :postgrex]
     else
-      [:logger]
+      [:logger, :redix]
     end
   end
 
@@ -59,7 +59,7 @@ defmodule FunWithFlags.Mixfile do
       {:ex_doc, "~> 0.19", only: :dev},
       {:mock, "~> 0.3", only: :test},
 
-      {:redix, "~> 0.9.1", optional: true},
+      {:redix, "~> 0.9", optional: true},
       {:ecto_sql, "~> 3.0", optional: true},
       {:postgrex, "~> 0.13", optional: true, only: [:dev, :test]},
       {:myxql, "~> 0.2", optional: true, only: [:dev, :test]},
