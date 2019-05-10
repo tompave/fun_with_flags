@@ -1,11 +1,9 @@
 defmodule FunWithFlags.Store.Persistent.EctoTest do
   use FunWithFlags.TestCase, async: false
   import FunWithFlags.TestUtils
-  import Mock
 
   alias FunWithFlags.Store.Persistent.Ecto, as: PersiEcto
-  alias FunWithFlags.{Config, Flag, Gate}
-  alias FunWithFlags.Notifications.PhoenixPubSub, as: NotifiPhoenix
+  alias FunWithFlags.{Flag, Gate}
 
   @moduletag :ecto_persistence
 
@@ -49,78 +47,6 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
 
       other_gate = %Gate{type: :actor, for: "string:asdf", enabled: true}
       assert {:ok, %Flag{name: ^name, gates: [^other_gate, ^gate]}} = PersiEcto.put(name, other_gate)
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are enabled, put() will publish a notification to Phoenix.PubSub", %{name: name, gate: gate, flag: flag} do
-      assert Config.change_notifications_enabled?
-
-      u_id = NotifiPhoenix.unique_id()
-
-      with_mocks([
-        {Phoenix.PubSub, [:passthrough], []}
-      ]) do
-        assert {:ok, ^flag} = PersiEcto.put(name, gate)
-        :timer.sleep(20)
-
-        assert called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
-          )
-        )
-      end
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are enabled, put() will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name, gate: gate, flag: flag} do
-      assert Config.change_notifications_enabled?
-      channel = "fun_with_flags_changes"
-      u_id = NotifiPhoenix.unique_id()
-
-      # Subscribe to the notifications
-
-      :ok = Phoenix.PubSub.subscribe(:fwf_test, channel) # implicit self
-
-
-      assert {:ok, ^flag} = PersiEcto.put(name, gate)
-
-      payload = {:updated, name, u_id}
-      
-      receive do
-        {:fwf_changes, ^payload} -> :ok
-      after
-        500 -> flunk "Haven't received any message after 0.5 seconds"
-      end
-
-      # cleanup
-
-      :ok = Phoenix.PubSub.unsubscribe(:fwf_test, channel) # implicit self
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are NOT enabled, put() will NOT publish a notification to Phoenix.PubSub", %{name: name, gate: gate, flag: flag} do
-      u_id = NotifiPhoenix.unique_id()
-
-      with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
-        {Phoenix.PubSub, [:passthrough], []}
-      ]) do
-        assert {:ok, ^flag} = PersiEcto.put(name, gate)
-        :timer.sleep(20)
-
-        refute called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
-          )
-        )
-      end
     end
 
     test "put() will UPSERT gates, inserting new ones and editing existing ones", %{name: name, gate: first_bool_gate} do
@@ -207,82 +133,6 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = PersiEcto.put(name, bool_gate)
       assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^pot_gate]}} = PersiEcto.put(name, pot_gate)
     end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are enabled, put() will publish a notification to Phoenix.PubSub", %{name: name, pot_gate: pot_gate} do
-      assert Config.change_notifications_enabled?
-
-      u_id = NotifiPhoenix.unique_id()
-      flag = %Flag{name: name, gates: [pot_gate]}
-
-      with_mocks([
-        {Phoenix.PubSub, [:passthrough], []}
-      ]) do
-        assert {:ok, ^flag} = PersiEcto.put(name, pot_gate)
-        :timer.sleep(20)
-
-        assert called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
-          )
-        )
-      end
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are enabled, put() will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name, pot_gate: pot_gate} do
-      assert Config.change_notifications_enabled?
-
-      channel = "fun_with_flags_changes"
-      u_id = NotifiPhoenix.unique_id()
-      flag = %Flag{name: name, gates: [pot_gate]}
-
-      # Subscribe to the notifications
-
-      :ok = Phoenix.PubSub.subscribe(:fwf_test, channel) # implicit self
-
-
-      assert {:ok, ^flag} = PersiEcto.put(name, pot_gate)
-
-      payload = {:updated, name, u_id}
-      
-      receive do
-        {:fwf_changes, ^payload} -> :ok
-      after
-        500 -> flunk "Haven't received any message after 0.5 seconds"
-      end
-
-      # cleanup
-
-      :ok = Phoenix.PubSub.unsubscribe(:fwf_test, channel) # implicit self
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are NOT enabled, put() will NOT publish a notification to Phoenix.PubSub", %{name: name, pot_gate: pot_gate} do
-      u_id = NotifiPhoenix.unique_id()
-      flag = %Flag{name: name, gates: [pot_gate]}
-
-      with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
-        {Phoenix.PubSub, [:passthrough], []}
-      ]) do
-        assert {:ok, ^flag} = PersiEcto.put(name, pot_gate)
-        :timer.sleep(20)
-
-        refute called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
-          )
-        )
-      end
-    end
   end
 
 # -----------------
@@ -324,82 +174,6 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       bool_gate = Gate.new(:boolean, false)
       assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = PersiEcto.put(name, bool_gate)
       assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^poa_gate]}} = PersiEcto.put(name, poa_gate)
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are enabled, put() will publish a notification to Phoenix.PubSub", %{name: name, poa_gate: poa_gate} do
-      assert Config.change_notifications_enabled?
-
-      u_id = NotifiPhoenix.unique_id()
-      flag = %Flag{name: name, gates: [poa_gate]}
-
-      with_mocks([
-        {Phoenix.PubSub, [:passthrough], []}
-      ]) do
-        assert {:ok, ^flag} = PersiEcto.put(name, poa_gate)
-        :timer.sleep(20)
-
-        assert called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
-          )
-        )
-      end
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are enabled, put() will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name, poa_gate: poa_gate} do
-      assert Config.change_notifications_enabled?
-
-      channel = "fun_with_flags_changes"
-      u_id = NotifiPhoenix.unique_id()
-      flag = %Flag{name: name, gates: [poa_gate]}
-
-      # Subscribe to the notifications
-
-      :ok = Phoenix.PubSub.subscribe(:fwf_test, channel) # implicit self
-
-
-      assert {:ok, ^flag} = PersiEcto.put(name, poa_gate)
-
-      payload = {:updated, name, u_id}
-      
-      receive do
-        {:fwf_changes, ^payload} -> :ok
-      after
-        500 -> flunk "Haven't received any message after 0.5 seconds"
-      end
-
-      # cleanup
-
-      :ok = Phoenix.PubSub.unsubscribe(:fwf_test, channel) # implicit self
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are NOT enabled, put() will NOT publish a notification to Phoenix.PubSub", %{name: name, poa_gate: poa_gate} do
-      u_id = NotifiPhoenix.unique_id()
-      flag = %Flag{name: name, gates: [poa_gate]}
-
-      with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
-        {Phoenix.PubSub, [:passthrough], []}
-      ]) do
-        assert {:ok, ^flag} = PersiEcto.put(name, poa_gate)
-        :timer.sleep(20)
-
-        refute called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
-          )
-        )
-      end
     end
   end
 
@@ -458,78 +232,6 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = PersiEcto.delete(name, group_gate)
       assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = PersiEcto.delete(name, group_gate)
       assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = PersiEcto.delete(name, %Gate{type: :actor, for: "I'm not really there", enabled: false})
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are enabled, delete(flag_name, gate) will publish a notification to PhoenixPubSub", %{name: name, group_gate: group_gate} do
-      assert Config.change_notifications_enabled?
-
-      u_id = NotifiPhoenix.unique_id()
-
-      with_mocks([
-        {Phoenix.PubSub, [:passthrough], []}
-      ]) do
-        assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, group_gate)
-        :timer.sleep(20)
-
-        assert called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
-          )
-        )
-      end
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are enabled, delete(flag_name, gate) will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name, group_gate: group_gate} do
-      assert Config.change_notifications_enabled?
-      channel = "fun_with_flags_changes"
-      u_id = NotifiPhoenix.unique_id()
-
-      # Subscribe to the notifications
-
-      :ok = Phoenix.PubSub.subscribe(:fwf_test, channel) # implicit self
-
-
-      assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, group_gate)
-
-      payload = {:updated, name, u_id}
-      
-      receive do
-        {:fwf_changes, ^payload} -> :ok
-      after
-        500 -> flunk "Haven't received any message after 0.5 seconds"
-      end
-
-      # cleanup
-
-      :ok = Phoenix.PubSub.unsubscribe(:fwf_test, channel) # implicit self
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are NOT enabled, delete(flag_name, gate) will NOT publish a notification to Phoenix.PubSub ", %{name: name, group_gate: group_gate} do
-      u_id = NotifiPhoenix.unique_id()
-
-      with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
-        {Phoenix.PubSub, [:passthrough], []}
-      ]) do
-        assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, group_gate)
-        :timer.sleep(20)
-
-        refute called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
-          )
-        )
-      end
     end
   end
 
@@ -594,78 +296,6 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate]}} = PersiEcto.delete(name, pot_gate)
       assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate]}} = PersiEcto.delete(name, pot_gate)
     end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are enabled, delete(flag_name, gate) will publish a notification to PhoenixPubSub", %{name: name, pot_gate: pot_gate} do
-      assert Config.change_notifications_enabled?
-
-      u_id = NotifiPhoenix.unique_id()
-
-      with_mocks([
-        {Phoenix.PubSub, [:passthrough], []}
-      ]) do
-        assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, pot_gate)
-        :timer.sleep(20)
-
-        assert called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
-          )
-        )
-      end
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are enabled, delete(flag_name, gate) will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name, pot_gate: pot_gate} do
-      assert Config.change_notifications_enabled?
-      channel = "fun_with_flags_changes"
-      u_id = NotifiPhoenix.unique_id()
-
-      # Subscribe to the notifications
-
-      :ok = Phoenix.PubSub.subscribe(:fwf_test, channel) # implicit self
-
-
-      assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, pot_gate)
-
-      payload = {:updated, name, u_id}
-      
-      receive do
-        {:fwf_changes, ^payload} -> :ok
-      after
-        500 -> flunk "Haven't received any message after 0.5 seconds"
-      end
-
-      # cleanup
-
-      :ok = Phoenix.PubSub.unsubscribe(:fwf_test, channel) # implicit self
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are NOT enabled, delete(flag_name, gate) will NOT publish a notification to Phoenix.PubSub ", %{name: name, pot_gate: pot_gate} do
-      u_id = NotifiPhoenix.unique_id()
-
-      with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
-        {Phoenix.PubSub, [:passthrough], []}
-      ]) do
-        assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, pot_gate)
-        :timer.sleep(20)
-
-        refute called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
-          )
-        )
-      end
-    end
   end
 
 # -----------------
@@ -729,78 +359,6 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate]}} = PersiEcto.delete(name, poa_gate)
       assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate]}} = PersiEcto.delete(name, poa_gate)
     end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are enabled, delete(flag_name, gate) will publish a notification to PhoenixPubSub", %{name: name, poa_gate: poa_gate} do
-      assert Config.change_notifications_enabled?
-
-      u_id = NotifiPhoenix.unique_id()
-
-      with_mocks([
-        {Phoenix.PubSub, [:passthrough], []}
-      ]) do
-        assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, poa_gate)
-        :timer.sleep(20)
-
-        assert called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
-          )
-        )
-      end
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are enabled, delete(flag_name, gate) will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name, poa_gate: poa_gate} do
-      assert Config.change_notifications_enabled?
-      channel = "fun_with_flags_changes"
-      u_id = NotifiPhoenix.unique_id()
-
-      # Subscribe to the notifications
-
-      :ok = Phoenix.PubSub.subscribe(:fwf_test, channel) # implicit self
-
-
-      assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, poa_gate)
-
-      payload = {:updated, name, u_id}
-      
-      receive do
-        {:fwf_changes, ^payload} -> :ok
-      after
-        500 -> flunk "Haven't received any message after 0.5 seconds"
-      end
-
-      # cleanup
-
-      :ok = Phoenix.PubSub.unsubscribe(:fwf_test, channel) # implicit self
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are NOT enabled, delete(flag_name, gate) will NOT publish a notification to Phoenix.PubSub ", %{name: name, poa_gate: poa_gate} do
-      u_id = NotifiPhoenix.unique_id()
-
-      with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
-        {Phoenix.PubSub, [:passthrough], []}
-      ]) do
-        assert {:ok, %Flag{name: ^name}} = PersiEcto.delete(name, poa_gate)
-        :timer.sleep(20)
-
-        refute called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
-          )
-        )
-      end
-    end
   end
 
 # -----------------
@@ -844,77 +402,6 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = PersiEcto.delete(name)
       assert {:ok, %Flag{name: ^name, gates: []}} = PersiEcto.delete(name)
       assert {:ok, %Flag{name: ^name, gates: []}} = PersiEcto.delete(name)
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are enabled, delete(flag_name) will publish a notification to Phoenix.PubSub", %{name: name} do
-      assert Config.change_notifications_enabled?
-
-      u_id = NotifiPhoenix.unique_id()
-
-      with_mocks([
-        {Phoenix.PubSub, [:passthrough], []}
-      ]) do
-        assert {:ok, %Flag{name: ^name, gates: []}} = PersiEcto.delete(name)
-        :timer.sleep(20)
-
-        assert called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
-          )
-        )
-      end
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are enabled, delete(flag_name) will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name} do
-      assert Config.change_notifications_enabled?
-      channel = "fun_with_flags_changes"
-      u_id = NotifiPhoenix.unique_id()
-
-      # Subscribe to the notifications
-
-      :ok = Phoenix.PubSub.subscribe(:fwf_test, channel) # implicit self
-
-      assert {:ok, %Flag{name: ^name, gates: []}} = PersiEcto.delete(name)
-
-      payload = {:updated, name, u_id}
-      
-      receive do
-        {:fwf_changes, ^payload} -> :ok
-      after
-        500 -> flunk "Haven't received any message after 0.5 seconds"
-      end
-
-      # cleanup
-
-      :ok = Phoenix.PubSub.unsubscribe(:fwf_test, channel) # implicit self
-    end
-
-
-    @tag phoenix_pubsub: "with_ecto"
-    test "when change notifications are NOT enabled, delete(flag_name) will NOT publish a notification to Phoenix.PubSub", %{name: name} do
-      u_id = NotifiPhoenix.unique_id()
-
-      with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
-        {Phoenix.PubSub, [:passthrough], []}
-      ]) do
-        assert {:ok, %Flag{name: ^name, gates: []}} = PersiEcto.delete(name)
-        :timer.sleep(20)
-
-        refute called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
-          )
-        )
-      end
     end
   end
 
