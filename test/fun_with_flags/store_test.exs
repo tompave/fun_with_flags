@@ -6,6 +6,9 @@ defmodule FunWithFlags.StoreTest do
   alias FunWithFlags.{Store, Config, Flag, Gate}
   alias FunWithFlags.Store.Cache
 
+  alias FunWithFlags.Notifications.Redis, as: NotifiRedis
+  alias FunWithFlags.Notifications.PhoenixPubSub, as: NotifiPhoenix
+
   @persistence Config.persistence_adapter()
 
   setup_all do
@@ -52,6 +55,156 @@ defmodule FunWithFlags.StoreTest do
     test "put() returns the tuple {:ok, %Flag{}}", %{name: name, gate: gate, flag: flag} do
       assert {:ok, ^flag} = Store.put(name, gate)
     end
+
+    @tag :redis_pubsub
+    test "when change notifications are enabled, put() will publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
+      assert Config.change_notifications_enabled?
+
+      u_id = NotifiRedis.unique_id()
+
+      with_mocks([
+        {Redix, [:passthrough], []}
+      ]) do
+        assert {:ok, ^flag} = Store.put(name, gate)
+        :timer.sleep(20)
+
+        assert called(
+          Redix.command(
+            FunWithFlags.Store.Persistent.Redis,
+            ["PUBLISH", "fun_with_flags_changes", "#{u_id}:#{name}"]
+          )
+        )
+      end
+    end
+
+    @tag phoenix_pubsub: "with_redis"
+    test "when change notifications are enabled, put() will publish a notification to Phoenix.PubSub", %{name: name, gate: gate, flag: flag} do
+      assert Config.change_notifications_enabled?
+
+      u_id = NotifiPhoenix.unique_id()
+
+      with_mocks([
+        {Phoenix.PubSub, [:passthrough], []}
+      ]) do
+        assert {:ok, ^flag} = Store.put(name, gate)
+        :timer.sleep(20)
+
+        assert called(
+          Phoenix.PubSub.broadcast!(
+            :fwf_test,
+            "fun_with_flags_changes",
+            {:fwf_changes, {:updated, name, u_id}}
+          )
+        )
+      end
+    end
+
+    @tag :redis_pubsub
+    test "when change notifications are enabled, put() will cause other subscribers to receive a Redis notification", %{name: name, gate: gate, flag: flag} do
+      assert Config.change_notifications_enabled?
+      channel = "fun_with_flags_changes"
+      u_id = NotifiRedis.unique_id()
+
+      # Subscribe to the notifications
+
+      {:ok, receiver} = Redix.PubSub.start_link(Keyword.merge(Config.redis_config, [sync_connect: true]))
+      {:ok, ref} = Redix.PubSub.subscribe(receiver, channel, self())
+
+      receive do
+        {:redix_pubsub, ^receiver, ^ref, :subscribed, %{channel: ^channel}} -> :ok
+      after
+        500 -> flunk "Subscribe didn't work"
+      end
+
+      assert {:ok, ^flag} = Store.put(name, gate)
+
+      payload = "#{u_id}:#{to_string(name)}"
+      
+      receive do
+        {:redix_pubsub, ^receiver, ^ref, :message, %{channel: ^channel, payload: ^payload}} -> :ok
+      after
+        500 -> flunk "Haven't received any message after 0.5 seconds"
+      end
+
+      # cleanup
+
+      Redix.PubSub.unsubscribe(receiver, channel, self())
+
+      receive do
+        {:redix_pubsub, ^receiver, ^ref, :unsubscribed, %{channel: ^channel}} -> :ok
+      after
+        500 -> flunk "Unsubscribe didn't work"
+      end
+
+      Process.exit(receiver, :kill)
+    end
+
+    @tag phoenix_pubsub: "with_redis"
+    test "when change notifications are enabled, put() will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name, gate: gate, flag: flag} do
+      assert Config.change_notifications_enabled?
+      channel = "fun_with_flags_changes"
+      u_id = NotifiPhoenix.unique_id()
+
+      # Subscribe to the notifications
+
+      :ok = Phoenix.PubSub.subscribe(:fwf_test, channel) # implicit self
+
+
+      assert {:ok, ^flag} = Store.put(name, gate)
+
+      payload = {:updated, name, u_id}
+      
+      receive do
+        {:fwf_changes, ^payload} -> :ok
+      after
+        500 -> flunk "Haven't received any message after 0.5 seconds"
+      end
+
+      # cleanup
+
+      :ok = Phoenix.PubSub.unsubscribe(:fwf_test, channel) # implicit self
+    end
+
+    @tag :redis_pubsub
+    test "when change notifications are NOT enabled, put() will NOT publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
+      with_mocks([
+        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {NotifiRedis, [:passthrough], []},
+        {Redix, [:passthrough], []}
+      ]) do
+        assert {:ok, ^flag} = Store.put(name, gate)
+        :timer.sleep(20)
+        refute called NotifiRedis.payload_for(name)
+
+        refute called(
+          Redix.command(
+            FunWithFlags.Store.Persistent.Redis,
+            ["PUBLISH", "fun_with_flags_changes", "unique_id_foobar:#{name}"]
+          )
+        )
+      end
+    end
+
+    @tag phoenix_pubsub: "with_redis"
+    test "when change notifications are NOT enabled, put() will NOT publish a notification to Phoenix.PubSub", %{name: name, gate: gate, flag: flag} do
+      u_id = NotifiPhoenix.unique_id()
+
+      with_mocks([
+        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {Phoenix.PubSub, [:passthrough], []}
+      ]) do
+        assert {:ok, ^flag} = Store.put(name, gate)
+        :timer.sleep(20)
+
+        refute called(
+          Phoenix.PubSub.broadcast!(
+            :fwf_test,
+            "fun_with_flags_changes",
+            {:fwf_changes, {:updated, name, u_id}}
+          )
+        )
+      end
+    end
   end
 
 
@@ -88,6 +241,158 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name, group_gate)
       assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name, group_gate)
     end
+
+    @tag :redis_pubsub
+    test "when change notifications are enabled, delete(flag_name, gate) will publish a notification to Redis", %{name: name, group_gate: group_gate} do
+      assert Config.change_notifications_enabled?
+
+      u_id = NotifiRedis.unique_id()
+
+      with_mocks([
+        {Redix, [:passthrough], []}
+      ]) do
+        assert {:ok, %Flag{name: ^name}} = Store.delete(name, group_gate)
+        :timer.sleep(20)
+
+        assert called(
+          Redix.command(
+            FunWithFlags.Store.Persistent.Redis,
+            ["PUBLISH", "fun_with_flags_changes", "#{u_id}:#{name}"]
+          )
+        )
+      end
+    end
+
+    @tag phoenix_pubsub: "with_redis"
+    test "when change notifications are enabled, delete(flag_name, gate) will publish a notification to PhoenixPubSub", %{name: name, group_gate: group_gate} do
+      assert Config.change_notifications_enabled?
+
+      u_id = NotifiPhoenix.unique_id()
+
+      with_mocks([
+        {Phoenix.PubSub, [:passthrough], []}
+      ]) do
+        assert {:ok, %Flag{name: ^name}} = Store.delete(name, group_gate)
+        :timer.sleep(20)
+
+        assert called(
+          Phoenix.PubSub.broadcast!(
+            :fwf_test,
+            "fun_with_flags_changes",
+            {:fwf_changes, {:updated, name, u_id}}
+          )
+        )
+      end
+    end
+
+
+    @tag :redis_pubsub
+    test "when change notifications are enabled, delete(flag_name, gate) will cause other subscribers to receive a Redis notification", %{name: name, group_gate: group_gate} do
+      assert Config.change_notifications_enabled?
+      channel = "fun_with_flags_changes"
+      u_id = NotifiRedis.unique_id()
+
+      # Subscribe to the notifications
+
+      {:ok, receiver} = Redix.PubSub.start_link(Keyword.merge(Config.redis_config, [sync_connect: true]))
+      {:ok, ref} = Redix.PubSub.subscribe(receiver, channel, self())
+
+      receive do
+        {:redix_pubsub, ^receiver, ^ref, :subscribed, %{channel: ^channel}} -> :ok
+      after
+        500 -> flunk "Subscribe didn't work"
+      end
+
+      assert {:ok, %Flag{name: ^name}} = Store.delete(name, group_gate)
+
+      payload = "#{u_id}:#{to_string(name)}"
+      
+      receive do
+        {:redix_pubsub, ^receiver, ^ref, :message, %{channel: ^channel, payload: ^payload}} -> :ok
+      after
+        500 -> flunk "Haven't received any message after 0.5 seconds"
+      end
+
+      # cleanup
+
+      Redix.PubSub.unsubscribe(receiver, channel, self())
+
+      receive do
+        {:redix_pubsub, ^receiver, ^ref, :unsubscribed, %{channel: ^channel}} -> :ok
+      after
+        500 -> flunk "Unsubscribe didn't work"
+      end
+
+      Process.exit(receiver, :kill)
+    end
+
+    @tag phoenix_pubsub: "with_redis"
+    test "when change notifications are enabled, delete(flag_name, gate) will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name, group_gate: group_gate} do
+      assert Config.change_notifications_enabled?
+      channel = "fun_with_flags_changes"
+      u_id = NotifiPhoenix.unique_id()
+
+      # Subscribe to the notifications
+
+      :ok = Phoenix.PubSub.subscribe(:fwf_test, channel) # implicit self
+
+
+      assert {:ok, %Flag{name: ^name}} = Store.delete(name, group_gate)
+
+      payload = {:updated, name, u_id}
+      
+      receive do
+        {:fwf_changes, ^payload} -> :ok
+      after
+        500 -> flunk "Haven't received any message after 0.5 seconds"
+      end
+
+      # cleanup
+
+      :ok = Phoenix.PubSub.unsubscribe(:fwf_test, channel) # implicit self
+    end
+
+
+    @tag :redis_pubsub
+    test "when change notifications are NOT enabled, delete(flag_name, gate) will NOT publish a notification to Redis", %{name: name, group_gate: group_gate} do
+      with_mocks([
+        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {NotifiRedis, [:passthrough], []},
+        {Redix, [:passthrough], []}
+      ]) do
+        assert {:ok, %Flag{name: ^name}} = Store.delete(name, group_gate)
+        :timer.sleep(20)
+        refute called NotifiRedis.payload_for(name)
+
+        refute called(
+          Redix.command(
+            FunWithFlags.Store.Persistent.Redis,
+            ["PUBLISH", "fun_with_flags_changes", "unique_id_foobar:#{name}"]
+          )
+        )
+      end
+    end
+
+    @tag phoenix_pubsub: "with_redis"
+    test "when change notifications are NOT enabled, delete(flag_name, gate) will NOT publish a notification to Phoenix.PubSub ", %{name: name, group_gate: group_gate} do
+      u_id = NotifiPhoenix.unique_id()
+
+      with_mocks([
+        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {Phoenix.PubSub, [:passthrough], []}
+      ]) do
+        assert {:ok, %Flag{name: ^name}} = Store.delete(name, group_gate)
+        :timer.sleep(20)
+
+        refute called(
+          Phoenix.PubSub.broadcast!(
+            :fwf_test,
+            "fun_with_flags_changes",
+            {:fwf_changes, {:updated, name, u_id}}
+          )
+        )
+      end
+    end
   end
 
 
@@ -119,6 +424,156 @@ defmodule FunWithFlags.StoreTest do
     test "deleting is safe and idempotent", %{name: name} do
       assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
       assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
+    end
+
+    @tag :redis_pubsub
+    test "when change notifications are enabled, delete(flag_name) will publish a notification to Redis", %{name: name} do
+      assert Config.change_notifications_enabled?
+
+      u_id = NotifiRedis.unique_id()
+
+      with_mocks([
+        {Redix, [:passthrough], []}
+      ]) do
+        assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
+        :timer.sleep(20)
+
+        assert called(
+          Redix.command(
+            FunWithFlags.Store.Persistent.Redis,
+            ["PUBLISH", "fun_with_flags_changes", "#{u_id}:#{name}"]
+          )
+        )
+      end
+    end
+
+    @tag phoenix_pubsub: "with_redis"
+    test "when change notifications are enabled, delete(flag_name) will publish a notification to Phoenix.PubSub", %{name: name} do
+      assert Config.change_notifications_enabled?
+
+      u_id = NotifiPhoenix.unique_id()
+
+      with_mocks([
+        {Phoenix.PubSub, [:passthrough], []}
+      ]) do
+        assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
+        :timer.sleep(20)
+
+        assert called(
+          Phoenix.PubSub.broadcast!(
+            :fwf_test,
+            "fun_with_flags_changes",
+            {:fwf_changes, {:updated, name, u_id}}
+          )
+        )
+      end
+    end
+
+    @tag :redis_pubsub
+    test "when change notifications are enabled, delete(flag_name) will cause other subscribers to receive a Redis notification", %{name: name} do
+      assert Config.change_notifications_enabled?
+      channel = "fun_with_flags_changes"
+      u_id = NotifiRedis.unique_id()
+
+      # Subscribe to the notifications
+
+      {:ok, receiver} = Redix.PubSub.start_link(Keyword.merge(Config.redis_config, [sync_connect: true]))
+      {:ok, ref} = Redix.PubSub.subscribe(receiver, channel, self())
+
+      receive do
+        {:redix_pubsub, ^receiver, ^ref, :subscribed, %{channel: ^channel}} -> :ok
+      after
+        500 -> flunk "Subscribe didn't work"
+      end
+
+      assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
+
+      payload = "#{u_id}:#{to_string(name)}"
+      
+      receive do
+        {:redix_pubsub, ^receiver, ^ref, :message, %{channel: ^channel, payload: ^payload}} -> :ok
+      after
+        500 -> flunk "Haven't received any message after 0.5 seconds"
+      end
+
+      # cleanup
+
+      Redix.PubSub.unsubscribe(receiver, channel, self())
+
+      receive do
+        {:redix_pubsub, ^receiver, ^ref, :unsubscribed, %{channel: ^channel}} -> :ok
+      after
+        500 -> flunk "Unsubscribe didn't work"
+      end
+
+      Process.exit(receiver, :kill)
+    end
+
+    @tag phoenix_pubsub: "with_redis"
+    test "when change notifications are enabled, delete(flag_name) will cause other subscribers to receive a Phoenix.PubSub notification", %{name: name} do
+      assert Config.change_notifications_enabled?
+      channel = "fun_with_flags_changes"
+      u_id = NotifiPhoenix.unique_id()
+
+      # Subscribe to the notifications
+
+      :ok = Phoenix.PubSub.subscribe(:fwf_test, channel) # implicit self
+
+      assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
+
+      payload = {:updated, name, u_id}
+      
+      receive do
+        {:fwf_changes, ^payload} -> :ok
+      after
+        500 -> flunk "Haven't received any message after 0.5 seconds"
+      end
+
+      # cleanup
+
+      :ok = Phoenix.PubSub.unsubscribe(:fwf_test, channel) # implicit self
+    end
+
+
+    @tag :redis_pubsub
+    test "when change notifications are NOT enabled, delete(flag_name) will NOT publish a notification to Redis", %{name: name} do
+      with_mocks([
+        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {NotifiRedis, [:passthrough], []},
+        {Redix, [:passthrough], []}
+      ]) do
+        assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
+        :timer.sleep(20)
+        refute called NotifiRedis.payload_for(name)
+
+        refute called(
+          Redix.command(
+            FunWithFlags.Store.Persistent.Redis,
+            ["PUBLISH", "fun_with_flags_changes", "unique_id_foobar:#{name}"]
+          )
+        )
+      end
+    end
+
+    @tag phoenix_pubsub: "with_redis"
+    test "when change notifications are NOT enabled, delete(flag_name) will NOT publish a notification to Phoenix.PubSub", %{name: name} do
+      u_id = NotifiPhoenix.unique_id()
+
+      with_mocks([
+        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {Phoenix.PubSub, [:passthrough], []}
+      ]) do
+        assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
+        :timer.sleep(20)
+
+        refute called(
+          Phoenix.PubSub.broadcast!(
+            :fwf_test,
+            "fun_with_flags_changes",
+            {:fwf_changes, {:updated, name, u_id}}
+          )
+        )
+      end
     end
   end
 

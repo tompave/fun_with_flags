@@ -67,7 +67,6 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
     case out do
       {:ok, {:ok, result}} ->
-        publish_change(flag_name)
         {:ok, result}
       {:error, _} = error ->
         error
@@ -82,7 +81,6 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
     case do_insert(flag_name, changeset, options) do
       {:ok, flag} ->
-        publish_change(flag_name)
         {:ok, flag}
       other ->
         other
@@ -137,7 +135,6 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     try do
       {_count, _} = @repo.delete_all(query)
       {:ok, flag} = get(flag_name)
-      publish_change(flag_name)
       {:ok, flag}
     rescue
       e in [Ecto.QueryError] -> {:error, e}
@@ -165,7 +162,6 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     try do
       {_count, _} = @repo.delete_all(query)
       {:ok, flag} = get(flag_name)
-      publish_change(flag_name)
       {:ok, flag}
     rescue
       e in [Ecto.QueryError] -> {:error, e}
@@ -191,7 +187,6 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     try do
       {_count, _} = @repo.delete_all(query)
       {:ok, flag} = get(flag_name)
-      publish_change(flag_name)
       {:ok, flag}
     rescue
       e in [Ecto.QueryError] -> {:error, e}
@@ -218,12 +213,6 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     {:ok, atoms}
   end
 
-
-  defp publish_change(flag_name) do
-    if Config.change_notifications_enabled? do
-      Config.notifications_adapter.publish_change(flag_name)
-    end
-  end
 
   defp deserialize(flag_name, records) do
     Serializer.deserialize_flag(flag_name, records)
