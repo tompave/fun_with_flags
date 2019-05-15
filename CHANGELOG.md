@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.4.0 (unreleased)
+## v1.4.0
 
 This release focuses on making it easier to extend the package, for example with custom peristence adapters.
 
