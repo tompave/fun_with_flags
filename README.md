@@ -34,6 +34,8 @@ It stores flag information in Redis or a relational DB (PostgreSQL or MySQL, wit
   - [Persistence Adapters](#persistence-adapters)
   - [PubSub Adapters](#pubsub-adapters)
 * [Installation](#installation)
+* [Extensibility](#extensibility)
+  - [Custom Persistence Adapters](#custom-persistence-adapters)
 * [Testing](#testing)
 * [Common Issues](#common-issues)
 
@@ -611,9 +613,35 @@ Using `ecto_sql` for persisting the flags also requires an ecto adapter, e.g. `p
 
 Since FunWithFlags depends on Elixir `>= 1.6`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
 
+## Extensibility
+
+### Custom Persistence Adapters
+
+This library aims to be extensible and allows users to provide their own persistence layer.
+
+This is supported through [`FunWithFlags.Store.Persistent`](https://github.com/tompave/fun_with_flags/blob/master/lib/fun_with_flags/store/persistent.ex), a generic persistence [behaviour](https://hexdocs.pm/elixir/typespecs.html#behaviours) that is adopted by the builtin Redis and Ecto adapters.
+
+Custom persistence adapters can adopt the behaviour and then be configured as the persistence module in the Mix config of the user applications.
+
+For example, an application can define this module:
+
+```elixir
+defmodule MyApp.MyAlternativeFlagStore do
+  @behaviour FunWithFlags.Store.Persistent
+  # implement all the behaviour's callback
+end
+```
+
+And then configure the library to use it:
+
+```elixir
+config :fun_with_flags, :persistence, adapter: MyApp.MyAlternativeFlagStore
+```
+
+
 ## Testing
 
-This library depends on Redis, PostgreSQL and MySQL, and you'll need them installed and running on your system in order to run the complete test suite. The tests will use the [Redis db number 5](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_utils.ex#L2) and then clean after themselves, but it's safer to start Redis in a directory where there is no `dump.rdb` file you care about to avoid issues. The Ecto tests will use the SQL sandbox and all transactions will be automatically rolled back.
+This library depends on Redis, PostgreSQL and MySQL, and you'll need them installed and running on your system in order to run the complete test suite. The tests will use the [Redis db number 5](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_utils.ex#L4) and then clean after themselves, but it's safer to start Redis in a directory where there is no `dump.rdb` file you care about to avoid issues. The Ecto tests will use the SQL sandbox and all transactions will be automatically rolled back.
 
 To setup the test DB for the Ecto persistence tests, run:
 
