@@ -22,7 +22,7 @@ defmodule FunWithFlags.Config do
   ]
 
   def redis_config do
-    case Application.get_env(:fun_with_flags, :redis, []) do
+    case Confex.get_env(:fun_with_flags, :redis, []) do
       uri  when is_binary(uri) ->
         uri
       opts when is_list(opts) ->
@@ -46,7 +46,7 @@ defmodule FunWithFlags.Config do
   defp ets_cache_config do
     Keyword.merge(
       @default_cache_config,
-      Application.get_env(:fun_with_flags, :cache, [])
+      Confex.get_env(:fun_with_flags, :cache, [])
     )
   end
 
@@ -66,7 +66,7 @@ defmodule FunWithFlags.Config do
   defp persistence_config do
     Keyword.merge(
       @default_persistence_config,
-      Application.get_env(:fun_with_flags, :persistence, [])
+      Confex.get_env(:fun_with_flags, :persistence, [])
     )
   end
 
@@ -90,7 +90,7 @@ defmodule FunWithFlags.Config do
   defp notifications_config do
     Keyword.merge(
       @default_notifications_config,
-      Application.get_env(:fun_with_flags, :cache_bust_notifications, [])
+      Confex.get_env(:fun_with_flags, :cache_bust_notifications, [])
     )
   end
 
