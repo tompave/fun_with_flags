@@ -447,7 +447,7 @@ defmodule FunWithFlags do
   but it's not meant to be used at runtime. Undefined flags,
   for example, will be considered disabled.
   """
-  @spec all_flag_names() :: {:ok, [atom]} | {:ok, []}
+  @spec all_flag_names() :: {:ok, [atom]}
   defdelegate all_flag_names(), to: @store
 
   @doc """
@@ -459,7 +459,7 @@ defmodule FunWithFlags do
 
   To query the value of a flag, please use the `enabled?2` function instead.
   """
-  @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]} | {:ok, []}
+  @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]}
   defdelegate all_flags(), to: @store
 
 
