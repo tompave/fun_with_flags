@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Typespec improvements. (Thanks [LostKobrakai](https://github.com/LostKobrakai), [pull/49](https://github.com/tompave/fun_with_flags/pull/49))
+
 ## v1.4.0
 
 This release focuses on making it easier to extend the package, for example with custom peristence adapters.
