@@ -32,14 +32,9 @@ matrix:
       otp_release: 21.3
 services:
   - redis-server
+  - mysql
 addons:
   postgresql: "9.6"
-  apt:
-    sources:
-      - mysql-5.7-trusty
-    packages:
-      - mysql-server
-      - mysql-client
 script:
   - mix compile --warnings-as-errors
   - mix test --force $TEST_OPTS
