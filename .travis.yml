@@ -6,6 +6,7 @@ elixir:
   - 1.7
   - 1.6
 otp_release:
+  - 22.1
   - 22.0
   - 21.3
   - 20.3
@@ -26,6 +27,8 @@ matrix:
       otp_release: 20.3
     - elixir: 1.7
       otp_release: 20.3
+    - elixir: 1.6
+      otp_release: 22.1
     - elixir: 1.6
       otp_release: 22.0
     - elixir: 1.6
