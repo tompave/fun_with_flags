@@ -1,4 +1,4 @@
-dist: trusty
+dist: bionic
 language: elixir
 elixir:
   - 1.9
@@ -32,9 +32,8 @@ matrix:
       otp_release: 21.3
 services:
   - redis-server
+  - postgresql
   - mysql
-addons:
-  postgresql: "9.6"
 script:
   - mix compile --warnings-as-errors
   - mix test --force $TEST_OPTS
