@@ -119,7 +119,7 @@ defmodule FunWithFlags.SimpleStoreTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.lookup(name)
       SimpleStore.put(name, gate)
       assert {:ok, %Flag{name: ^name, gates: [^gate]}} = SimpleStore.lookup(name)
-    end  
+    end
   end
 
 
@@ -228,6 +228,34 @@ defmodule FunWithFlags.SimpleStoreTest do
         end
         assert called(PersiRedis.get(name))
         assert {:error, "mocked error"} = PersiRedis.get(name)
+      end
+    end
+
+    @tag :redis_persistence
+    test "in case of redis connection error" do
+      alias FunWithFlags.Store.Persistent.Redis, as: PersiRedis
+      name = unique_atom()
+
+      with_mock(Redix, [], command: fn(_conn, ["HGETALL", _]) -> {:error, %Redix.ConnectionError{reason: :nxdomain}} end) do
+        assert_raise RuntimeError, "Can't load feature flag", fn() ->
+          SimpleStore.lookup(name)
+        end
+        assert called(Redix.command(:_, :_))
+        assert {:error, "Redis Connection Error: nxdomain"} = PersiRedis.get(name)
+      end
+    end
+
+    @tag :redis_persistence
+    test "in case of redis semantic error" do
+      alias FunWithFlags.Store.Persistent.Redis, as: PersiRedis
+      name = unique_atom()
+
+      with_mock(Redix, [], command: fn(_conn, ["HGETALL", _]) -> {:error, %Redix.Error{message: "wrong type"}} end) do
+        assert_raise RuntimeError, "Can't load feature flag", fn() ->
+          SimpleStore.lookup(name)
+        end
+        assert called(Redix.command(:_, :_))
+        assert {:error, "Redis Error: wrong type"} = PersiRedis.get(name)
       end
     end
 

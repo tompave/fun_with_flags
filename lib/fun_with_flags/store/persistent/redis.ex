@@ -128,6 +128,14 @@ defmodule FunWithFlags.Store.Persistent.Redis do
     @prefix <> to_string(flag_name)
   end
 
+  defp redis_error(%Redix.ConnectionError{reason: reason_atom}) do
+    "Redis Connection Error: #{reason_atom}"
+  end
+
+  defp redis_error(%Redix.Error{message: message}) do
+    "Redis Error: #{message}"
+  end
+
   defp redis_error(reason_atom) do
     "Redis Error: #{reason_atom}"
   end
