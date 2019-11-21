@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.4.1
 
 * Typespec improvements. (Thanks [LostKobrakai](https://github.com/LostKobrakai), [pull/49](https://github.com/tompave/fun_with_flags/pull/49))
 * Improve Redis error handling for connection and command errors. (Thanks [chubarovNick](https://github.com/chubarovNick), [pull/54](https://github.com/tompave/fun_with_flags/pull/54))
