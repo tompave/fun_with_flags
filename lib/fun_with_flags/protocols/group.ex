@@ -65,7 +65,7 @@ defprotocol FunWithFlags.Group do
       iex> FunWithFlags.Group.in?(data, :superusers)
       false
   """
-  @spec in?(term, atom) :: boolean
+  @spec in?(term, atom | String.t) :: boolean
   def in?(item, group)
 end
 
