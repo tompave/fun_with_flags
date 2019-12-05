@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Typespec improvements. (Thanks [skylerparr](https://github.com/skylerparr), [pull/57](https://github.com/tompave/fun_with_flags/pull/57))
+
 ## v1.4.1
 
 * Typespec improvements. (Thanks [LostKobrakai](https://github.com/LostKobrakai), [pull/49](https://github.com/tompave/fun_with_flags/pull/49))
