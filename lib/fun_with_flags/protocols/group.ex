@@ -59,13 +59,13 @@ defprotocol FunWithFlags.Group do
 
   ## Example
 
-      iex> user = %{name: "bolo", group: :staff}
-      iex> FunWithFlags.Group.in?(data, :staff)
+      iex> user = %{name: "bolo", group: "staff"}
+      iex> FunWithFlags.Group.in?(data, "staff")
       true
-      iex> FunWithFlags.Group.in?(data, :superusers)
+      iex> FunWithFlags.Group.in?(data, "superusers")
       false
   """
-  @spec in?(term, atom) :: boolean
+  @spec in?(term, String.t | atom) :: boolean
   def in?(item, group)
 end
 
