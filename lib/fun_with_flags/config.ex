@@ -52,6 +52,7 @@ defmodule FunWithFlags.Config do
     end
   end
 
+
   def cache_flutter? do
     Keyword.get(ets_cache_config(), :flutter)
   end
