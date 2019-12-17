@@ -25,7 +25,7 @@ defmodule FunWithFlags.TimestampsTest do
   end
 
 
-  describe "expired?() tells if a timestamp is past its ttl" do    
+  describe "expired?() tells if a timestamp is past its ttl" do
     test "it returns true when the timestamp is expired" do
       one_min_ago = TS.now - 60
       assert TS.expired?(one_min_ago, 10)
@@ -36,6 +36,12 @@ defmodule FunWithFlags.TimestampsTest do
       one_min_ago = TS.now - 60
       refute TS.expired?(one_min_ago, 61)
       refute TS.expired?(one_min_ago, 3600)
+    end
+
+    test "it accounts for flutter offset" do
+      one_min_ago = TS.now - 60
+      refute TS.expired?(one_min_ago, 61, 2)
+      assert TS.expired?(one_min_ago, 59, -2)
     end
   end
 end
