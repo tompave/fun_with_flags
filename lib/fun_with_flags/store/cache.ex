@@ -9,7 +9,6 @@ defmodule FunWithFlags.Store.Cache do
   @table_options [
     :set, :protected, :named_table, {:read_concurrency, true}
   ]
-  @ttl Config.cache_ttl
 
 
   def worker_spec do
@@ -42,7 +41,7 @@ defmodule FunWithFlags.Store.Cache do
   end
 
   defp validate(name, flag = %Flag{name: name}, timestamp) do
-    if flag_stale?(timestamp, name) do
+    if flag_stale?(timestamp, flag) do
       {:miss, :expired, flag}
     else
       {:ok, flag}
@@ -52,36 +51,15 @@ defmodule FunWithFlags.Store.Cache do
     {:miss, :invalid, nil}
   end
 
-  defp flag_stale?(timestamp, flag_name) do
-    ttl = Config.cache_ttl
+  defp flag_stale?(timestamp, flag) do
     if Config.cache_flutter? do
-      g = Timestamps.expired?(timestamp, ttl, flutter_offset(flag_name))
-      # IO.inspect(g)
-
-      g
+      IO.inspect(Flag.flutter_offset(flag), label: :flag_offset)
+      Timestamps.expired?(timestamp, Config.cache_ttl, Flag.flutter_offset(flag))
     else
-      Timestamps.expired?(timestamp, ttl)
+      Timestamps.expired?(timestamp, Config.cache_ttl)
     end
   end
 
-  defp flutter_offset(flag_name) do
-    flutter_percentage = 0.1
-    maximum_ttl_variance = ceil(@ttl * flutter_percentage)
-
-    flag_name
-    |> flag_name_as_integer()
-    |> Integer.mod(maximum_ttl_variance)
-    |> Kernel.*(-1)
-  end
-
-  defp flag_name_as_integer(flag_name) do
-    {name_as_integer, _} =
-      :crypto.hash(:md5, Atom.to_string(flag_name))
-      |> Base.encode16()
-      |> Integer.parse(16)
-
-    name_as_integer
-  end
 
   # We want to always write serially through the
   # GenServer to avoid race conditions.
