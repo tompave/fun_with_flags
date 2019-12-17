@@ -68,20 +68,14 @@ defmodule FunWithFlags.ConfigTest do
     end
 
     test "with flutter" do
-      # enable flutter
-      Mix.Config.persist(fun_with_flags: [cache: [flutter: true]])
+      # enable flutter and customize TTL
+      Mix.Config.persist(fun_with_flags: [cache: [flutter: true, ttl: 50]])
 
-      # collect 100 ttls
-      ttls = Enum.map(0..100, fn _ ->
-        Config.cache_ttl
-      end)
+      # seed RNG and collect TTLs
+      :rand.seed(:exsplus, {101, 102, 103})
+      ttls = Enum.map(0..5, fn _ -> Config.cache_ttl end)
 
-      # test that the values aren't all the same
-      # this test isn't ideal because 1, it's technically non-deterministic and,
-      # 2, it only checks that the values aren't _all_ the same.  If there were
-      # only 2 unique values, this would pass.  That said, I think it's sufficient
-      # when considering the implementation and the pitfalls of using random numbers
-      assert length(Enum.uniq(ttls)) > 1
+      assert [49, 51, 47, 45, 51, 48] = ttls
 
       # cleanup
       reset_cache_defaults()
