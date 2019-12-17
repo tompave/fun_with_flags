@@ -21,3 +21,6 @@ erl_crash.dump
 
 # Redis db
 dump.rdb
+
+# The directory used by Elixir Language Server
+.elixir_ls
