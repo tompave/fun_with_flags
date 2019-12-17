@@ -8,7 +8,8 @@ defmodule FunWithFlags.Config do
 
   @default_cache_config [
     enabled: true,
-    ttl: 900 # in seconds, 15 minutes
+    ttl: 900, # in seconds, 15 minutes
+    flutter: false # adds a random variance to TTLs to avoid hammering persistence
   ]
 
   @default_notifications_config [
@@ -39,7 +40,20 @@ defmodule FunWithFlags.Config do
 
 
   def cache_ttl do
-    Keyword.get(ets_cache_config(), :ttl)
+    ttl = Keyword.get(ets_cache_config(), :ttl)
+
+    if __MODULE__.cache_flutter? do
+      flutter_percentage = 10
+      ttl_variance = round(ttl / flutter_percentage)
+
+      ttl + Enum.random(-ttl_variance..ttl_variance)
+    else
+      ttl
+    end
+  end
+
+  def cache_flutter? do
+    Keyword.get(ets_cache_config(), :flutter)
   end
 
 

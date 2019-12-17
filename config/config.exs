@@ -34,7 +34,8 @@ with_ecto =
 
 config :fun_with_flags, :cache,
   enabled: with_cache,
-  ttl: 60
+  ttl: 60,
+  flutter: false
 
 
 if with_phx_pubsub do

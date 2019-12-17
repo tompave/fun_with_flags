@@ -53,17 +53,39 @@ defmodule FunWithFlags.ConfigTest do
   end
 
 
-  test "cache_ttl" do
-    # defaults to 60 seconds in test
-    assert 60 = Config.cache_ttl
+  describe "cache_ttl" do
+    test "without flutter" do
+      # defaults to 60 seconds in test
+      assert 60 = Config.cache_ttl
 
-    # can be configured
-    Mix.Config.persist(fun_with_flags: [cache: [ttl: 3600]])
-    assert 3600 = Config.cache_ttl
+      # can be configured
+      Mix.Config.persist(fun_with_flags: [cache: [ttl: 3600]])
+      assert 3600 = Config.cache_ttl
 
-    # cleanup
-    reset_cache_defaults()
-    assert 60 = Config.cache_ttl
+      # cleanup
+      reset_cache_defaults()
+      assert 60 = Config.cache_ttl
+    end
+
+    test "with flutter" do
+      # enable flutter
+      Mix.Config.persist(fun_with_flags: [cache: [flutter: true]])
+
+      # collect 100 ttls
+      ttls = Enum.map(0..100, fn _ ->
+        Config.cache_ttl
+      end)
+
+      # test that the values aren't all the same
+      # this test isn't ideal because 1, it's technically non-deterministic and,
+      # 2, it only checks that the values aren't _all_ the same.  If there were
+      # only 2 unique values, this would pass.  That said, I think it's sufficient
+      # when considering the implementation and the pitfalls of using random numbers
+      assert length(Enum.uniq(ttls)) > 1
+
+      # cleanup
+      reset_cache_defaults()
+    end
   end
 
 
