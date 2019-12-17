@@ -67,6 +67,20 @@ defmodule FunWithFlags.ConfigTest do
   end
 
 
+  test "cache_flutter?" do
+    # defaults to false in test
+    refute Config.cache_flutter?
+
+    # can be configured
+    Mix.Config.persist(fun_with_flags: [cache: [flutter: true]])
+    assert Config.cache_flutter?
+
+    # cleanup
+    reset_cache_defaults()
+    refute Config.cache_flutter?
+  end
+
+
   test "store_module" do
     # defaults to FunWithFlags.Store
     assert FunWithFlags.Store = Config.store_module
@@ -200,7 +214,7 @@ defmodule FunWithFlags.ConfigTest do
   end
 
   defp reset_cache_defaults do
-    Mix.Config.persist(fun_with_flags: [cache: [enabled: true, ttl: 60]])
+    Mix.Config.persist(fun_with_flags: [cache: [enabled: true, ttl: 60, flutter: false]])
   end
 
   defp reset_notifications_defaults(adapter, client) do
