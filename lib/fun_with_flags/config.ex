@@ -43,8 +43,8 @@ defmodule FunWithFlags.Config do
     ttl = Keyword.get(ets_cache_config(), :ttl)
 
     if __MODULE__.cache_flutter? do
-      flutter_percentage = 10
-      ttl_variance = round(ttl / flutter_percentage)
+      flutter_percentage = 0.1
+      ttl_variance = round(ttl * flutter_percentage)
 
       ttl + Enum.random(-ttl_variance..ttl_variance)
     else
