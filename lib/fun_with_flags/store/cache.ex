@@ -51,9 +51,9 @@ defmodule FunWithFlags.Store.Cache do
     {:miss, :invalid, nil}
   end
 
+
   defp flag_stale?(timestamp, flag) do
     if Config.cache_flutter? do
-      IO.inspect(Flag.flutter_offset(flag), label: :flag_offset)
       Timestamps.expired?(timestamp, Config.cache_ttl, Flag.flutter_offset(flag))
     else
       Timestamps.expired?(timestamp, Config.cache_ttl)
