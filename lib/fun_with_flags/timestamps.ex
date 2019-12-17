@@ -6,6 +6,13 @@ defmodule FunWithFlags.Timestamps do
   end
 
   def expired?(timestamp, ttl, flutter_offset \\ 0) do
-    (timestamp + ttl + flutter_offset) < __MODULE__.now()
+    n = __MODULE__.now()
+    IO.inspect(timestamp)
+    IO.inspect(ttl)
+    IO.inspect(flutter_offset)
+    IO.inspect((timestamp) - n)
+    IO.puts("---------")
+
+    (timestamp + ttl + flutter_offset) < n
   end
 end

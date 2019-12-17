@@ -47,7 +47,7 @@ defmodule FunWithFlags.TestUtils do
   end
 
 
-  
+
   defmacro timetravel([by: offset], [do: body]) do
     quote do
       fake_now = FunWithFlags.Timestamps.now + unquote(offset)
@@ -61,6 +61,9 @@ defmodule FunWithFlags.TestUtils do
         end,
         expired?: fn(timestamp, ttl) ->
           :meck.passthrough([timestamp, ttl])
+        end,
+        expired?: fn(timestamp, ttl, offset) ->
+          :meck.passthrough([timestamp, ttl, offset])
         end
       ]) do
         unquote(body)

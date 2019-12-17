@@ -53,10 +53,14 @@ defmodule FunWithFlags.Store.Cache do
   end
 
   defp flag_stale?(timestamp, flag_name) do
+    ttl = Config.cache_ttl
     if Config.cache_flutter? do
-      Timestamps.expired?(timestamp, @ttl, flutter_offset(flag_name))
+      g = Timestamps.expired?(timestamp, ttl, flutter_offset(flag_name))
+      # IO.inspect(g)
+
+      g
     else
-      Timestamps.expired?(timestamp, @ttl)
+      Timestamps.expired?(timestamp, ttl)
     end
   end
 

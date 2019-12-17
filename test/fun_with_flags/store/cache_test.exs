@@ -47,7 +47,7 @@ defmodule FunWithFlags.Store.CacheTest do
     end
 
 
-    test "looking up an expired flag returns {:miss, :expired, stale_value}", %{name: name, flag: flag}  do
+    test "looking up an expired flag returns {:miss, :expired, stale_value}", %{name: name, flag: flag} do
       assert {:miss, :not_found, nil} = Cache.get(name)
 
       {:ok, ^flag} = Cache.put(flag)
@@ -65,6 +65,24 @@ defmodule FunWithFlags.Store.CacheTest do
         Cache.flush
         assert {:miss, :not_found, nil} = Cache.get(name)
       end
+    end
+
+    test "enabling ttl flutter introduces variance into expiration", %{flag: flag} do
+      Mix.Config.persist(fun_with_flags: [cache: [flutter: true]])
+      name = :"testname"
+      flag = %Flag{flag | name: name}
+
+      assert {:miss, :not_found, nil} = Cache.get(name)
+
+      {:ok, ^flag} = Cache.put(flag)
+      assert {:ok, ^flag} = Cache.get(name)
+
+      # # 1 second before expiring
+      timetravel by: (Config.cache_ttl - 4) do
+        assert {:ok, ^flag} = Cache.get(name)
+      end
+
+      Mix.Config.persist(fun_with_flags: [cache: [flutter: false]])
     end
   end
 
