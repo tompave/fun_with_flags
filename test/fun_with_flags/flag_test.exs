@@ -1,5 +1,6 @@
 defmodule FunWithFlags.FlagTest do
   use FunWithFlags.TestCase, async: true
+  import FunWithFlags.TestUtils
 
   alias FunWithFlags.{Flag,Gate}
 
@@ -351,7 +352,7 @@ defmodule FunWithFlags.FlagTest do
       #    - percentage_of_time (if present, applies with or without actors in the enabled?() call)
       #   or:
       #    - percentage_of_actors (only if an actor is provided)
-    
+
       # score with :warging flag = 0.122283935546875
       other_actor = %{actor_id: "a valid actor, but not an enabled one"}
 
@@ -489,6 +490,30 @@ defmodule FunWithFlags.FlagTest do
       ]}
 
       assert Flag.enabled?(flag, for: item)
+    end
+  end
+
+  describe "flutter_offset" do
+    test "returned offset is <= 0" do
+      Enum.each(0..100, fn _ ->
+        flag = %Flag{name: unique_atom()}
+
+        assert Flag.flutter_offset(flag) <= 0
+      end)
+    end
+
+    test "offset is never > 10% of the TTL" do
+      ttl = 100
+      Mix.Config.persist(fun_with_flags: [cache: [ttl: ttl]])
+
+      Enum.each(0..100, fn _ ->
+        flag = %Flag{name: unique_atom()}
+
+        assert abs(Flag.flutter_offset(flag)) <= (ttl * 0.1)
+      end)
+
+      # cleanup
+      Mix.Config.persist(fun_with_flags: [cache: [ttl: 60]])
     end
   end
 end

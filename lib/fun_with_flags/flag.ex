@@ -6,6 +6,7 @@ defmodule FunWithFlags.Flag do
   """
 
   alias FunWithFlags.Gate
+  alias FunWithFlags.Config
 
   defstruct [name: nil, gates: []]
   @type t :: %FunWithFlags.Flag{name: atom, gates: [FunWithFlags.Gate.t]}
@@ -44,6 +45,31 @@ defmodule FunWithFlags.Flag do
             check_boolean_gate(gates) || check_percentage_gate(gates, item, flag_name)
         end
     end
+  end
+
+  @doc ~S"""
+  Taking a %Flag{}, a deterministic TTL offset is returned that is within 10% of the default TTL.
+
+  This number will be <= 0, meaning that the TTL with flutter will only ever be <= the original TTL.
+  """
+  @spec flutter_offset(t) :: integer
+  def flutter_offset(%__MODULE__{name: flag_name}) do
+    flutter_percentage = 0.1
+    maximum_ttl_variance = ceil(Config.cache_ttl * flutter_percentage)
+
+    flag_name
+    |> name_as_integer()
+    |> Integer.mod(maximum_ttl_variance)
+    |> Kernel.*(-1)
+  end
+
+  defp name_as_integer(flag_name) do
+    {name_as_integer, _} =
+      :crypto.hash(:md5, Atom.to_string(flag_name))
+      |> Base.encode16()
+      |> Integer.parse(16)
+
+    name_as_integer
   end
 
 
