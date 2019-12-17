@@ -3,12 +3,13 @@ defmodule FunWithFlags.Store.Cache do
   use GenServer
   alias FunWithFlags.Timestamps
   alias FunWithFlags.Flag
+  alias FunWithFlags.Config
 
   @table_name :fun_with_flags_cache
   @table_options [
     :set, :protected, :named_table, {:read_concurrency, true}
   ]
-  @ttl FunWithFlags.Config.cache_ttl
+  @ttl Config.cache_ttl
 
 
   def worker_spec do
@@ -41,7 +42,7 @@ defmodule FunWithFlags.Store.Cache do
   end
 
   defp validate(name, flag = %Flag{name: name}, timestamp) do
-    if Timestamps.expired?(timestamp, @ttl) do
+    if flag_stale?(timestamp, name) do
       {:miss, :expired, flag}
     else
       {:ok, flag}
@@ -51,6 +52,32 @@ defmodule FunWithFlags.Store.Cache do
     {:miss, :invalid, nil}
   end
 
+  defp flag_stale?(timestamp, flag_name) do
+    if Config.cache_flutter? do
+      Timestamps.expired?(timestamp, @ttl, flutter_offset(flag_name))
+    else
+      Timestamps.expired?(timestamp, @ttl)
+    end
+  end
+
+  defp flutter_offset(flag_name) do
+    flutter_percentage = 0.1
+    maximum_ttl_variance = ceil(@ttl * flutter_percentage)
+
+    flag_name
+    |> flag_name_as_integer()
+    |> Integer.mod(maximum_ttl_variance)
+    |> Kernel.*(-1)
+  end
+
+  defp flag_name_as_integer(flag_name) do
+    {name_as_integer, _} =
+      :crypto.hash(:md5, Atom.to_string(flag_name))
+      |> Base.encode16()
+      |> Integer.parse(16)
+
+    name_as_integer
+  end
 
   # We want to always write serially through the
   # GenServer to avoid race conditions.
