@@ -53,33 +53,17 @@ defmodule FunWithFlags.ConfigTest do
   end
 
 
-  describe "cache_ttl" do
-    test "without flutter" do
-      # defaults to 60 seconds in test
-      assert 60 = Config.cache_ttl
+  test "cache_ttl" do
+    # defaults to 60 seconds in test
+    assert 60 = Config.cache_ttl
 
-      # can be configured
-      Mix.Config.persist(fun_with_flags: [cache: [ttl: 3600]])
-      assert 3600 = Config.cache_ttl
+    # can be configured
+    Mix.Config.persist(fun_with_flags: [cache: [ttl: 3600]])
+    assert 3600 = Config.cache_ttl
 
-      # cleanup
-      reset_cache_defaults()
-      assert 60 = Config.cache_ttl
-    end
-
-    test "with flutter" do
-      # enable flutter and customize TTL
-      Mix.Config.persist(fun_with_flags: [cache: [flutter: true, ttl: 50]])
-
-      # seed RNG and collect TTLs
-      :rand.seed(:exsplus, {101, 102, 103})
-      ttls = Enum.map(0..5, fn _ -> Config.cache_ttl end)
-
-      assert [49, 51, 47, 45, 51, 48] = ttls
-
-      # cleanup
-      reset_cache_defaults()
-    end
+    # cleanup
+    reset_cache_defaults()
+    assert 60 = Config.cache_ttl
   end
 
 
