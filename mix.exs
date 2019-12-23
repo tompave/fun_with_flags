@@ -217,6 +217,7 @@ defmodule FunWithFlags.Mixfile do
       ],
       links: %{
         "GitHub" => "https://github.com/tompave/fun_with_flags",
+        "Changelog" => "https://github.com/tompave/fun_with_flags/blob/master/CHANGELOG.md"
       }
     ]
   end
