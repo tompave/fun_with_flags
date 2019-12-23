@@ -3,12 +3,12 @@ defmodule FunWithFlags.Store.Cache do
   use GenServer
   alias FunWithFlags.Timestamps
   alias FunWithFlags.Flag
+  alias FunWithFlags.Config
 
   @table_name :fun_with_flags_cache
   @table_options [
     :set, :protected, :named_table, {:read_concurrency, true}
   ]
-  @ttl FunWithFlags.Config.cache_ttl
 
 
   def worker_spec do
@@ -33,21 +33,21 @@ defmodule FunWithFlags.Store.Cache do
   #
   def get(flag_name) do
     case :ets.lookup(@table_name, flag_name) do
-      [{^flag_name, {flag, timestamp}}] ->
-        validate(flag_name, flag, timestamp)
+      [{^flag_name, {flag, timestamp, ttl}}] ->
+        validate(flag_name, flag, timestamp, ttl)
       _ ->
         {:miss, :not_found, nil}
     end
   end
 
-  defp validate(name, flag = %Flag{name: name}, timestamp) do
-    if Timestamps.expired?(timestamp, @ttl) do
+  defp validate(name, flag = %Flag{name: name}, timestamp, ttl) do
+    if Timestamps.expired?(timestamp, ttl) do
       {:miss, :expired, flag}
     else
       {:ok, flag}
     end
   end
-  defp validate(_name, _flag, _timestamp) do
+  defp validate(_name, _flag, _timestamp, _ttl) do
     {:miss, :invalid, nil}
   end
 
@@ -75,13 +75,13 @@ defmodule FunWithFlags.Store.Cache do
   def init(:ok) do
     tab_name = @table_name
     ^tab_name = :ets.new(@table_name, @table_options)
-    {:ok, tab_name}
+    {:ok, %{tab_name: tab_name, ttl: Config.cache_ttl}}
   end
 
 
-  def handle_call({:put, flag = %Flag{name: name}}, _from, state) do
+  def handle_call({:put, flag = %Flag{name: name}}, _from, state = %{ttl: ttl}) do
     # writing to an ETS table will either return true or raise
-    :ets.insert(@table_name, {name, {flag, Timestamps.now}})
+    :ets.insert(@table_name, {name, {flag, Timestamps.now, ttl}})
     {:reply, {:ok, flag}, state}
   end
 
