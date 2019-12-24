@@ -1,5 +1,8 @@
 # :observer.start
 
+# Start the ecto repo if running the benchmarks with ecto.
+# {:ok, _pid} = FunWithFlags.Dev.EctoRepo.start_link()
+
 FunWithFlags.clear(:one)
 FunWithFlags.clear(:two)
 FunWithFlags.clear(:three)
