@@ -462,7 +462,7 @@ Just as Elixir and Phoenix are meant to scale better than Ruby on Rails with hig
 
 The reason to add an ETS cache is that, most of the time, feature flags can be considered static values. Doing a round-trip to the DB (Redis, PostgreSQL or MySQL) is expensive in terms of time and in terms of resources, expecially if multiple flags must be checked during a single web request. In the worst cases, the load on the DB can become a cause of concern, a performance bottleneck or the source of a system failure.
 
-Often the solution is to memoize the flag values _in the context of the web request_, but the approach can be extended to the scope of the entire server.
+Often the solution is to memoize the flag values _in the context of the web request_, but the approach can be extended to the scope of the entire server. This is what FunWithFlags does, as each application node/instance caches the flags in an ETS table.
 
 Of course, caching adds a different kind of complexity and there are some pros and cons. When a flag is created or updated the ETS cache on the local node is updated immediately, and the main problem is syncronizing the flag data across the other application nodes that should share the same view of the world.
 
@@ -474,6 +474,7 @@ FunWithFlags uses three mechanisms to deal with the problem:
 2. If that fails, the cache has a configurable TTL. Reading from redis every few minutes is still better than doing so 30k times per second.
 3. If that doesn't work, it's possible to disable the cache and just read from the DB all the time. That's what Flipper does.
 
+In terms of performance, very syntetic benchmarks (where the DBs run on the same machine as the Beam code) show that the ETS cache makes querying the FunWithFlags interface between 10 and 20 times faster than going directly to Redis, and between 20 and 40 times faster than going directly to Postgres. The variance depends on the complexity of the flag data to be retrieved.
 
 ## To Do
 
