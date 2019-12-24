@@ -1,5 +1,6 @@
 # :observer.start
 
+FunWithFlags.clear(:one)
 FunWithFlags.clear(:two)
 FunWithFlags.clear(:three)
 FunWithFlags.clear(:four)

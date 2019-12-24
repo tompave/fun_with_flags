@@ -1,4 +1,4 @@
-:observer.start
+# :observer.start
 
 FunWithFlags.clear(:one)
 FunWithFlags.clear(:two)
