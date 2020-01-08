@@ -70,7 +70,7 @@ The priority order is from most to least specific: `Actors > Groups > Boolean > 
 
 For example, a disabled group gate takes precendence over an enabled boolean (global) gate for the entities in the group, and a further enabled actor gate overrides the disabled group gate for a specific entity. When an entity belongs to multiple groups with conflicting toggle status, the disabled group gates have precedence over the enabled ones. The percentage gates are checked last, if present, and they're only checked if no other gate is enabled.
 
-As another example, a flag can have a disabled boolean gate and a 50% enabled %-of-actors gate. When the flag is checked with an actor, it has a (deterministic, consistent and repeatable) 50% chance to be enabled, but when checked without an actor argument it will always be disabled. If we add to the flag a disabled actor gate and an enabled group gate, the flag will be always disabled for the the actor, always enabled for any other actor matching the group, have a 50% change to be enabled for any other actor, and always be disabled when checked without actor arguments. If, then, we replace the 50%-of-actors gate with a 50%-of-time gate, the flag will be always disabled for the the actor, always enabled for any other actor matching the group, and have a 50% chance to be enabled for any other actor or when checked without an actor argument.
+As another example, a flag can have a disabled boolean gate and a 50% enabled %-of-actors gate. When the flag is checked with an actor, it has a (deterministic, consistent and repeatable) 50% chance to be enabled, but when checked without an actor argument it will always be disabled. If we add to the flag a disabled actor gate and an enabled group gate, the flag will be always disabled for the actor, always enabled for any other actor matching the group, have a 50% change to be enabled for any other actor, and always be disabled when checked without actor arguments. If, then, we replace the 50%-of-actors gate with a 50%-of-time gate, the flag will be always disabled for the actor, always enabled for any other actor matching the group, and have a 50% chance to be enabled for any other actor or when checked without an actor argument.
 
 ### Boolean Gate
 
@@ -522,7 +522,7 @@ config :fun_with_flags, :redis, {:system, "REDIS_URL"}
 
 ### Persistence Adapters
 
-The library comes with two persistence adapters for the the [`Redix`](https://hex.pm/packages/redix) and [`Ecto`](https://hex.pm/packages/ecto) libraries, that allow to persist feature flag data in Redis, PostgreSQL or MySQL. In order to use any of them, you must declare the correct optional dependency in the Mixfile (see the [installation](#installation) instructions, below).
+The library comes with two persistence adapters for the [`Redix`](https://hex.pm/packages/redix) and [`Ecto`](https://hex.pm/packages/ecto) libraries, that allow to persist feature flag data in Redis, PostgreSQL or MySQL. In order to use any of them, you must declare the correct optional dependency in the Mixfile (see the [installation](#installation) instructions, below).
 
 The Redis adapter is the default and there is no need to explicitly declare it. All it needs is the Redis connection configuration.
 
@@ -556,7 +556,7 @@ It's also necessary to create the DB table that will hold the feature flag data.
 
 The library comes with two PubSub adapters for the [`Redix`](https://hex.pm/packages/redix) and [`Phoenix.PubSub`](https://hex.pm/packages/phoenix_pubsub) libraries. In order to use any of them, you must declare the correct optional dependency in the Mixfile. (see the [installation](#installation) instructions, below)
 
-The Redis PubSub adapter is the default and doesn't need to be excplicity configured. It can only be used in conjunction with the Redis persistence adapter however, and is not available when using Ecto for persistence. When used, it connects directly to the Redis instance used for persisting the the flag data.
+The Redis PubSub adapter is the default and doesn't need to be excplicity configured. It can only be used in conjunction with the Redis persistence adapter however, and is not available when using Ecto for persistence. When used, it connects directly to the Redis instance used for persisting the flag data.
 
 The Phoenix PubSub adapter uses the high level API of `Phoenix.PubSub`, which means that under the hood it could use either its PG2 or Redis adapters, and this library doesn't need to know. It's provided as a convenient way to leverage distributed Erlang when using FunWithFlags in a Phoenix application, although it can be used independently (without the rest of the Phoenix framework) to add PubSub to Elixir apps running on Erlang clusters.  
 FunWithFlags expects the `Phoenix.PubSub` process to be started by the host application, and in order to use this adapter the client (name or PID) must be provided in the configuration.
