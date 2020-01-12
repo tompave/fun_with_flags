@@ -9,7 +9,7 @@
 
 FunWithFlags, the Elixir feature flag library.
 
-This readme refers to the `master` branch. For the latest version released on Hex, please check [the readme published with the docs](https://hexdocs.pm/fun_with_flags/readme.html).
+If you're reading this on the [GitHub repo](https://github.com/tompave/fun_with_flags), keep in mind that this readme refers to the `master` branch. For the latest version released on Hex, please check [the readme published with the docs](https://hexdocs.pm/fun_with_flags/readme.html).
 
 ---
 
