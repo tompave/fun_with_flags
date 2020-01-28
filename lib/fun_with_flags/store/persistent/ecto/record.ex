@@ -8,7 +8,7 @@ if Code.ensure_loaded?(Ecto) do
 
     @primary_key {:id, :id, autogenerate: true}
 
-    schema Config.table_name() do
+    schema Config.persistence_table_name() do
       field(:flag_name, :string)
       field(:gate_type, :string)
       field(:target, :string)
