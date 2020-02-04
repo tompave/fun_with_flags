@@ -1,13 +1,13 @@
 dist: bionic
 language: elixir
 elixir:
+  - 1.10
   - 1.9
   - 1.8
   - 1.7
 otp_release:
   - 22.2
   - 22.1
-  - 22.0
   - 21.3
 env:
   - CACHE_ENABLED=true  PERSISTENCE=ecto RDBMS=postgres PUBSUB_BROKER=phoenix_pubsub TEST_OPTS='--no-start --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence'
@@ -22,6 +22,8 @@ matrix:
   exclude:
     - elixir: 1.7
       otp_release: 22.2
+    - elixir: 1.7
+      otp_release: 22.1
 services:
   - redis-server
   - postgresql
