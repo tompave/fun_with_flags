@@ -1,5 +1,6 @@
 defmodule FunWithFlags.Dev.EctoRepo.Migrations.EnsureColumnsAreNotNull do
   use Ecto.Migration
+  alias FunWithFlags.Config
   #
   # Use this migration to add the `not null` constraints to the
   # table created using the `CreateFeatureFlagsTable` migration
@@ -10,8 +11,10 @@ defmodule FunWithFlags.Dev.EctoRepo.Migrations.EnsureColumnsAreNotNull do
   # is no need to run this migration. In that case, this migration
   # is a no-op.
 
+  @table_name Config.table_name()
+
   def up do
-    alter table(:fun_with_flags_toggles) do
+    alter table(@table_name) do
       modify :flag_name, :string, null: false
       modify :gate_type, :string, null: false
       modify :target, :string, null: false
@@ -20,7 +23,7 @@ defmodule FunWithFlags.Dev.EctoRepo.Migrations.EnsureColumnsAreNotNull do
   end
 
   def down do
-    alter table(:fun_with_flags_toggles) do
+    alter table(@table_name) do
       modify :flag_name, :string, null: true
       modify :gate_type, :string, null: true
       modify :target, :string, null: true

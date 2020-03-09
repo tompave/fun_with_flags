@@ -503,7 +503,7 @@ config :fun_with_flags, :cache_bust_notifications,
   [enabled: true, adapter: FunWithFlags.Notifications.Redis]
 
 # Notifications can also be disabled, which will also remove the Redis/Redix dependency
-config :fun_with_flags, :cache_bust_notifications, [enabled: false]  
+config :fun_with_flags, :cache_bust_notifications, [enabled: false]
 ```
 
 When using Redis for persistence and/or cache-busting PubSub it is necessary to configure the connection to the Redis instance. These options can be omitted if Redis is not being used. For example, the defaults:
@@ -550,6 +550,9 @@ config :my_app, MyApp.Repo,
 config :fun_with_flags, :persistence,
   adapter: FunWithFlags.Store.Persistent.Ecto,
   repo: MyApp.Repo
+
+# Optional configuration to specify the database table name. Default table name is "fun_with_flags_toggles".
+config :fun_with_flags, table_name: "your_table_name"
 ```
 
 It's also necessary to create the DB table that will hold the feature flag data. To do that, [create a new migration](https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Gen.Migration.html) in your project and copy the contents of [the provided migration file](https://github.com/tompave/fun_with_flags/blob/master/priv/ecto_repo/migrations/00000000000000_create_feature_flags_table.exs). Then [run the migration](https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Migrate.html).
@@ -560,7 +563,7 @@ The library comes with two PubSub adapters for the [`Redix`](https://hex.pm/pack
 
 The Redis PubSub adapter is the default and doesn't need to be excplicity configured. It can only be used in conjunction with the Redis persistence adapter however, and is not available when using Ecto for persistence. When used, it connects directly to the Redis instance used for persisting the flag data.
 
-The Phoenix PubSub adapter uses the high level API of `Phoenix.PubSub`, which means that under the hood it could use either its PG2 or Redis adapters, and this library doesn't need to know. It's provided as a convenient way to leverage distributed Erlang when using FunWithFlags in a Phoenix application, although it can be used independently (without the rest of the Phoenix framework) to add PubSub to Elixir apps running on Erlang clusters.  
+The Phoenix PubSub adapter uses the high level API of `Phoenix.PubSub`, which means that under the hood it could use either its PG2 or Redis adapters, and this library doesn't need to know. It's provided as a convenient way to leverage distributed Erlang when using FunWithFlags in a Phoenix application, although it can be used independently (without the rest of the Phoenix framework) to add PubSub to Elixir apps running on Erlang clusters.
 FunWithFlags expects the `Phoenix.PubSub` process to be started by the host application, and in order to use this adapter the client (name or PID) must be provided in the configuration.
 
 For example, in Phoenix (>= 1.5.0) it would be:
@@ -671,7 +674,7 @@ The Mixfile defines a few other helper tasks that allow to run the test suite wi
 
 ### Configuration changes have no effect in `MIX_ENV=dev`
 
-**Issue**: changing the library settings in the host application's Mix config file has no effect, or "missing process" exceptions are raised when booting. This should only be an issue in the development environment.  
+**Issue**: changing the library settings in the host application's Mix config file has no effect, or "missing process" exceptions are raised when booting. This should only be an issue in the development environment.
 **Solution**: clear the compiled BEAM bytecode with:
 
 ```shell

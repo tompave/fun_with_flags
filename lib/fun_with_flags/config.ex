@@ -32,6 +32,10 @@ defmodule FunWithFlags.Config do
     end
   end
 
+  def table_name do
+    Application.get_env(:fun_with_flags, :table_name, "fun_with_flags_toggles")
+  end
+
 
   def cache? do
     Keyword.get(ets_cache_config(), :enabled)

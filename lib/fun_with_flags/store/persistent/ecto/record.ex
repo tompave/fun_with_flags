@@ -4,11 +4,11 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
-  alias FunWithFlags.Gate
+  alias FunWithFlags.{Gate, Config}
 
   @primary_key {:id, :id, autogenerate: true}
 
-  schema "fun_with_flags_toggles" do
+  schema Config.table_name() do
     field :flag_name, :string
     field :gate_type, :string
     field :target, :string

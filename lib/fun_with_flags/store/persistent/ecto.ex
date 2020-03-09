@@ -15,6 +15,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   @repo Config.ecto_repo()
   @mysql_lock_timeout_s 3
+  @table_name Config.table_name()
 
 
   @impl true
@@ -222,7 +223,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   defp postgres_table_lock! do
     Ecto.Adapters.SQL.query!(
       @repo,
-      "LOCK TABLE fun_with_flags_toggles IN SHARE ROW EXCLUSIVE MODE;"
+      "LOCK TABLE #{@table_name} IN SHARE ROW EXCLUSIVE MODE;"
     )
   end
 
