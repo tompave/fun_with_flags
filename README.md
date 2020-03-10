@@ -675,7 +675,7 @@ The Mixfile defines a few other helper tasks that allow to run the test suite wi
 ### Configuration changes have no effect in `MIX_ENV=dev`
 
 **Issue**: changing the library settings in the host application's Mix config file has no effect, or "missing process" exceptions are raised when booting. This should only be an issue in the development environment.  
-**Solution**: clear the compiled BEAM bytecode with:  
+**Solution**: clear the compiled BEAM bytecode with:
 
 ```shell
 rm -r _build/dev/lib/fun_with_flags
