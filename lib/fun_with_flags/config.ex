@@ -19,9 +19,8 @@ defmodule FunWithFlags.Config do
   @default_persistence_config [
     adapter: FunWithFlags.Store.Persistent.Redis,
     repo: FunWithFlags.NullEctoRepo,
+    ecto_table_name: "fun_with_flags_toggles"
   ]
-
-  @default_ecto_table_name "fun_with_flags_toggles"
 
   def redis_config do
     case Application.get_env(:fun_with_flags, :redis, []) do
@@ -34,8 +33,8 @@ defmodule FunWithFlags.Config do
     end
   end
 
-  def table_name do
-    Application.get_env(:fun_with_flags, :table_name, @default_ecto_table_name)
+  def ecto_table_name do
+    Keyword.get(persistence_config(), :ecto_table_name)
   end
 
 

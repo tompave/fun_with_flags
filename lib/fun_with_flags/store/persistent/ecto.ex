@@ -15,7 +15,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   @repo Config.ecto_repo()
   @mysql_lock_timeout_s 3
-  @table_name Config.table_name()
+  @table_name Config.ecto_table_name()
 
 
   @impl true

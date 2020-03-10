@@ -8,7 +8,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
 
   @primary_key {:id, :id, autogenerate: true}
 
-  schema Config.table_name() do
+  schema Config.ecto_table_name() do
     field :flag_name, :string
     field :gate_type, :string
     field :target, :string
