@@ -10,11 +10,13 @@ defmodule FunWithFlags.Dev.EctoRepo.Migrations.EnsureColumnsAreNotNull do
   # then the `not null` constraints are already there and there
   # is no need to run this migration. In that case, this migration
   # is a no-op.
-
-  @table_name Config.table_name()
+  #
+  # This migration assumes the default table name of "fun_with_flags_toggles"
+  # is being used. If you have overriden that via configuration, you should
+  # change this migration accordingly.
 
   def up do
-    alter table(@table_name) do
+    alter table(:fun_with_flags_toggles) do
       modify :flag_name, :string, null: false
       modify :gate_type, :string, null: false
       modify :target, :string, null: false
@@ -23,7 +25,7 @@ defmodule FunWithFlags.Dev.EctoRepo.Migrations.EnsureColumnsAreNotNull do
   end
 
   def down do
-    alter table(@table_name) do
+    alter table(:fun_with_flags_toggles) do
       modify :flag_name, :string, null: true
       modify :gate_type, :string, null: true
       modify :target, :string, null: true
