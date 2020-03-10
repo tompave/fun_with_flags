@@ -551,7 +551,8 @@ config :fun_with_flags, :persistence,
   adapter: FunWithFlags.Store.Persistent.Ecto,
   repo: MyApp.Repo
 
-# Optional configuration to specify the database table name. Default table name is "fun_with_flags_toggles".
+# Optional configuration to specify the ecto table name.
+# Default table name is "fun_with_flags_toggles".
 config :fun_with_flags, table_name: "your_table_name"
 ```
 
