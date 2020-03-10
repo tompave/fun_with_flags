@@ -21,6 +21,8 @@ defmodule FunWithFlags.Config do
     repo: FunWithFlags.NullEctoRepo,
   ]
 
+  @default_ecto_table_name "fun_with_flags_toggles"
+
   def redis_config do
     case Application.get_env(:fun_with_flags, :redis, []) do
       uri  when is_binary(uri) ->
@@ -33,7 +35,7 @@ defmodule FunWithFlags.Config do
   end
 
   def table_name do
-    Application.get_env(:fun_with_flags, :table_name, "fun_with_flags_toggles")
+    Application.get_env(:fun_with_flags, :table_name, @default_ecto_table_name)
   end
 
 
