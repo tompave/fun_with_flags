@@ -2,10 +2,12 @@ defmodule FunWithFlags.Dev.EctoRepo.Migrations.CreateFeatureFlagsTable do
   use Ecto.Migration
   alias FunWithFlags.Config
 
-  @table_name Config.table_name() |> String.to_atom()
+  # This migration assumes the default table name of "fun_with_flags_toggles"
+  # is being used. If you have overriden that via configuration, you should
+  # change this migration accordingly.
 
   def up do
-    create table(@table_name, primary_key: false) do
+    create table(:fun_with_flags_toggles, primary_key: false) do
       add :id, :bigserial, primary_key: true
       add :flag_name, :string, null: false
       add :gate_type, :string, null: false
@@ -14,13 +16,13 @@ defmodule FunWithFlags.Dev.EctoRepo.Migrations.CreateFeatureFlagsTable do
     end
 
     create index(
-      @table_name,
+      :fun_with_flags_toggles,
       [:flag_name, :gate_type, :target],
       [unique: true, name: "fwf_flag_name_gate_target_idx"]
     )
   end
 
   def down do
-    drop table(@table_name)
+    drop table(:fun_with_flags_toggles)
   end
 end
