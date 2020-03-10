@@ -1,6 +1,5 @@
 defmodule FunWithFlags.Dev.EctoRepo.Migrations.CreateFeatureFlagsTable do
   use Ecto.Migration
-  alias FunWithFlags.Config
 
   # This migration assumes the default table name of "fun_with_flags_toggles"
   # is being used. If you have overriden that via configuration, you should
