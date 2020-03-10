@@ -1,6 +1,5 @@
 defmodule FunWithFlags.Dev.EctoRepo.Migrations.EnsureColumnsAreNotNull do
   use Ecto.Migration
-  alias FunWithFlags.Config
   #
   # Use this migration to add the `not null` constraints to the
   # table created using the `CreateFeatureFlagsTable` migration
