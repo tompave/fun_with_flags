@@ -25,12 +25,12 @@ services:
   - redis-server
   - postgresql
   - mysql
-script:
-  - mix compile --warnings-as-errors
-  - mix test --force $TEST_OPTS
 before_script:
+  - MIX_ENV=test mix compile --warnings-as-errors # Compile once.
   - MIX_ENV=test mix ecto.create
   - MIX_ENV=test mix ecto.migrate
+script:
+  - mix test --force $TEST_OPTS
 notifications:
   email:
     on_success: never
