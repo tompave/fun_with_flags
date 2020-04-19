@@ -7,7 +7,7 @@ elixir:
   - 1.7
 otp_release:
   - 22.2
-  - 21.3
+  - 21.2 # 21.3 no longer available on Travis
 env:
   - CACHE_ENABLED=true  PERSISTENCE=ecto RDBMS=postgres PUBSUB_BROKER=phoenix_pubsub TEST_OPTS='--no-start --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence'
   - CACHE_ENABLED=false PERSISTENCE=ecto RDBMS=postgres PUBSUB_BROKER=phoenix_pubsub TEST_OPTS='--no-start --only integration'
