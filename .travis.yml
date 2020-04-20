@@ -8,15 +8,6 @@ elixir:
 otp_release:
   - 22.2
   - 21.2 # 21.3 no longer available on Travis
-env:
-  - CACHE_ENABLED=true  PERSISTENCE=ecto RDBMS=postgres PUBSUB_BROKER=phoenix_pubsub TEST_OPTS='--no-start --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence'
-  - CACHE_ENABLED=false PERSISTENCE=ecto RDBMS=postgres PUBSUB_BROKER=phoenix_pubsub TEST_OPTS='--no-start --only integration'
-  - CACHE_ENABLED=true  PERSISTENCE=ecto RDBMS=mysql PUBSUB_BROKER=phoenix_pubsub TEST_OPTS='--no-start --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence'
-  - CACHE_ENABLED=false PERSISTENCE=ecto RDBMS=mysql PUBSUB_BROKER=phoenix_pubsub TEST_OPTS='--no-start --only integration'
-  - CACHE_ENABLED=true  PERSISTENCE=redis TEST_OPTS='--exclude phoenix_pubsub --exclude ecto_persistence'
-  - CACHE_ENABLED=false PERSISTENCE=redis TEST_OPTS='--only integration'
-  - CACHE_ENABLED=true  PERSISTENCE=redis PUBSUB_BROKER=phoenix_pubsub TEST_OPTS='--no-start --exclude redis_pubsub --exclude ecto_persistence --exclude phoenix_pubsub:with_ecto --include phoenix_pubsub:with_redis --include phoenix_pubsub:true'
-  - CACHE_ENABLED=false PERSISTENCE=redis PUBSUB_BROKER=phoenix_pubsub TEST_OPTS='--no-start --only integration'
 matrix:
   exclude:
     - elixir: 1.7
@@ -30,7 +21,7 @@ before_script:
   - MIX_ENV=test mix ecto.create
   - MIX_ENV=test mix ecto.migrate
 script:
-  - mix test --force $TEST_OPTS
+  - mix test.all
 notifications:
   email:
     on_success: never
