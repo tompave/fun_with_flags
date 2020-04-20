@@ -46,7 +46,6 @@ defmodule FunWithFlags.Flag do
     end
   end
 
-
   defp check_percentage_gate(gates, item, flag_name) do
     case percentage_of_actors_gate(gates) do
       nil ->
