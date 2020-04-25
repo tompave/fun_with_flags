@@ -563,12 +563,12 @@ The Redis PubSub adapter is the default and doesn't need to be excplicity config
 The Phoenix PubSub adapter uses the high level API of `Phoenix.PubSub`, which means that under the hood it could use either its PG2 or Redis adapters, and this library doesn't need to know. It's provided as a convenient way to leverage distributed Erlang when using FunWithFlags in a Phoenix application, although it can be used independently (without the rest of the Phoenix framework) to add PubSub to Elixir apps running on Erlang clusters.  
 FunWithFlags expects the `Phoenix.PubSub` process to be started by the host application, and in order to use this adapter the client (name or PID) must be provided in the configuration.
 
-For example, in Phoenix it would be:
+For example, in Phoenix (>= 1.5.0) it would be:
 
 ```elixir
 # normal Phoenix configuration
 config :my_app, MyApp.Web.Endpoint,
-  pubsub: [name: MyApp.PubSub, adapter: Phoenix.PubSub.PG2]
+  pubsub_server: MyApp.PubSub
 
 # FunWithFlags configuration
 config :fun_with_flags, :cache_bust_notifications,
@@ -581,7 +581,11 @@ Or, without Phoenix:
 
 ```elixir
 # possibly in the application's supervision tree
-{:ok, _pid} = Phoenix.PubSub.PG2.start_link(:my_pubsub_process_name)
+children = [
+  {Phoenix.PubSub, [name: :my_pubsub_process_name, adapter: Phoenix.PubSub.PG2]}
+]
+opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+{:ok, _pid} = Supervisor.start_link(children, opts)
 
 # config/config.exs
 config :fun_with_flags, :cache_bust_notifications,
