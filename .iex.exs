@@ -40,7 +40,11 @@ end
 
 if Config.phoenix_pubsub? do
   with_safe_restart.(fn ->
-    Phoenix.PubSub.PG2.start_link(:fwf_test, [pool_size: 1])
+    children = [
+      {Phoenix.PubSub, [name: :fwf_test, adapter: Phoenix.PubSub.PG2, pool_size: 1]}
+    ]
+    opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+    Supervisor.start_link(children, opts)
   end)
 end
 
