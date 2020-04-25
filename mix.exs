@@ -64,7 +64,7 @@ defmodule FunWithFlags.Mixfile do
       {:postgrex, "~> 0.13", optional: true, only: [:dev, :test]},
       {:myxql, "~> 0.2", optional: true, only: [:dev, :test]},
 
-      {:phoenix_pubsub, "~> 1.0", optional: true},
+      {:phoenix_pubsub, "~> 2.0", optional: true},
 
       {:credo, "~> 1.4", only: :dev, runtime: false},
     ]
