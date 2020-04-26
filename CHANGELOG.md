@@ -7,6 +7,7 @@
 * Upgrade Phoenix.PubSub dependency to 2.0. This provides compatibility with Phoenix 1.5.
 * Typespec improvements. (Thanks [skylerparr](https://github.com/skylerparr), [pull/57](https://github.com/tompave/fun_with_flags/pull/57))
 * Internal changes to how flag data is cached in the ETS table. This has no effect on the functionality of the package, with two exceptions. First, the `cache: [ttl: seconds]` config value is not memoized anymore and it can be changed without recompiling. Second, since the TTL is now stored with the ETS entries, old and new ETS data is not compatible; this is not an issue if you restart/rotate your application nodes/instances when deploying, but it will be an issue if you perform [hot code upgrades](https://hexdocs.pm/mix/1.9.4/Mix.Tasks.Release.html#module-hot-code-upgrades). In that case, you have to first empty the ETS table, for example with `FunWithFlags.Store.Cache.flush/0`.
+* New config option to set a custom name for the DB table when using the Ecto persistence adapter. (Thanks [BobbyMcWho](https://github.com/BobbyMcWho), [pull/64](https://github.com/tompave/fun_with_flags/pull/64) and [pull/77](https://github.com/tompave/fun_with_flags/pull/77))
 
 ## v1.4.1
 
