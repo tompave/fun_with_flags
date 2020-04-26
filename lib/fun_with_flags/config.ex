@@ -19,6 +19,7 @@ defmodule FunWithFlags.Config do
   @default_persistence_config [
     adapter: FunWithFlags.Store.Persistent.Redis,
     repo: FunWithFlags.NullEctoRepo,
+    ecto_table_name: "fun_with_flags_toggles"
   ]
 
   def redis_config do
@@ -30,6 +31,10 @@ defmodule FunWithFlags.Config do
       {:system, var} when is_binary(var) ->
         System.get_env(var)
     end
+  end
+
+  def ecto_table_name do
+    Keyword.get(persistence_config(), :ecto_table_name)
   end
 
 

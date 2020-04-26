@@ -119,6 +119,20 @@ defmodule FunWithFlags.ConfigTest do
     end
   end
 
+  describe "ecto_table_name()" do
+    test "it defaults to \"fun_with_flags_toggles\"" do
+      assert Config.ecto_table_name() == "fun_with_flags_toggles"
+    end
+
+    test "it can be configured" do
+      persistence_config = Application.get_env(:fun_with_flags,  :persistence, [])
+      Application.put_env(:fun_with_flags, :persistence, [ecto_table_name: "my_custom_table"])
+
+      assert Config.ecto_table_name() == "my_custom_table"
+
+      Application.put_env(:fun_with_flags, :persistence, persistence_config)
+    end
+  end
 
   describe "When we are sending notifications with Redis PubSub" do
     @describetag :redis_pubsub

@@ -549,7 +549,9 @@ config :my_app, MyApp.Repo,
 # FunWithFlags configuration.
 config :fun_with_flags, :persistence,
   adapter: FunWithFlags.Store.Persistent.Ecto,
-  repo: MyApp.Repo
+  repo: MyApp.Repo,
+  ecto_table_name: "your_table_name" # optional
+  # Default table name is "fun_with_flags_toggles".
 ```
 
 It's also necessary to create the DB table that will hold the feature flag data. To do that, [create a new migration](https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Gen.Migration.html) in your project and copy the contents of [the provided migration file](https://github.com/tompave/fun_with_flags/blob/master/priv/ecto_repo/migrations/00000000000000_create_feature_flags_table.exs). Then [run the migration](https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Migrate.html).
