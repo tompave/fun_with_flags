@@ -9,7 +9,11 @@ if FunWithFlags.Config.phoenix_pubsub? do
   # Start a Phoenix.PubSub process for the tests.
   # The `:fwf_test` connection name will be injected into this
   # library in `config/test.exs`.
-  {:ok, _pid} = Phoenix.PubSub.PG2.start_link(:fwf_test, [pool_size: 1])
+  children = [
+    {Phoenix.PubSub, [name: :fwf_test, adapter: Phoenix.PubSub.PG2, pool_size: 1]}
+  ]
+  opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+  {:ok, _pid} = Supervisor.start_link(children, opts)
 end
 
 # With some configurations the tests are run with `--no-start`, because
