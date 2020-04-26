@@ -20,7 +20,6 @@ end
 # we want to start the Phoenix.PubSub process before starting the application.
 Application.ensure_all_started(:fun_with_flags)
 IO.puts "--------------------------------------------------------------"
-IO.puts "$TEST_OPTS='#{System.get_env("TEST_OPTS")}'"
 IO.puts "$CACHE_ENABLED=#{System.get_env("CACHE_ENABLED")}"
 IO.puts "$PERSISTENCE=#{System.get_env("PERSISTENCE")}"
 IO.puts "$RDBMS=#{System.get_env("RDBMS")}"
