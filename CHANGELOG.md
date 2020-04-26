@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.5.0 (unreleased)
+## v1.5.0
 
 * Drop support for Elixir 1.6. Elixir >= 1.7 is now required.
 * Drop support for Erlang/OTP 20, and Erlang/OTP >= 21 is now required. An older Erlang/OTP might still work with older versions of Elixir, but Elixir 1.10 requires Erlang/OTP >= 21. Dropping support for older versions of Erlang/OTP simply means that this package is not tested with them in CI, and that no compatibility issues are considered bugs.
