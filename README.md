@@ -613,7 +613,7 @@ def deps do
     {:ecto_sql, "~> 3.0}",
 
     # optionally, if you don't want to use Redis' builtin pubsub
-    {:phoenix_pubsub, "~> 1.1"},
+    {:phoenix_pubsub, "~> 2.0"},
   ]
 end
 ```
