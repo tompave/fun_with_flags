@@ -17,9 +17,12 @@ services:
   - postgresql
   - mysql
 before_script:
-  - MIX_ENV=test mix compile --warnings-as-errors # Compile once.
-  - MIX_ENV=test mix ecto.create
-  - MIX_ENV=test mix ecto.migrate
+  - MIX_ENV=test PERSISTENCE=ecto RDBMS=postgres mix compile --warnings-as-errors
+  - MIX_ENV=test PERSISTENCE=ecto RDBMS=postgres mix do ecto.create, ecto.migrate
+  - rm -rf _build/test/lib/fun_with_flag
+  - MIX_ENV=test PERSISTENCE=ecto RDBMS=mysql mix compile --warnings-as-errors
+  - MIX_ENV=test PERSISTENCE=ecto RDBMS=mysql mix do ecto.create, ecto.migrate
+  - rm -rf _build/test/lib/fun_with_flags
 script:
   - mix test.all
 notifications:
