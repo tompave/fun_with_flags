@@ -73,17 +73,32 @@ defmodule FunWithFlags.Mixfile do
 
   defp aliases do
     [
-      {:"test.all", [
-        &run_tests__redis_pers__redis_pubsub/1, &run_integration_tests__redis_pers__redis_pubsub__no_cache/1,
-        &run_tests__redis_pers__phoenix_pubsub/1, &run_integration_tests__redis_pers__phoenix_pubsub__no_cache/1,
-        &run_tests__ecto_pers_postgres__phoenix_pubsub/1, &run_integration_tests__ecto_pers_postgres__phoenix_pubsub__no_cache/1,
-        &run_tests__ecto_pers_mysql__phoenix_pubsub/1, &run_integration_tests__ecto_pers_mysql__phoenix_pubsub__no_cache/1,
-      ]},
+      {:"test.all", [&run_all_tests/1]},
       {:"test.phx", [&run_tests__redis_pers__phoenix_pubsub/1]},
       {:"test.ecto.postgres", [&run_tests__ecto_pers_postgres__phoenix_pubsub/1]},
       {:"test.ecto.mysql", [&run_tests__ecto_pers_mysql__phoenix_pubsub/1]},
       {:"test.redis", [&run_tests__redis_pers__redis_pubsub/1]},
     ]
+  end
+
+  # Runs all the test configurations.
+  # If any fails, exit with status code 1, so that this can properly fail in CI.
+  #
+  defp run_all_tests(arg) do
+    tests = [
+      &run_tests__redis_pers__redis_pubsub/1, &run_integration_tests__redis_pers__redis_pubsub__no_cache/1,
+      &run_tests__redis_pers__phoenix_pubsub/1, &run_integration_tests__redis_pers__phoenix_pubsub__no_cache/1,
+      &run_tests__ecto_pers_postgres__phoenix_pubsub/1, &run_integration_tests__ecto_pers_postgres__phoenix_pubsub__no_cache/1,
+      &run_tests__ecto_pers_mysql__phoenix_pubsub/1, &run_integration_tests__ecto_pers_mysql__phoenix_pubsub__no_cache/1,
+    ]
+
+    exit_codes = tests |> Enum.map(fn(test_fn) -> test_fn.(arg) end)
+
+    if Enum.any?(exit_codes, &(&1 != 0)) do
+      require Logger
+      Logger.error("Some test configuration did not pass.")
+      exit({:shutdown, 1})
+    end
   end
 
 
