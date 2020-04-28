@@ -6,10 +6,13 @@ elixir:
   - 1.8
   - 1.7
 otp_release:
+  - 22.3
   - 22.2
   - 21.2 # 21.3 no longer available on Travis
 matrix:
   exclude:
+    - elixir: 1.7
+      otp_release: 22.3
     - elixir: 1.7
       otp_release: 22.2
 services:
