@@ -22,7 +22,7 @@ defmodule FunWithFlags.Application do
 
 
   defp persistence_spec do
-    adapter = FunWithFlags.Store.Persistent.adapter()
+    adapter = Config.persistence_adapter()
 
     try do
       adapter.worker_spec()
