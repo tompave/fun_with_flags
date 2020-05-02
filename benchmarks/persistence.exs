@@ -1,3 +1,8 @@
+# Test the performance of the persistence adapters.
+# This benchmark is mostly affected by the performance of the underlying datastore.
+# However, it's also useful to assess how the store is accessed in Elixir. For example,
+# when switching from compiled-in config to just straight calls to the config module.
+
 # :observer.start
 
 # Start the ecto repo if running the benchmarks with ecto.
@@ -44,30 +49,23 @@ FunWithFlags.disable(:four, for_group: "nope3")
 FunWithFlags.disable(:four, for_group: "nope4")
 FunWithFlags.enable(:four, for_percentage_of: {:actors, 0.99})
 
-# warm up the cache
-FunWithFlags.enabled?(:one)
-FunWithFlags.enabled?(:two)
-FunWithFlags.enabled?(:three)
-FunWithFlags.enabled?(:four)
-
-
-alias FunWithFlags.Store.Cache
+alias FunWithFlags.SimpleStore
 
 # -----------------------------------
 one = fn() ->
-  Cache.get(:one)
+  SimpleStore.lookup(:one)
 end
 
 two = fn() ->
-  Cache.get(:two)
+  SimpleStore.lookup(:two)
 end
 
 three = fn() ->
-  Cache.get(:three)
+  SimpleStore.lookup(:three)
 end
 
 four = fn() ->
-  Cache.get(:four)
+  SimpleStore.lookup(:four)
 end
 
 
@@ -77,9 +75,5 @@ Benchee.run(
     "two" => two,
     "three" => three,
     "four" => four,
-  }#,
-  # formatters: [
-  #   Benchee.Formatters.HTML,
-  #   Benchee.Formatters.Console
-  # ]
+  }
 )
