@@ -683,12 +683,12 @@ rm -r _build/dev/lib/YOUR_APP_NAME
 
 Why does this happen?
 
-This library tries to be fast and performant, and will optimize as many things as possible at compile time by conditionally compiling different references to values and modules.
+This library tries to be fast and performant and it optimizes some things at compile-time by conditionally compiling different references to modules.
 
-For example, disabling or enabling the cache will cause a different module to be used, and the same applies to choosing different persistence or PubSub adapters.
+Specifically, if the cache is enabled or disabled the library will use a different module (either `Store` or `SimpleStore`). Because these modules are accessed in the hot path, compiling them in improves the performance of the library.
 
-While it would be possible to read everything dynamically with [`Application.get_env/3`](https://hexdocs.pm/elixir/Application.html#get_env/3) (which holds the config in the main application GenServer's state), that would require a few extra calls that should not really be necessary for data that never changes while the application is running.
+While it would be possible to read that config dynamically with [`Application.get_env/3`](https://hexdocs.pm/elixir/Application.html#get_env/3), that would require a few extra calls that should not really be necessary for data that never changes while the application is running. These calls would be reading the config from the application environment ETS table, plus some function calls to merge it with the defaults and then read the right key. Those extra operations come with some overhead.
 
-For this reason, most things that are referenced in the hot path of the library are frozen at compile time with [module attributes](https://elixir-lang.org/getting-started/module-attributes.html#as-constants). This effectively minimizes needless inter-process messages, and gives a nice performance boost to busy applications.
+For this reason, things that are referenced in the hot path of the library are frozen at compile time with [module attributes](https://elixir-lang.org/getting-started/module-attributes.html#as-constants). This effectively minimizes needless inter-process messages, and gives a nice performance boost to busy applications.
 
 This should only be a problem in the development environment, where if you change some settings after the initial compilation, Mix will not recompile the dependencies. In the production enviroment this should not be an issue.
