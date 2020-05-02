@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.5.1
 
 * Internal changes to not compile in the persistence adapter config. This has no effect on the functionality of the package, but now the Ecto or Redis adapter configurantion is not memoized anymore, and it can be changed with no need to recompile the package.
 
