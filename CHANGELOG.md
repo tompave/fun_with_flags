@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Internal changes to not compile in the persistence adapter config. This has no effect on the functionality of the package, but now the Ecto or Redis adapter configurantion is not memoized anymore, and it can be changed with no need to recompile the package.
+
 ## v1.5.0
 
 * Drop support for Elixir 1.6. Elixir >= 1.7 is now required.

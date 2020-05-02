@@ -168,7 +168,7 @@ defmodule FunWithFlags.StoreTest do
     @tag :redis_pubsub
     test "when change notifications are NOT enabled, put() will NOT publish a notification to Redis", %{name: name, gate: gate, flag: flag} do
       with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {Config, [:passthrough], [change_notifications_enabled?: fn() -> false end]},
         {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
@@ -190,7 +190,7 @@ defmodule FunWithFlags.StoreTest do
       u_id = NotifiPhoenix.unique_id()
 
       with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {Config, [:passthrough], [change_notifications_enabled?: fn() -> false end]},
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, ^flag} = Store.put(name, gate)
@@ -356,7 +356,7 @@ defmodule FunWithFlags.StoreTest do
     @tag :redis_pubsub
     test "when change notifications are NOT enabled, delete(flag_name, gate) will NOT publish a notification to Redis", %{name: name, group_gate: group_gate} do
       with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {Config, [:passthrough], [change_notifications_enabled?: fn() -> false end]},
         {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
@@ -378,7 +378,7 @@ defmodule FunWithFlags.StoreTest do
       u_id = NotifiPhoenix.unique_id()
 
       with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {Config, [:passthrough], [change_notifications_enabled?: fn() -> false end]},
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name}} = Store.delete(name, group_gate)
@@ -538,7 +538,7 @@ defmodule FunWithFlags.StoreTest do
     @tag :redis_pubsub
     test "when change notifications are NOT enabled, delete(flag_name) will NOT publish a notification to Redis", %{name: name} do
       with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {Config, [:passthrough], [change_notifications_enabled?: fn() -> false end]},
         {NotifiRedis, [:passthrough], []},
         {Redix, [:passthrough], []}
       ]) do
@@ -560,7 +560,7 @@ defmodule FunWithFlags.StoreTest do
       u_id = NotifiPhoenix.unique_id()
 
       with_mocks([
-        {Config, [], [change_notifications_enabled?: fn() -> false end]},
+        {Config, [:passthrough], [change_notifications_enabled?: fn() -> false end]},
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)

@@ -6,12 +6,6 @@ defmodule FunWithFlags.Store.Persistent do
   can provide your own adapters by adopting this behaviour.
   """
 
-  @adapter FunWithFlags.Config.persistence_adapter
-
-  @doc false
-  @spec adapter() :: atom
-  def adapter, do: @adapter
-
   @doc """
   A persistent adapter should return either
   [a child specification](https://hexdocs.pm/elixir/Supervisor.html#module-child-specification)

@@ -25,7 +25,7 @@ defmodule FunWithFlags do
   explanation.
   """
 
-  alias FunWithFlags.{Flag, Gate}
+  alias FunWithFlags.{Flag, Gate, Config}
 
   @store FunWithFlags.Config.store_module
 
@@ -473,7 +473,7 @@ defmodule FunWithFlags do
   def get_flag(name) do
     {:ok, names} = all_flag_names()
     if name in names do
-      {:ok, flag} = FunWithFlags.Store.Persistent.adapter.get(name)
+      {:ok, flag} = Config.persistence_adapter().get(name)
       flag
     else
       nil
