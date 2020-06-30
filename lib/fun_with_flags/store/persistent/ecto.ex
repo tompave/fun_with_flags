@@ -5,17 +5,16 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   @behaviour FunWithFlags.Store.Persistent
 
-  alias FunWithFlags.{Config, Gate}
+  alias FunWithFlags.Gate
   alias FunWithFlags.Store.Persistent.Ecto.Record
   alias FunWithFlags.Store.Serializer.Ecto, as: Serializer
 
-  import FunWithFlags.Config, only: [ecto_repo: 0]
+  import FunWithFlags.Config, only: [ecto_repo: 0, ecto_table_name: 0]
   import Ecto.Query
 
   require Logger
 
   @mysql_lock_timeout_s 3
-  @table_name Config.ecto_table_name()
 
 
   @impl true
@@ -223,7 +222,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   defp postgres_table_lock! do
     Ecto.Adapters.SQL.query!(
       ecto_repo(),
-      "LOCK TABLE #{@table_name} IN SHARE ROW EXCLUSIVE MODE;"
+      "LOCK TABLE #{ecto_table_name()} IN SHARE ROW EXCLUSIVE MODE;"
     )
   end
 
