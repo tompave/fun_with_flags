@@ -6,6 +6,10 @@ does_anything_need_redis = !(
 
 
 if FunWithFlags.Config.phoenix_pubsub? do
+  # The Phoenix PubSub application must be running before we try to start our
+  # PubSub process and subscribe.
+  :ok = Application.ensure_started(:phoenix_pubsub)
+
   # Start a Phoenix.PubSub process for the tests.
   # The `:fwf_test` connection name will be injected into this
   # library in `config/test.exs`.

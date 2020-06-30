@@ -37,12 +37,25 @@ defmodule FunWithFlags.Mixfile do
   # and postgrex applications. They're not started automatically
   # because they're optional, I think.
   #
+  # Also start the Phoenix PubSub application if that notification
+  # adapter is configured.
+  #
   defp local_extra_applications do
-    if System.get_env("PERSISTENCE") == "ecto" do
-      [:logger, :ecto, :ecto_sql, :postgrex]
-    else
-      [:logger, :redix]
-    end
+    apps =
+      if System.get_env("PERSISTENCE") == "ecto" do
+        [:logger, :ecto, :ecto_sql, :postgrex]
+      else
+        [:logger, :redix]
+      end
+
+    apps =
+      if System.get_env("PUBSUB_BROKER") == "phoenix_pubsub" do
+        [:phoenix_pubsub | apps]
+      else
+        apps
+      end
+
+    apps
   end
 
   # Dependencies can be Hex packages:
