@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.5.2 (unreleased)
+
+* Dev and test fixes to support Phoenix.PubSub on OTP 23 and Elixir >= 1.10.3. This was only an issue when working locally, and there should be no problems when using the previous version of the package in a host application.
+
 ## v1.5.1
 
 * Internal changes to not compile in the persistence adapter config. This has no effect on the functionality of the package, but now the Ecto or Redis adapter configurantion is not memoized anymore, and it can be changed with no need to recompile the package.
