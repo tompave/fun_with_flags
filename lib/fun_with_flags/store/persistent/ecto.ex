@@ -9,11 +9,11 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   alias FunWithFlags.Store.Persistent.Ecto.Record
   alias FunWithFlags.Store.Serializer.Ecto, as: Serializer
 
+  import FunWithFlags.Config, only: [ecto_repo: 0]
   import Ecto.Query
 
   require Logger
 
-  @repo Config.ecto_repo()
   @mysql_lock_timeout_s 3
   @table_name Config.ecto_table_name()
 
@@ -29,7 +29,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     name_string = to_string(flag_name)
     query = from(r in Record, where: r.flag_name == ^name_string)
     try do
-      results = @repo.all(query)
+      results = ecto_repo().all(query)
       flag = deserialize(flag_name, results)
       {:ok, flag}
     rescue
@@ -55,7 +55,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     end
 
     out = transaction_fn.(fn() ->
-      case @repo.one(find_one_q) do
+      case ecto_repo().one(find_one_q) do
         record = %Record{} ->
           changeset = Record.update_target(record, gate)
           do_update(flag_name, changeset)
@@ -90,23 +90,23 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
 
   defp _transaction_with_lock_postgres(upsert_fn) do
-    @repo.transaction fn() ->
+    ecto_repo().transaction fn() ->
       postgres_table_lock!()
       upsert_fn.()
     end
   end
 
   defp _transaction_with_lock_mysql(upsert_fn) do
-    @repo.transaction fn() ->
+    ecto_repo().transaction fn() ->
       if mysql_lock!() do
         try do
           upsert_fn.()
         rescue
           e ->
-            @repo.rollback("Exception: #{inspect(e)}")
+            ecto_repo().rollback("Exception: #{inspect(e)}")
         else
           {:error, reason} ->
-            @repo.rollback("Error while upserting the gate: #{inspect(reason)}")
+            ecto_repo().rollback("Error while upserting the gate: #{inspect(reason)}")
           {:ok, value} ->
             {:ok, value}
         after
@@ -116,7 +116,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
         end
       else
         Logger.error("Couldn't acquire lock with 'SELECT GET_LOCK()' after #{@mysql_lock_timeout_s} seconds")
-        @repo.rollback("couldn't acquire lock")
+        ecto_repo().rollback("couldn't acquire lock")
       end
     end
   end
@@ -134,7 +134,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     )
 
     try do
-      {_count, _} = @repo.delete_all(query)
+      {_count, _} = ecto_repo().delete_all(query)
       {:ok, flag} = get(flag_name)
       {:ok, flag}
     rescue
@@ -161,7 +161,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     )
 
     try do
-      {_count, _} = @repo.delete_all(query)
+      {_count, _} = ecto_repo().delete_all(query)
       {:ok, flag} = get(flag_name)
       {:ok, flag}
     rescue
@@ -186,7 +186,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     )
 
     try do
-      {_count, _} = @repo.delete_all(query)
+      {_count, _} = ecto_repo().delete_all(query)
       {:ok, flag} = get(flag_name)
       {:ok, flag}
     rescue
@@ -199,7 +199,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   def all_flags do
     flags =
       Record
-      |> @repo.all()
+      |> ecto_repo().all()
       |> Enum.group_by(&(&1.flag_name))
       |> Enum.map(fn ({name, records}) -> deserialize(name, records) end)
     {:ok, flags}
@@ -209,7 +209,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   @impl true
   def all_flag_names do
     query = from(r in Record, select: r.flag_name, distinct: true)
-    strings = @repo.all(query)
+    strings = ecto_repo().all(query)
     atoms = Enum.map(strings, &String.to_atom(&1))
     {:ok, atoms}
   end
@@ -222,7 +222,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   defp postgres_table_lock! do
     Ecto.Adapters.SQL.query!(
-      @repo,
+      ecto_repo(),
       "LOCK TABLE #{@table_name} IN SHARE ROW EXCLUSIVE MODE;"
     )
   end
@@ -230,7 +230,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   defp mysql_lock! do
     result = Ecto.Adapters.SQL.query!(
-      @repo,
+      ecto_repo(),
       "SELECT GET_LOCK('fun_with_flags_percentage_gate_upsert', #{@mysql_lock_timeout_s})"
     )
 
@@ -241,7 +241,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   defp mysql_unlock! do
     result = Ecto.Adapters.SQL.query!(
-      @repo,
+      ecto_repo(),
       "SELECT RELEASE_LOCK('fun_with_flags_percentage_gate_upsert');"
     )
 
@@ -266,7 +266,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
 
   defp db_type do
-    case @repo.__adapter__() do
+    case ecto_repo().__adapter__() do
       Ecto.Adapters.Postgres -> :postgres
       Ecto.Adapters.MySQL -> :mysql # legacy, Mariaex
       Ecto.Adapters.MyXQL -> :mysql # new in ecto_sql 3.1
@@ -277,14 +277,14 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   defp do_insert(flag_name, changeset, options \\ []) do
     changeset
-    |> @repo.insert(options)
+    |> ecto_repo().insert(options)
     |> handle_write(flag_name)
   end
 
 
   defp do_update(flag_name, changeset, options \\ []) do
     changeset
-    |> @repo.update(options)
+    |> ecto_repo().update(options)
     |> handle_write(flag_name)
   end
 
