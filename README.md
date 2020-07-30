@@ -610,7 +610,7 @@ def deps do
     # either:
     {:redix, "~> 0.9"},
     # or:
-    {:ecto_sql, "~> 3.0}",
+    {:ecto_sql, "~> 3.0"},
 
     # optionally, if you don't want to use Redis' builtin pubsub
     {:phoenix_pubsub, "~> 2.0"},
