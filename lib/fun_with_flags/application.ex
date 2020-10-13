@@ -31,7 +31,7 @@ defmodule FunWithFlags.Application do
         Logger.error "FunWithFlags: It looks like you're trying to use #{inspect(adapter)} " <>
          "to persist flags, but you haven't added its optional dependency to the Mixfile " <>
          "of your project."
-        reraise e, System.stacktrace
+        reraise e, __STACKTRACE__
     end
   end
 
@@ -49,7 +49,7 @@ defmodule FunWithFlags.Application do
          "for the cache-busting notifications, but you haven't added its optional dependency to the Mixfile " <>
          "of your project. If you don't need cache-busting notifications, they can be disabled to make this " <>
          "error go away."
-        reraise e, System.stacktrace
+        reraise e, __STACKTRACE__
     end
   end
 end
