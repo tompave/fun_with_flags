@@ -1,11 +1,12 @@
 dist: bionic
 language: elixir
 elixir:
+  - 1.11
   - 1.10
   - 1.9
   - 1.8
-  - 1.7
 otp_release:
+  - 23.1
   - 23.0
   - 22.3
   - 22.2
@@ -13,15 +14,13 @@ otp_release:
 matrix:
   exclude:
     - elixir: 1.9
+      otp_release: 23.1
+    - elixir: 1.9
       otp_release: 23.0
     - elixir: 1.8
+      otp_release: 23.1
+    - elixir: 1.8
       otp_release: 23.0
-    - elixir: 1.7
-      otp_release: 23.0
-    - elixir: 1.7
-      otp_release: 22.3
-    - elixir: 1.7
-      otp_release: 22.2
 services:
   - redis-server
   - postgresql
