@@ -20,15 +20,13 @@ if FunWithFlags.Config.phoenix_pubsub? do
   {:ok, _pid} = Supervisor.start_link(children, opts)
 end
 
-# With some configurations the tests are run with `--no-start`, because
-# we want to start the Phoenix.PubSub process before starting the application.
-Application.ensure_all_started(:fun_with_flags)
 IO.puts "--------------------------------------------------------------"
 IO.puts "$CACHE_ENABLED=#{System.get_env("CACHE_ENABLED")}"
 IO.puts "$PERSISTENCE=#{System.get_env("PERSISTENCE")}"
 IO.puts "$RDBMS=#{System.get_env("RDBMS")}"
 IO.puts "$PUBSUB_BROKER=#{System.get_env("PUBSUB_BROKER")}"
 IO.puts "--------------------------------------------------------------"
+IO.puts "Logger level:          #{inspect(Logger.level())}"
 IO.puts "Cache enabled:         #{inspect(FunWithFlags.Config.cache?)}"
 IO.puts "Persistence adapter:   #{inspect(FunWithFlags.Config.persistence_adapter())}"
 IO.puts "RDBMS driver:          #{inspect(if FunWithFlags.Config.persist_in_ecto?, do: FunWithFlags.Dev.EctoRepo.__adapter__(), else: nil)}"
