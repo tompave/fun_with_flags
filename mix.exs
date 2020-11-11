@@ -8,7 +8,7 @@ defmodule FunWithFlags.Mixfile do
       app: :fun_with_flags,
       source_url: "https://github.com/tompave/fun_with_flags",
       version: @version,
-      elixir: "~> 1.7",
+      elixir: "~> 1.8",
       elixirc_paths: elixirc_paths(Mix.env),
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
@@ -72,7 +72,7 @@ defmodule FunWithFlags.Mixfile do
       {:ex_doc, "~> 0.21", only: :dev},
       {:mock, "~> 0.3", only: :test},
 
-      {:redix, "~> 0.9", optional: true},
+      {:redix, "~> 1.0", optional: true},
       {:ecto_sql, "~> 3.0", optional: true},
       {:postgrex, "~> 0.13", optional: true, only: [:dev, :test]},
       {:myxql, "~> 0.2", optional: true, only: [:dev, :test]},
@@ -144,7 +144,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_tests__redis_pers__phoenix_pubsub(_) do
     Mix.shell.cmd(
-      "mix test --color --force --no-start --exclude redis_pubsub --exclude ecto_persistence --exclude phoenix_pubsub:with_ecto --include phoenix_pubsub:with_redis --include phoenix_pubsub:true", 
+      "mix test --color --force --exclude redis_pubsub --exclude ecto_persistence --exclude phoenix_pubsub:with_ecto --include phoenix_pubsub:with_redis --include phoenix_pubsub:true", 
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -157,7 +157,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_integration_tests__redis_pers__phoenix_pubsub__no_cache(_) do
     Mix.shell.cmd(
-      "mix test --color --force --no-start --only integration",
+      "mix test --color --force --only integration",
       env: [
         {"CACHE_ENABLED", "false"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -169,7 +169,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_tests__ecto_pers_postgres__phoenix_pubsub(_) do
     Mix.shell.cmd(
-      "mix test --color --force --no-start --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence", 
+      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence", 
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -183,7 +183,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_tests__ecto_pers_mysql__phoenix_pubsub(_) do
     Mix.shell.cmd(
-      "mix test --color --force --no-start --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence", 
+      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence", 
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -198,7 +198,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_integration_tests__ecto_pers_postgres__phoenix_pubsub__no_cache(_) do
     Mix.shell.cmd(
-      "mix test --color --force --no-start --only integration",
+      "mix test --color --force --only integration",
       env: [
         {"CACHE_ENABLED", "false"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -213,7 +213,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_integration_tests__ecto_pers_mysql__phoenix_pubsub__no_cache(_) do
     Mix.shell.cmd(
-      "mix test --color --force --no-start --only integration",
+      "mix test --color --force --only integration",
       env: [
         {"CACHE_ENABLED", "false"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
