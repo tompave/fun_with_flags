@@ -51,8 +51,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     repo = ecto_repo()
 
     transaction_fn = case db_type(repo) do
-      :postgres -> &_transaction_with_lock_postgres/2
-      :mysql -> &_transaction_with_lock_mysql/2
+      :postgres -> &transaction_with_lock_postgres/2
+      :mysql -> &transaction_with_lock_mysql/2
     end
 
     out = transaction_fn.(repo, fn() ->
@@ -91,14 +91,14 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
-  defp _transaction_with_lock_postgres(repo, upsert_fn) do
+  defp transaction_with_lock_postgres(repo, upsert_fn) do
     repo.transaction fn() ->
       postgres_table_lock!(repo)
       upsert_fn.()
     end
   end
 
-  defp _transaction_with_lock_mysql(repo, upsert_fn) do
+  defp transaction_with_lock_mysql(repo, upsert_fn) do
     repo.transaction fn() ->
       if mysql_lock!(repo) do
         try do
