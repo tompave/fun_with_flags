@@ -4,6 +4,7 @@
 
 * Add support for Elixir 1.11. Drop support for Elixir 1.7. Elixir >= 1.8 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
 * More internal changes to not compile in the package configuration. Removed compile-time referneces to the Ecto repo and the Ecto table name. See the release notes for v1.5.1 (below) for more details on this type of changes.
+* Ecto and Postgres persistence: when updating percentage gates, use a flag-scoped advisory lock rathen than locking the entire table. With the old system the entire table was locked when setting or changing any percentage gate, across all flags. With this change, the lock is scoped to one flag and the table is never fully locked.
 * Dev and test fixes to support Phoenix.PubSub on OTP 23 and Elixir >= 1.10.3. This was only an issue when working locally, and there should be no problems when using the previous version of the package in a host application.
 * Update Redix to 1.0. As [its changelog](https://github.com/whatyouhide/redix/blob/main/CHANGELOG.md#v100) says this doesn't introduce breaking changes, but it's a major version bump that should be documented here, as it will require changes in the host applications mix files.
 
