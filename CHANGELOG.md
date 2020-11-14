@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.6.0 (unreleased)
+## v1.6.0
 
 * Add support for Elixir 1.11. Drop support for Elixir 1.7. Elixir >= 1.8 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
 * More internal changes to not compile in the package configuration. Removed compile-time referneces to the Ecto repo and the Ecto table name. See the release notes for v1.5.1 (below) for more details on this type of changes.
