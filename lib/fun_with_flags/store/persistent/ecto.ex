@@ -9,7 +9,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   alias FunWithFlags.Store.Persistent.Ecto.Record
   alias FunWithFlags.Store.Serializer.Ecto, as: Serializer
 
-  import FunWithFlags.Config, only: [ecto_repo: 0, ecto_table_name: 0]
+  import FunWithFlags.Config, only: [ecto_repo: 0]
   import Ecto.Query
 
   require Logger
@@ -51,8 +51,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     repo = ecto_repo()
 
     transaction_fn = case db_type(repo) do
-      :postgres -> &_transaction_with_lock_postgres/2
-      :mysql -> &_transaction_with_lock_mysql/2
+      :postgres -> build_transaction_with_lock_postgres_fn(flag_name)
+      :mysql -> &transaction_with_lock_mysql/2
     end
 
     out = transaction_fn.(repo, fn() ->
@@ -91,14 +91,24 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
-  defp _transaction_with_lock_postgres(repo, upsert_fn) do
-    repo.transaction fn() ->
-      postgres_table_lock!(repo)
-      upsert_fn.()
+  # Returns a transaction-wrapper function for Postgres.
+  #
+  defp build_transaction_with_lock_postgres_fn(flag_name) do
+    fn(repo, upsert_fn) ->
+      repo.transaction fn() ->
+        Ecto.Adapters.SQL.query!(repo,
+          "SELECT pg_advisory_xact_lock(hashtext('fun_with_flags_percentage_gate_upsert'), hashtext($1))",
+          [to_string(flag_name)]
+        )
+        upsert_fn.()
+      end
     end
   end
 
-  defp _transaction_with_lock_mysql(repo, upsert_fn) do
+
+  # Is itself a transaction-wrapper function for MySQL.
+  #
+  defp transaction_with_lock_mysql(repo, upsert_fn) do
     repo.transaction fn() ->
       if mysql_lock!(repo) do
         try do
@@ -219,14 +229,6 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   defp deserialize(flag_name, records) do
     Serializer.deserialize_flag(flag_name, records)
-  end
-
-
-  defp postgres_table_lock!(repo) do
-    Ecto.Adapters.SQL.query!(
-      repo,
-      "LOCK TABLE #{ecto_table_name()} IN SHARE ROW EXCLUSIVE MODE;"
-    )
   end
 
 

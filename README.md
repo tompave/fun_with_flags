@@ -473,7 +473,7 @@ For example, if we have two or more nodes running the application, and on one of
 FunWithFlags uses three mechanisms to deal with the problem:
 
 1. Use PubSub to emit change notifications. All nodes subscribe to the same channel and reload flags in the ETS cache when required.
-2. If that fails, the cache has a configurable TTL. Reading from redis every few minutes is still better than doing so 30k times per second.
+2. If that fails, the cache has a configurable TTL. Reading from the DB every few minutes is still better than doing so 30k times per second.
 3. If that doesn't work, it's possible to disable the cache and just read from the DB all the time. That's what Flipper does.
 
 In terms of performance, very synthetic benchmarks (where the DBs run on the same machine as the Beam code, so with no network hop but sharing the CPU) show that the ETS cache makes querying the FunWithFlags interface between 10 and 20 times faster than going directly to Redis, and between 20 and 40 times faster than going directly to Postgres. The variance depends on the complexity of the flag data to be retrieved.
