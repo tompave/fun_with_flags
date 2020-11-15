@@ -7,7 +7,7 @@ defmodule FunWithFlags.Notifications.Redis do
   alias FunWithFlags.{Config, Store}
 
   # Use the Redis conn from the persistence module to
-  # issue redis commands (to publish notification).
+  # issue Redis commands (to publish notification).
   @write_conn FunWithFlags.Store.Persistent.Redis
 
   @conn :fun_with_flags_notifications
@@ -24,8 +24,8 @@ defmodule FunWithFlags.Notifications.Redis do
   end
 
 
-  # Initialize the Genserver with a unique id (binary).
-  # This id will stay with the genserver until it's terminated, and is
+  # Initialize the GenServer with a unique id (binary).
+  # This id will stay with the GenServer until it's terminated, and is
   # used to build the outgoing notification payloads and to ignore
   # incoming messages that originated from this node.
   #
@@ -123,7 +123,7 @@ defmodule FunWithFlags.Notifications.Redis do
         nil
       [_id, name] ->
         # received message from another node, reload the flag
-        Logger.debug fn -> "FunWithFlags: received change notifiation for flag '#{name}'" end
+        Logger.debug fn -> "FunWithFlags: received change notification for flag '#{name}'" end
         Task.start(Store, :reload, [String.to_atom(name)])
       _ ->
         # invalid message, ignore
