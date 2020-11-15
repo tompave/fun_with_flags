@@ -20,8 +20,8 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
   end
 
 
-  # Initialize the Genserver with a unique id (binary).
-  # This id will stay with the genserver until it's terminated, and is
+  # Initialize the GenServer with a unique id (binary).
+  # This id will stay with the GenServer until it's terminated, and is
   # used to build the outgoing notification payloads and to ignore
   # incoming messages that originated from this node.
   #
@@ -108,14 +108,14 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
 
   def handle_info({:fwf_changes, {:updated, name, _}}, unique_id) do
     # received message from another node, reload the flag
-    Logger.debug fn -> "FunWithFlags: received change notifiation for flag '#{name}'" end
+    Logger.debug fn -> "FunWithFlags: received change notification for flag '#{name}'" end
     Task.start(Store, :reload, [name])
     {:noreply, unique_id}
   end
 
 
   # When subscribing to the pubsub process fails, the process sends itself a delayed message
-  # to try again. It will be handlerd here.
+  # to try again. It will be handled here.
   #
   def handle_info({:subscribe_retry, attempt}, unique_id) do
     Logger.debug fn -> "FunWithFlags: retrying to subscribe to Phoenix.PubSub, attempt #{attempt}." end

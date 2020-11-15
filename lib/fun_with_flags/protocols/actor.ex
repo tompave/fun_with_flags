@@ -12,7 +12,7 @@ defprotocol FunWithFlags.Actor do
   features in some contexts (e.g. a deploy introduces a critical error that
   only happens in one specific country).
 
-  Actor gates take precendence over the others, both when they're enabled and
+  Actor gates take precedence over the others, both when they're enabled and
   when they're disabled. They can be considered as toggle overrides.
 
 

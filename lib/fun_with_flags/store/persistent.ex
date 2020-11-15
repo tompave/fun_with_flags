@@ -2,7 +2,7 @@ defmodule FunWithFlags.Store.Persistent do
   @moduledoc """
   A behaviour module for implementing persistence adapters.
 
-  The package ships with peristence adapters for Redis and Ecto, but you
+  The package ships with persistence adapters for Redis and Ecto, but you
   can provide your own adapters by adopting this behaviour.
   """
 

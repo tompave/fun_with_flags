@@ -1,9 +1,10 @@
 # FunWithFlags
 
 [![Build Status](https://travis-ci.org/tompave/fun_with_flags.svg?branch=master)](https://travis-ci.org/tompave/fun_with_flags)
-[![Hex.pm](https://img.shields.io/hexpm/v/fun_with_flags.svg)](https://hex.pm/packages/fun_with_flags)
-[![hexdocs.pm](https://img.shields.io/badge/docs-1.6.0-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/)
-![Hex.pm Downloads](https://img.shields.io/hexpm/dt/fun_with_flags)
+[![Module Version](https://img.shields.io/hexpm/v/fun_with_flags.svg)](https://hex.pm/packages/fun_with_flags)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/fun_with_flags/)
+[![Total Download](https://img.shields.io/hexpm/dt/fun_with_flags.svg)](https://hex.pm/packages/fun_with_flags)
+[![License](https://img.shields.io/hexpm/l/fun_with_flags.svg)](https://github.com/tompave/fun_with_flags/blob/master/LICENSE.txt)
 [![ElixirWeekly](https://img.shields.io/badge/featured-ElixirWeekly-8e5ab5.svg)](https://elixirweekly.net/issues/43)
 [![ElixirCasts](https://img.shields.io/badge/featured-ElixirCasts-ff931e.svg)](https://elixircasts.io/feature-flags)
 
@@ -15,7 +16,7 @@ If you're reading this on the [GitHub repo](https://github.com/tompave/fun_with_
 
 FunWithFlags is an OTP application that provides a 2-level storage to save and retrieve feature flags, an Elixir API to toggle and query them, and a [web dashboard](#web-dashboard) as control panel.
 
-It stores flag information in Redis or a relational DB (PostgreSQL or MySQL, with Ecto) for persistence and syncronization across different nodes, but it also maintains a local cache in an ETS table for fast lookups. When flags are added or toggled on a node, the other nodes are notified via PubSub and reload their local ETS caches.
+It stores flag information in Redis or a relational DB (PostgreSQL or MySQL, with Ecto) for persistence and synchronization across different nodes, but it also maintains a local cache in an ETS table for fast lookups. When flags are added or toggled on a node, the other nodes are notified via PubSub and reload their local ETS caches.
 
 ## Content
 
@@ -70,7 +71,7 @@ Boolean, Actor and Group gates can express either an enabled or disabled state. 
 
 The priority order is from most to least specific: `Actors > Groups > Boolean > Percentage`, and it applies to both enabled and disabled gates.
 
-For example, a disabled group gate takes precendence over an enabled boolean (global) gate for the entities in the group, and a further enabled actor gate overrides the disabled group gate for a specific entity. When an entity belongs to multiple groups with conflicting toggle status, the disabled group gates have precedence over the enabled ones. The percentage gates are checked last, if present, and they're only checked if no other gate is enabled.
+For example, a disabled group gate takes precedence over an enabled boolean (global) gate for the entities in the group, and a further enabled actor gate overrides the disabled group gate for a specific entity. When an entity belongs to multiple groups with conflicting toggle status, the disabled group gates have precedence over the enabled ones. The percentage gates are checked last, if present, and they're only checked if no other gate is enabled.
 
 As another example, a flag can have a disabled boolean gate and a 50% enabled %-of-actors gate. When the flag is checked with an actor, it has a (deterministic, consistent and repeatable) 50% chance to be enabled, but when checked without an actor argument it will always be disabled. If we add to the flag a disabled actor gate and an enabled group gate, the flag will be always disabled for the actor, always enabled for any other actor matching the group, have a 50% change to be enabled for any other actor, and always be disabled when checked without actor arguments. If, then, we replace the 50%-of-actors gate with a 50%-of-time gate, the flag will be always disabled for the actor, always enabled for any other actor matching the group, and have a 50% chance to be enabled for any other actor or when checked without an actor argument.
 
@@ -97,7 +98,7 @@ false
 
 This allows you to enable or disable a flag for one or more entities. For example, in web applications it's common to use a `%User{}` struct or equivalent as an actor, or perhaps the data used to represent the current country for an HTTP request. This can be useful to showcase a work-in-progress feature to someone, to gradually rollout a functionality by country, or to dynamically disable some features in some contexts.
 
-Actor gates take precendence over the others, both when they're enabled and when they're disabled. They can be considered as toggle overrides.
+Actor gates take precedence over the others, both when they're enabled and when they're disabled. They can be considered as toggle overrides.
 
 In order to be used as an actor, an entity must implement the `FunWithFlags.Actor` protocol. This can be implemented for custom structs or literally any other type.
 
@@ -184,7 +185,7 @@ end
 
 Group gates are similar to actor gates, but they apply to a category of entities rather than specific ones. They can be toggled on or off for the _name of the group_ instead of a specific term.
 
-Group gates take precendence over boolean gates but are overridden by actor gates.
+Group gates take precedence over boolean gates but are overridden by actor gates.
 
 Group names can be binaries or atoms. Atoms are supported for retro-compatibility with versions `<= 0.9` and binaries are therefore preferred. In fact, atoms are internally converted to binaries and are then stored and later retrieved as binaries.
 
@@ -246,7 +247,7 @@ When a %-of-time gate is checked a [pseudo-random number is generated](http://er
 
 %-of-time gates are useful to gradually introduce alternative code paths that either have the same effects of the old ones, or don't have effects visible to the users. This last point is important, because with a %-of-time gate the application will behave differently on a pseudo-random basis.
 
-A good use case for %-of-time gates is to safely test the correctedness or performance and load characteristics of an alternative implementation of a functionality.
+A good use case for %-of-time gates is to safely test the correctness or performance and load characteristics of an alternative implementation of a functionality.
 
 For example:
 
@@ -263,7 +264,7 @@ def foo(bar) do
 end
 ```
 
-The %-of-time gate is incompatible and mutually exclusive with the %-of-actors gate, and it replaces it when it gets set. While there are ways to make them work together, it would needlessly overcomplicate the priority rules.
+The %-of-time gate is incompatible and mutually exclusive with the %-of-actors gate, and it replaces it when it gets set. While there are ways to make them work together, it would needlessly over complicate the priority rules.
 
 ### Percentage of Actors Gate
 
@@ -357,7 +358,7 @@ defmodule MyPhoenixApp.MyView do
 end
 ```
 
-The %-of-actors gate is incompatible and mutually exclusive with the %-of-time gate, and it replaces it when it gets set. While there are ways to make them work together, it would needlessly overcomplicate the priority rules.
+The %-of-actors gate is incompatible and mutually exclusive with the %-of-time gate, and it replaces it when it gets set. While there are ways to make them work together, it would needlessly over complicate the priority rules.
 
 ### Clearing a Feature Flag's Rules
 
@@ -462,11 +463,11 @@ Just as Elixir and Phoenix are meant to scale better than Ruby on Rails with hig
 >
 > -- Phil Karlton
 
-The reason to add an ETS cache is that, most of the time, feature flags can be considered static values. Doing a round-trip to the DB (Redis, PostgreSQL or MySQL) is expensive in terms of time and in terms of resources, expecially if multiple flags must be checked during a single web request. In the worst cases, the load on the DB can become a cause of concern, a performance bottleneck or the source of a system failure.
+The reason to add an ETS cache is that, most of the time, feature flags can be considered static values. Doing a round-trip to the DB (Redis, PostgreSQL or MySQL) is expensive in terms of time and in terms of resources, especially if multiple flags must be checked during a single web request. In the worst cases, the load on the DB can become a cause of concern, a performance bottleneck or the source of a system failure.
 
 Often the solution is to memoize the flag values _in the context of the web request_, but the approach can be extended to the scope of the entire server. This is what FunWithFlags does, as each application node/instance caches the flags in an ETS table.
 
-Of course, caching adds a different kind of complexity and there are some pros and cons. When a flag is created or updated the ETS cache on the local node is updated immediately, and the main problem is syncronizing the flag data across the other application nodes that should share the same view of the world.
+Of course, caching adds a different kind of complexity and there are some pros and cons. When a flag is created or updated the ETS cache on the local node is updated immediately, and the main problem is synchronizing the flag data across the other application nodes that should share the same view of the world.
 
 For example, if we have two or more nodes running the application, and on one of them an admin user updates a flag that the others have already cached, or creates a flag that the others have already looked up (and cached as "disabled"), then the other nodes must  be notified of the changes.
 
@@ -503,7 +504,7 @@ config :fun_with_flags, :cache_bust_notifications,
   [enabled: true, adapter: FunWithFlags.Notifications.Redis]
 
 # Notifications can also be disabled, which will also remove the Redis/Redix dependency
-config :fun_with_flags, :cache_bust_notifications, [enabled: false]  
+config :fun_with_flags, :cache_bust_notifications, [enabled: false]
 ```
 
 When using Redis for persistence and/or cache-busting PubSub it is necessary to configure the connection to the Redis instance. These options can be omitted if Redis is not being used. For example, the defaults:
@@ -560,9 +561,9 @@ It's also necessary to create the DB table that will hold the feature flag data.
 
 The library comes with two PubSub adapters for the [`Redix`](https://hex.pm/packages/redix) and [`Phoenix.PubSub`](https://hex.pm/packages/phoenix_pubsub) libraries. In order to use any of them, you must declare the correct optional dependency in the Mixfile. (see the [installation](#installation) instructions, below)
 
-The Redis PubSub adapter is the default and doesn't need to be excplicity configured. It can only be used in conjunction with the Redis persistence adapter however, and is not available when using Ecto for persistence. When used, it connects directly to the Redis instance used for persisting the flag data.
+The Redis PubSub adapter is the default and doesn't need to be explicitly configured. It can only be used in conjunction with the Redis persistence adapter however, and is not available when using Ecto for persistence. When used, it connects directly to the Redis instance used for persisting the flag data.
 
-The Phoenix PubSub adapter uses the high level API of `Phoenix.PubSub`, which means that under the hood it could use either its PG2 or Redis adapters, and this library doesn't need to know. It's provided as a convenient way to leverage distributed Erlang when using FunWithFlags in a Phoenix application, although it can be used independently (without the rest of the Phoenix framework) to add PubSub to Elixir apps running on Erlang clusters.  
+The Phoenix PubSub adapter uses the high level API of `Phoenix.PubSub`, which means that under the hood it could use either its PG2 or Redis adapters, and this library doesn't need to know. It's provided as a convenient way to leverage distributed Erlang when using FunWithFlags in a Phoenix application, although it can be used independently (without the rest of the Phoenix framework) to add PubSub to Elixir apps running on Erlang clusters.
 FunWithFlags expects the `Phoenix.PubSub` process to be started by the host application, and in order to use this adapter the client (name or PID) must be provided in the configuration.
 
 For example, in Phoenix (>= 1.5.0) it would be:
@@ -673,7 +674,7 @@ The Mixfile defines a few other helper tasks that allow to run the test suite wi
 
 ### Configuration changes have no effect in `MIX_ENV=dev`
 
-**Issue**: changing the library settings in the host application's Mix config file has no effect, or "missing process" exceptions are raised when booting. This should only be an issue in the development environment.  
+**Issue**: changing the library settings in the host application's Mix config file has no effect, or "missing process" exceptions are raised when booting. This should only be an issue in the development environment.
 **Solution**: clear the compiled BEAM bytecode with:
 
 ```shell
@@ -691,4 +692,4 @@ While it would be possible to read that config dynamically with [`Application.ge
 
 For this reason, things that are referenced in the hot path of the library are frozen at compile time with [module attributes](https://elixir-lang.org/getting-started/module-attributes.html#as-constants). This effectively minimizes needless inter-process messages, and gives a nice performance boost to busy applications.
 
-This should only be a problem in the development environment, where if you change some settings after the initial compilation, Mix will not recompile the dependencies. In the production enviroment this should not be an issue.
+This should only be a problem in the development environment, where if you change some settings after the initial compilation, Mix will not recompile the dependencies. In the production environment this should not be an issue.
