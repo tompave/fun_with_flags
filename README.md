@@ -4,6 +4,7 @@
 [![Hex.pm](https://img.shields.io/hexpm/v/fun_with_flags.svg)](https://hex.pm/packages/fun_with_flags)
 [![hexdocs.pm](https://img.shields.io/badge/docs-1.6.0-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/)
 ![Hex.pm Downloads](https://img.shields.io/hexpm/dt/fun_with_flags)
+[![License](https://img.shields.io/hexpm/l/fun_with_flags.svg)](https://github.com/tompave/fun_with_flags/blob/master/LICENSE.txt)
 [![ElixirWeekly](https://img.shields.io/badge/featured-ElixirWeekly-8e5ab5.svg)](https://elixirweekly.net/issues/43)
 [![ElixirCasts](https://img.shields.io/badge/featured-ElixirCasts-ff931e.svg)](https://elixircasts.io/feature-flags)
 
