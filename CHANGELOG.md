@@ -146,7 +146,7 @@ Bug fixes:
 New Features:
 
 * `FunWithFlags.all_flags/0` is now public and documented.
-* Added `FunWithFlags.all_flags_names/0`, public and documented.
+* Added `FunWithFlags.all_flag_names/0`, public and documented.
 * Added proper log statements via the Elixir `Logger`. Setting the log level to `debug` will print cache busting info, for example.
 
 Internal changes:
