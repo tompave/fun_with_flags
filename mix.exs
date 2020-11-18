@@ -1,12 +1,12 @@
 defmodule FunWithFlags.Mixfile do
   use Mix.Project
 
+  @source_url "https://github.com/tompave/fun_with_flags"
   @version "1.6.0"
 
   def project do
     [
       app: :fun_with_flags,
-      source_url: "https://github.com/tompave/fun_with_flags",
       version: @version,
       elixir: "~> 1.8",
       elixirc_paths: elixirc_paths(Mix.env),
@@ -28,7 +28,7 @@ defmodule FunWithFlags.Mixfile do
     [extra_applications: extra_applications(Mix.env),
      mod: {FunWithFlags.Application, []}]
   end
- 
+
   defp extra_applications(:test), do: local_extra_applications()
   defp extra_applications(:dev),  do: local_extra_applications()
   defp extra_applications(_),     do: [:logger]
@@ -121,7 +121,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_tests__redis_pers__redis_pubsub(_) do
     Mix.shell.cmd(
-      "mix test --color --force --exclude phoenix_pubsub --exclude ecto_persistence", 
+      "mix test --color --force --exclude phoenix_pubsub --exclude ecto_persistence",
       env: [
         {"CACHE_ENABLED", "true"},
       ]
@@ -144,7 +144,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_tests__redis_pers__phoenix_pubsub(_) do
     Mix.shell.cmd(
-      "mix test --color --force --exclude redis_pubsub --exclude ecto_persistence --exclude phoenix_pubsub:with_ecto --include phoenix_pubsub:with_redis --include phoenix_pubsub:true", 
+      "mix test --color --force --exclude redis_pubsub --exclude ecto_persistence --exclude phoenix_pubsub:with_ecto --include phoenix_pubsub:with_redis --include phoenix_pubsub:true",
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -169,7 +169,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_tests__ecto_pers_postgres__phoenix_pubsub(_) do
     Mix.shell.cmd(
-      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence", 
+      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence",
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -183,7 +183,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_tests__ecto_pers_mysql__phoenix_pubsub(_) do
     Mix.shell.cmd(
-      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence", 
+      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence",
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -244,8 +244,8 @@ defmodule FunWithFlags.Mixfile do
         "MIT"
       ],
       links: %{
-        "GitHub" => "https://github.com/tompave/fun_with_flags",
-        "Changelog" => "https://github.com/tompave/fun_with_flags/blob/master/CHANGELOG.md"
+        "GitHub" => @source_url,
+        "Changelog" => "#{@source_url}/blob/master/CHANGELOG.md"
       }
     ]
   end
@@ -253,9 +253,9 @@ defmodule FunWithFlags.Mixfile do
 
   defp docs do
     [
-      extras: ["README.md"],
+      extras: ["README.md", "CHANGELOG.md"],
       main: "FunWithFlags",
-      source_url: "https://github.com/tompave/fun_with_flags/",
+      source_url: @source_url,
       source_ref: "v#{@version}"
     ]
   end
