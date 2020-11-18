@@ -36,7 +36,7 @@ defmodule FunWithFlags do
   Checks if a flag is enabled.
 
   It can be invoked with just the flag name, as an atom,
-  to check the general staus of a flag (i.e. the boolean gate).
+  to check the general status of a flag (i.e. the boolean gate).
 
   ## Options
 
@@ -133,7 +133,7 @@ defmodule FunWithFlags do
 
   This example relies on the [reference implementation](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_user.ex)
   used in the tests.
-      
+
       iex> alias FunWithFlags.TestUser, as: User
       iex> marty = %User{name: "Marty McFly", groups: ["students", "time_travelers"]}
       iex> doc = %User{name: "Emmet Brown", groups: ["scientists", "time_travelers"]}
@@ -265,7 +265,7 @@ defmodule FunWithFlags do
 
   This example relies on the [reference implementation](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_user.ex)
   used in the tests.
-      
+
       iex> alias FunWithFlags.TestUser, as: User
       iex> harry = %User{name: "Harry Potter", groups: ["wizards", "gryffindor"]}
       iex> dudley = %User{name: "Dudley Dursley", groups: ["muggles"]}
@@ -347,7 +347,7 @@ defmodule FunWithFlags do
   Sometimes enabling or disabling a gate is not what you want, and you
   need to remove that gate's rules instead. For example, if you don't need
   anymore to explicitly enable or disable a flag for an actor, and the
-  default state should be used instead, you'll want to cleare the gate.
+  default state should be used instead, you'll want to clear the gate.
 
   It's also possible to clear the entire flag, by not passing any option.
 

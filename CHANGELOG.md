@@ -3,14 +3,14 @@
 ## v1.6.0
 
 * Add support for Elixir 1.11. Drop support for Elixir 1.7. Elixir >= 1.8 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
-* More internal changes to not compile in the package configuration. Removed compile-time referneces to the Ecto repo and the Ecto table name. See the release notes for v1.5.1 (below) for more details on this type of changes.
-* Ecto and Postgres persistence: when updating percentage gates, use a flag-scoped advisory lock rathen than locking the entire table. With the old system the entire table was locked when setting or changing any percentage gate, across all flags. With this change, the lock is scoped to one flag and the table is never fully locked.
+* More internal changes to not compile in the package configuration. Removed compile-time references to the Ecto repo and the Ecto table name. See the release notes for v1.5.1 (below) for more details on this type of changes.
+* Ecto and Postgres persistence: when updating percentage gates, use a flag-scoped advisory lock rather than locking the entire table. With the old system the entire table was locked when setting or changing any percentage gate, across all flags. With this change, the lock is scoped to one flag and the table is never fully locked.
 * Dev and test fixes to support Phoenix.PubSub on OTP 23 and Elixir >= 1.10.3. This was only an issue when working locally, and there should be no problems when using the previous version of the package in a host application.
 * Update Redix to 1.0. As [its changelog](https://github.com/whatyouhide/redix/blob/main/CHANGELOG.md#v100) says this doesn't introduce breaking changes, but it's a major version bump that should be documented here, as it will require changes in the host applications mix files.
 
 ## v1.5.1
 
-* Internal changes to not compile in the persistence adapter config. This has no effect on the functionality of the package, but now the Ecto or Redis adapter configurantion is not memoized anymore, and it can be changed with no need to recompile the package.
+* Internal changes to not compile in the persistence adapter config. This has no effect on the functionality of the package, but now the Ecto or Redis adapter configuration is not memoized anymore, and it can be changed with no need to recompile the package.
 
 ## v1.5.0
 
@@ -28,7 +28,7 @@
 
 ## v1.4.0
 
-This release focuses on making it easier to extend the package, for example with custom peristence adapters.
+This release focuses on making it easier to extend the package, for example with custom persistence adapters.
 
 * Define a [behaviour](https://hexdocs.pm/elixir/typespecs.html#behaviours) in the `FunWithFlags.Store.Persistence` module that can be implemented by custom persistence adapters. The builtin Redis and Ecto adapters now formally implement this new behaviour.
 * Refactor how cache-busting change notifications are published: move the logic out of the two builtin persistence adapters and into the level above them. While this is just an internal change, it narrows the responsibilities of the persistence adapters and simplifies implementing custom ones.
@@ -113,7 +113,7 @@ Bug Fixes:
 ## v0.9.0
 
 * Ecto persistence adapter. It's now possible to store flag data with Ecto instead of Redis; if used in conjunction with the Phoenix.PubSub adapter, it's possible to use this library in Phoenix without Redis.
-* The `redix` dependencency is now optional.
+* The `redix` dependency is now optional.
 * Added optional `ecto` dependency.
 
 ## v0.8.1

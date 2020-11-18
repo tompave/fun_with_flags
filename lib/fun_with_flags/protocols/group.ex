@@ -4,7 +4,7 @@ defprotocol FunWithFlags.Group do
 
   Group gates are similar to actor gates, but they apply to a category of entities rather than specific ones. They can be toggled on or off for the _name of the group_ (as an atom) instead of a specific term.
 
-  Group gates take precendence over boolean gates but are overridden by actor gates.
+  Group gates take precedence over boolean gates but are overridden by actor gates.
 
   The semantics to determine which entities belong to which groups are application specific.
   Entities could have an explicit list of groups they belong to, or the groups could be abstract and inferred from some other attribute. For example, an `:employee` group could comprise all `%User{}` structs with an email address matching the company domain, or an `:admin` group could be made of all users with `%User{admin: true}`.
