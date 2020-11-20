@@ -21,9 +21,6 @@ defmodule FunWithFlags.Mixfile do
     ]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type "mix help compile.app" for more information
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
     [extra_applications: extra_applications(Mix.env),
@@ -59,15 +56,6 @@ defmodule FunWithFlags.Mixfile do
     apps
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:my_dep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:my_dep, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
-  #
-  # Type "mix help deps" for more examples and options
   defp deps do
     [
       {:redix, "~> 1.0", optional: true},
@@ -84,14 +72,12 @@ defmodule FunWithFlags.Mixfile do
     ]
   end
 
-
   defp dialyzer do
     [
       # Add optional dependencies to avoid "unknown_function" warnings.
       plt_add_apps: [:redix, :ecto, :ecto_sql, :phoenix_pubsub],
     ]
   end
-
 
   defp aliases do
     [
@@ -122,7 +108,6 @@ defmodule FunWithFlags.Mixfile do
       exit({:shutdown, 1})
     end
   end
-
 
   # Run the tests with Redis as persistent store and Redis PubSub as broker.
   #
@@ -232,11 +217,9 @@ defmodule FunWithFlags.Mixfile do
     )
   end
 
-
   defp elixirc_paths(:test), do: ["lib", "test/support", "dev_support"]
   defp elixirc_paths(:dev), do: ["lib", "dev_support"]
   defp elixirc_paths(_),     do: ["lib"]
-
 
   defp description do
     """
@@ -258,7 +241,6 @@ defmodule FunWithFlags.Mixfile do
       }
     ]
   end
-
 
   defp docs do
     [
