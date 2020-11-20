@@ -40,6 +40,7 @@ It stores flag information in Redis or a relational DB (PostgreSQL or MySQL, wit
 * [Extensibility](#extensibility)
   - [Custom Persistence Adapters](#custom-persistence-adapters)
 * [Testing](#testing)
+* [Development](#development)
 * [Common Issues](#common-issues)
 
 ## What's a Feature Flag?
@@ -669,6 +670,26 @@ $ mix test.all
 The `test.all` task will run the test suite multiple times with different configurations to exercise a matrix of options and adapters.
 
 The Mixfile defines a few other helper tasks that allow to run the test suite with some more specific configurations.
+
+## Development
+
+Like for testing, developing FunWithFlags requires local installations of Redis, PostgreSQL and MySQL. For work that doesn't touch the persistence adapters too closely, it's possibly simpler to just run FunWithFlags with Redis and then let CI run the tests with the other adapters.
+
+A common workflow is to run the tests and interact with the package API in `iex`.
+
+With the [default configuration](https://github.com/tompave/fun_with_flags/blob/master/config/config.exs), `iex -S mix` will compile and load FunWithFlags with Redis persistence and Redis PubSub. To compile and run the package in `iex` with Ecto and Phoenix PubSub support instead, use these commands:
+
+```shell
+bin/console_ecto postgres
+bin/console_ecto mysql
+```
+
+This package uses the [credo](https://hex.pm/packages/credo) and [dialyxir](https://hex.pm/packages/dialyxir) ([dialyzer](https://erlang.org/doc/man/dialyzer.html)) packages to help with local development. Their mix tasks can be executed in the root directory of the project:
+
+```shell
+mix credo
+mix dialyzer
+```
 
 ## Common Issues
 
