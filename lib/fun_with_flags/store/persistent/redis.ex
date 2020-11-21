@@ -32,7 +32,6 @@ defmodule FunWithFlags.Store.Persistent.Redis do
     case Redix.command(@conn, ["HGETALL", format(flag_name)]) do
       {:ok, data}   -> {:ok, Serializer.deserialize_flag(flag_name, data)}
       {:error, why} -> {:error, redis_error(why)}
-      _             -> {:error, :unknown}
     end
   end
 
