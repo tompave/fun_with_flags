@@ -89,7 +89,7 @@ defmodule FunWithFlags.Gate do
 
 
   @doc false
-  @spec enabled?(t, options) :: {:ok, boolean}
+  @spec enabled?(t, options) :: {:ok, boolean} | :ignore
   def enabled?(gate, options \\ [])
 
   def enabled?(%__MODULE__{type: :boolean, enabled: enabled}, []) do
