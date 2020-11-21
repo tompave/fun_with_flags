@@ -38,19 +38,6 @@ defmodule FunWithFlagsTest do
       assert true == FunWithFlags.enabled?(flag_name)
     end
 
-    test "if the store returns anything other than {:ok, _}, it returns false" do
-      name = unique_atom()
-      {:ok, true} = FunWithFlags.enable(name)
-      assert true == FunWithFlags.enabled?(name)
-
-      store = FunWithFlags.Config.store_module
-
-      with_mock(store, [], lookup: fn(^name) -> {:error, "mocked"} end) do
-        assert false == FunWithFlags.enabled?(name)
-      end
-    end
-
-
     test "if the store raises an error, it lets it bubble up" do
       name = unique_atom()
       store = FunWithFlags.Config.store_module
