@@ -3,7 +3,8 @@
 ## Unreleased
 
 * Added support for the Erlang [dialyzer](https://erlang.org/doc/man/dialyzer.html) (via the [dialyxir](https://hex.pm/packages/dialyxir) package).
-* Mixed documentation fixes and improvements. (Thanks [kianmeng](https://github.com/kianmeng), [pull/89](https://github.com/tompave/fun_with_flags/pull/89) and [pull/90](https://github.com/tompave/fun_with_flags/pull/90).)
+* Addressed all dialyzer warnings. Fixed some incorrect typespecs and simplified the implementation of some functions.
+* Miscellaneous documentation fixes and improvements. (Thanks [kianmeng](https://github.com/kianmeng), [pull/89](https://github.com/tompave/fun_with_flags/pull/89) and [pull/90](https://github.com/tompave/fun_with_flags/pull/90).)
 
 ## v1.6.0
 
