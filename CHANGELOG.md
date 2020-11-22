@@ -5,6 +5,7 @@
 * Added support for the Erlang [dialyzer](https://erlang.org/doc/man/dialyzer.html) (via the [dialyxir](https://hex.pm/packages/dialyxir) package).
 * Addressed all dialyzer warnings. Fixed some incorrect typespecs and simplified the implementation of some functions.
 * Miscellaneous documentation fixes and improvements. (Thanks [kianmeng](https://github.com/kianmeng), [pull/89](https://github.com/tompave/fun_with_flags/pull/89) and [pull/90](https://github.com/tompave/fun_with_flags/pull/90).)
+* Documented the `FunWithFlags.Store.Cache` module, and its `Cache.flush/0` and `Cache.dump/0` functions. They're now part of the public API of the package.
 
 ## v1.6.0
 
