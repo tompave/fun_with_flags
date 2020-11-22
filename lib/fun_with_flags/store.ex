@@ -7,6 +7,7 @@ defmodule FunWithFlags.Store do
 
   import FunWithFlags.Config, only: [persistence_adapter: 0]
 
+  @spec lookup(atom) :: {:ok, FunWithFlags.Flag.t}
   def lookup(flag_name) do
     case Cache.get(flag_name) do
       {:ok, flag} ->
@@ -32,6 +33,7 @@ defmodule FunWithFlags.Store do
   end
 
 
+  @spec put(atom, FunWithFlags.Gate.t) :: {:ok, FunWithFlags.Flag.t} | {:error, any()}
   def put(flag_name, gate) do
     flag_name
     |> persistence_adapter().put(gate)
@@ -40,6 +42,7 @@ defmodule FunWithFlags.Store do
   end
 
 
+  @spec delete(atom, FunWithFlags.Gate.t) :: {:ok, FunWithFlags.Flag.t} | {:error, any()}
   def delete(flag_name, gate) do
     flag_name
     |> persistence_adapter().delete(gate)
@@ -48,6 +51,7 @@ defmodule FunWithFlags.Store do
   end
 
 
+  @spec delete(atom) :: {:ok, FunWithFlags.Flag.t} | {:error, any()}
   def delete(flag_name) do
     flag_name
     |> persistence_adapter().delete()
@@ -56,6 +60,7 @@ defmodule FunWithFlags.Store do
   end
 
 
+  @spec reload(atom) :: {:ok, FunWithFlags.Flag.t}
   def reload(flag_name) do
     Logger.debug fn -> "FunWithFlags: reloading cached flag '#{flag_name}' from storage " end
     flag_name
@@ -63,21 +68,25 @@ defmodule FunWithFlags.Store do
     |> cache_persistence_result()
   end
 
+
+  @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]}
   def all_flags do
     persistence_adapter().all_flags()
   end
 
+
+  @spec all_flag_names() :: {:ok, [atom]}
   def all_flag_names do
     persistence_adapter().all_flag_names()
   end
 
+  defp cache_persistence_result(result = {:ok, flag}) do
+    Cache.put(flag)
+    result
+  end
+
   defp cache_persistence_result(result) do
-    case result do
-      {:ok, flag} ->
-        Cache.put(flag)
-      {:error, _reason} = error ->
-        error
-    end
+    result
   end
 
 
