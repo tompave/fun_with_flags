@@ -100,7 +100,6 @@ defprotocol FunWithFlags.Actor do
       end
   """
 
-
   @doc """
   Should return a globally unique binary.
 
@@ -116,7 +115,6 @@ defprotocol FunWithFlags.Actor do
   @doc false
   defdelegate score(actor, flag_name), to: FunWithFlags.Actor.Percentage
 end
-
 
 defmodule FunWithFlags.Actor.Percentage do
   @moduledoc false
@@ -141,15 +139,14 @@ defmodule FunWithFlags.Actor.Percentage do
   # %_ratio : 1.0 = 16_bits : 65_536
   #
   defp _actor_score(string) do
-    <<score :: size(16), _rest :: binary>> = :crypto.hash(:sha256, string)
+    <<score::size(16), _rest::binary>> = :crypto.hash(:sha256, string)
     score / 65_536
   end
-
 
   # To verify that the distribution is uniform
   #
   def distributions(count, flag_name) do
-    key_fun = fn(i) ->
+    key_fun = fn i ->
       a = %{actor_id: i}
       score = FunWithFlags.Actor.score(a, flag_name)
       round(score * 100)
@@ -157,11 +154,11 @@ defmodule FunWithFlags.Actor.Percentage do
 
     1..count
     |> Enum.group_by(key_fun)
-    |> Enum.map(fn({perc, items}) ->
+    |> Enum.map(fn {perc, items} ->
       {perc, length(items)}
     end)
     |> Enum.sort()
-    |> Enum.each(fn({perc, count}) ->
+    |> Enum.each(fn {perc, count} ->
       IO.puts("#{perc}  -  #{count}")
     end)
 

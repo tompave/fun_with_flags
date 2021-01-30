@@ -13,11 +13,13 @@ defmodule FunWithFlags.GroupTest do
     assert Group.in?(user1, :admin)
   end
 
-  test "in?(term, group_name) returns false if the term is not in the group", %{user1: user1, user2: user2} do
+  test "in?(term, group_name) returns false if the term is not in the group", %{
+    user1: user1,
+    user2: user2
+  } do
     refute Group.in?(user2, :admin)
     refute Group.in?(user1, :undefined_name)
   end
-
 
   describe "anything can be an actor, e.g. Maps" do
     test "a map that declares the right group" do
@@ -32,11 +34,10 @@ defmodule FunWithFlags.GroupTest do
     end
   end
 
-
   describe "the fallback Any implementation" do
     test "returns false for any argument, so that nothing is in any group" do
-      refute Group.in? 123, :group_name
-      refute Group.in? [], :group_name
+      refute Group.in?(123, :group_name)
+      refute Group.in?([], :group_name)
     end
   end
 end
