@@ -36,7 +36,7 @@ defmodule FunWithFlags do
 
   It can be invoked with just the flag name, as an atom,
   to check the general status of a flag (i.e. the boolean gate).
-  It can also be invoked with
+  It can also be invoked with list of flags names where each should be an atom.
 
   ## Options
 
