@@ -48,7 +48,11 @@ if Code.ensure_loaded?(Ecto) do
 
         flag_names
         |> Enum.map(fn flag_name ->
-          results = Enum.find(flags_data, [], fn {key, _value} -> key == flag_name end)
+          {_, results} =
+            Enum.find(flags_data, {"", []}, fn {key, _value} ->
+              key == Atom.to_string(flag_name)
+            end)
+
           {:ok, {flag_name, deserialize(flag_name, results)}}
         end)
       rescue
