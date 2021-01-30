@@ -22,44 +22,48 @@ defmodule FunWithFlags.Store.Persistent do
   `child_spec/1` _must_ return a valid child spec map.
   """
   @callback worker_spec() ::
-              Supervisor.child_spec
+              Supervisor.child_spec()
               | nil
-
 
   @doc """
   Retrieves a flag by name.
   """
   @callback get(flag_name :: atom) ::
-              {:ok, FunWithFlags.Flag.t}
+              {:ok, FunWithFlags.Flag.t()}
+
+  @doc """
+  Retrieves a flags by names.
+  """
+  @callback get_many(flag_names :: []) :: [
+              {:ok, {String.t(), FunWithFlags.Flag.t()}} | {:error, {String.t(), any()}}
+            ]
 
   @doc """
   Persists a gate for a flag, identified by name.
   """
-  @callback put(flag_name :: atom, gate :: FunWithFlags.Gate.t) ::
-              {:ok, FunWithFlags.Flag.t}
+  @callback put(flag_name :: atom, gate :: FunWithFlags.Gate.t()) ::
+              {:ok, FunWithFlags.Flag.t()}
               | {:error, any()}
 
   @doc """
   Deletes a gate from a flag, identified by name.
   """
-  @callback delete(flag_name :: atom, gate :: FunWithFlags.Gate.t) ::
-              {:ok, FunWithFlags.Flag.t}
+  @callback delete(flag_name :: atom, gate :: FunWithFlags.Gate.t()) ::
+              {:ok, FunWithFlags.Flag.t()}
               | {:error, any()}
-
 
   @doc """
   Deletes an entire flag, identified by name.
   """
   @callback delete(flag_name :: atom) ::
-              {:ok, FunWithFlags.Flag.t}
+              {:ok, FunWithFlags.Flag.t()}
               | {:error, any()}
-
 
   @doc """
   Retrieves all the persisted flags.
   """
   @callback all_flags() ::
-              {:ok, [FunWithFlags.Flag.t]}
+              {:ok, [FunWithFlags.Flag.t()]}
 
   @doc """
   Retrieves all the names of the persisted flags.

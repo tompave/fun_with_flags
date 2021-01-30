@@ -27,10 +27,9 @@ defmodule FunWithFlags do
 
   alias FunWithFlags.{Flag, Gate, Config}
 
-  @store FunWithFlags.Config.store_module
+  @store FunWithFlags.Config.store_module()
 
-  @type options :: Keyword.t
-
+  @type options :: Keyword.t()
 
   @doc """
   Checks if a flag is enabled.
@@ -70,7 +69,7 @@ defmodule FunWithFlags do
       false
 
   """
-  @spec enabled?(atom, options) :: boolean
+  @spec enabled?(atom | list(), options) :: boolean | %{key: boolean}
   def enabled?(flag_name, options \\ [])
 
   def enabled?(flag_name, []) when is_atom(flag_name) do
@@ -78,15 +77,30 @@ defmodule FunWithFlags do
     Flag.enabled?(flag)
   end
 
-  def enabled?(flag_name, [for: nil]) do
+  def enabled?(flag_name, for: nil) do
     enabled?(flag_name)
   end
 
-  def enabled?(flag_name, [for: item]) when is_atom(flag_name) do
+  def enabled?(flag_name, for: item) when is_atom(flag_name) do
     {:ok, flag} = @store.lookup(flag_name)
     Flag.enabled?(flag, for: item)
   end
 
+  def enabled?(flag_names, []) when is_list(flag_names) do
+    {:ok, flags} = @store.lookup(flag_names)
+
+    flag_names
+    |> Map.new(&{&1, false})
+    |> Map.merge(Flag.enabled?(flags))
+  end
+
+  def enabled?(flag_names, for: item) when is_list(flag_names) do
+    {:ok, flags} = @store.lookup(flag_names)
+
+    flag_names
+    |> Map.new(&{&1, false})
+    |> Map.merge(Flag.enabled?(flags, for: item))
+  end
 
   @doc """
   Enables a feature flag.
@@ -182,40 +196,37 @@ defmodule FunWithFlags do
     verify(flag)
   end
 
-  def enable(flag_name, [for_actor: nil]) do
+  def enable(flag_name, for_actor: nil) do
     enable(flag_name)
   end
 
-  def enable(flag_name, [for_actor: actor]) when is_atom(flag_name) do
+  def enable(flag_name, for_actor: actor) when is_atom(flag_name) do
     gate = Gate.new(:actor, actor, true)
     {:ok, flag} = @store.put(flag_name, gate)
     verify(flag, for: actor)
   end
 
-
-  def enable(flag_name, [for_group: nil]) do
+  def enable(flag_name, for_group: nil) do
     enable(flag_name)
   end
 
-  def enable(flag_name, [for_group: group_name]) when is_atom(flag_name) do
+  def enable(flag_name, for_group: group_name) when is_atom(flag_name) do
     gate = Gate.new(:group, group_name, true)
     {:ok, _flag} = @store.put(flag_name, gate)
     {:ok, true}
   end
 
-
-  def enable(flag_name, [for_percentage_of: {:time, ratio}]) when is_atom(flag_name) do
+  def enable(flag_name, for_percentage_of: {:time, ratio}) when is_atom(flag_name) do
     gate = Gate.new(:percentage_of_time, ratio)
     {:ok, _flag} = @store.put(flag_name, gate)
     {:ok, true}
   end
 
-  def enable(flag_name, [for_percentage_of: {:actors, ratio}]) when is_atom(flag_name) do
+  def enable(flag_name, for_percentage_of: {:actors, ratio}) when is_atom(flag_name) do
     gate = Gate.new(:percentage_of_actors, ratio)
     {:ok, _flag} = @store.put(flag_name, gate)
     {:ok, true}
   end
-
 
   @doc """
   Disables a feature flag.
@@ -303,34 +314,32 @@ defmodule FunWithFlags do
     verify(flag)
   end
 
-  def disable(flag_name, [for_actor: nil]) do
+  def disable(flag_name, for_actor: nil) do
     disable(flag_name)
   end
 
-  def disable(flag_name, [for_actor: actor]) when is_atom(flag_name) do
+  def disable(flag_name, for_actor: actor) when is_atom(flag_name) do
     gate = Gate.new(:actor, actor, false)
     {:ok, flag} = @store.put(flag_name, gate)
     verify(flag, for: actor)
   end
 
-  def disable(flag_name, [for_group: nil]) do
+  def disable(flag_name, for_group: nil) do
     disable(flag_name)
   end
 
-  def disable(flag_name, [for_group: group_name]) when is_atom(flag_name) do
+  def disable(flag_name, for_group: group_name) when is_atom(flag_name) do
     gate = Gate.new(:group, group_name, false)
     {:ok, _flag} = @store.put(flag_name, gate)
     {:ok, false}
   end
 
-
-  def disable(flag_name, [for_percentage_of: {type, ratio}])
-  when is_atom(flag_name) and is_float(ratio) do
+  def disable(flag_name, for_percentage_of: {type, ratio})
+      when is_atom(flag_name) and is_float(ratio) do
     inverted_ratio = 1.0 - ratio
-    {:ok, true} = enable(flag_name, [for_percentage_of: {type, inverted_ratio}])
+    {:ok, true} = enable(flag_name, for_percentage_of: {type, inverted_ratio})
     {:ok, false}
   end
-
 
   @doc """
   Clears the data of a feature flag.
@@ -402,31 +411,35 @@ defmodule FunWithFlags do
     :ok
   end
 
-  def clear(flag_name, [boolean: true]) do
-    gate = Gate.new(:boolean, false) # we only care about the gate id
+  def clear(flag_name, boolean: true) do
+    # we only care about the gate id
+    gate = Gate.new(:boolean, false)
     _clear_gate(flag_name, gate)
   end
 
-  def clear(flag_name, [for_actor: nil]) do
+  def clear(flag_name, for_actor: nil) do
     clear(flag_name)
   end
 
-  def clear(flag_name, [for_actor: actor]) when is_atom(flag_name) do
-    gate = Gate.new(:actor, actor, false) # we only care about the gate id
+  def clear(flag_name, for_actor: actor) when is_atom(flag_name) do
+    # we only care about the gate id
+    gate = Gate.new(:actor, actor, false)
     _clear_gate(flag_name, gate)
   end
 
-  def clear(flag_name, [for_group: nil]) do
+  def clear(flag_name, for_group: nil) do
     clear(flag_name)
   end
 
-  def clear(flag_name, [for_group: group_name]) when is_atom(flag_name) do
-    gate = Gate.new(:group, group_name, false) # we only care about the gate id
+  def clear(flag_name, for_group: group_name) when is_atom(flag_name) do
+    # we only care about the gate id
+    gate = Gate.new(:group, group_name, false)
     _clear_gate(flag_name, gate)
   end
 
-  def clear(flag_name, [for_percentage: true]) do
-    gate = Gate.new(:percentage_of_time, 0.5) # we only care about the gate id
+  def clear(flag_name, for_percentage: true) do
+    # we only care about the gate id
+    gate = Gate.new(:percentage_of_time, 0.5)
     _clear_gate(flag_name, gate)
   end
 
@@ -434,7 +447,6 @@ defmodule FunWithFlags do
     {:ok, _flag} = @store.delete(flag_name, gate)
     :ok
   end
-
 
   @doc """
   Returns a list of all flag names currently configured, as atoms.
@@ -455,9 +467,8 @@ defmodule FunWithFlags do
 
   To query the value of a flag, please use the `enabled?2` function instead.
   """
-  @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]}
+  @spec all_flags() :: {:ok, [FunWithFlags.Flag.t()]}
   defdelegate all_flags(), to: @store
-
 
   @doc """
   Returns a `FunWithFlags.Flag` struct for the given name, or `nil` if
@@ -465,9 +476,10 @@ defmodule FunWithFlags do
 
   Useful for debugging.
   """
-  @spec get_flag(atom) :: FunWithFlags.Flag.t | nil
+  @spec get_flag(atom) :: FunWithFlags.Flag.t() | nil
   def get_flag(name) do
     {:ok, names} = all_flag_names()
+
     if name in names do
       {:ok, flag} = Config.persistence_adapter().get(name)
       flag
@@ -476,11 +488,11 @@ defmodule FunWithFlags do
     end
   end
 
-
   defp verify(flag) do
     {:ok, Flag.enabled?(flag)}
   end
-  defp verify(flag, [for: data]) do
+
+  defp verify(flag, for: data) do
     {:ok, Flag.enabled?(flag, for: data)}
   end
 end
