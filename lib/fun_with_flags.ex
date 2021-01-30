@@ -36,6 +36,7 @@ defmodule FunWithFlags do
 
   It can be invoked with just the flag name, as an atom,
   to check the general status of a flag (i.e. the boolean gate).
+  It can also be invoked with
 
   ## Options
 
@@ -51,11 +52,17 @@ defmodule FunWithFlags do
       iex> alias FunWithFlags.TestUser, as: User
       iex> harry = %User{id: 1, name: "Harry Potter", groups: ["wizards", "gryffindor"]}
       iex> FunWithFlags.disable(:elder_wand)
+      iex> FunWithFlags.enable(:wand)
       iex> FunWithFlags.enable(:elder_wand, for_actor: harry)
+      iex> FunWithFlags.enable(:wand, for_actor: harry)
       iex> FunWithFlags.enabled?(:elder_wand)
       false
+      iex> FunWithFlags.enabled?([:elder_wand, :wand])
+      %{elder_wand: false, wand: true}
       iex> FunWithFlags.enabled?(:elder_wand, for: harry)
       true
+      iex> FunWithFlags.enabled?([:wand, :elder_wand], for: harry)
+      %{elder_wand: true, wand: true}
       iex> voldemort = %User{id: 7, name: "Tom Riddle", groups: ["wizards", "slytherin"]}
       iex> FunWithFlags.enabled?(:elder_wand, for: voldemort)
       false
