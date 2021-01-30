@@ -41,10 +41,14 @@ if Code.ensure_loaded?(Ecto) do
       query = from(r in Record, where: r.flag_name in ^name_strings)
 
       try do
-        query
-        |> ecto_repo().all()
-        |> Enum.group_by(& &1.flag_name)
-        |> Enum.map(fn {flag_name, results} ->
+        flags_data =
+          query
+          |> ecto_repo().all()
+          |> Enum.group_by(& &1.flag_name)
+
+        flag_names
+        |> Enum.map(fn flag_name ->
+          results = Enum.find(flags_data, [], fn {key, _value} -> key == flag_name end)
           {:ok, {flag_name, deserialize(flag_name, results)}}
         end)
       rescue

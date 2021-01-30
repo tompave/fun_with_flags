@@ -37,6 +37,19 @@ defmodule FunWithFlags.StoreTest do
     end
   end
 
+  describe "lookup(flag_names)" do
+    test "looking up an undefined flag returns a flag with no gates" do
+      flag_name = unique_atom()
+      assert {:ok, [%Flag{name: ^flag_name, gates: []}]} = Store.lookup([flag_name])
+    end
+
+    test "looking up a defined flag returns the flag", %{name: name, gate: gate, flag: flag} do
+      assert {:ok, [%Flag{name: ^name, gates: []}]} = Store.lookup([name])
+      Store.put(name, gate)
+      assert {:ok, ^flag} = Store.lookup(name)
+    end
+  end
+
   describe "put(flag_name, gate)" do
     test "put() can change the value of a flag", %{name: name, gate: gate, flag: flag} do
       assert {:ok, %Flag{name: ^name, gates: []}} = Store.lookup(name)
