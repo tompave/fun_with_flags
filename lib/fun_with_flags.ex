@@ -88,18 +88,12 @@ defmodule FunWithFlags do
 
   def enabled?(flag_names, []) when is_list(flag_names) do
     {:ok, flags} = @store.lookup(flag_names)
-
-    flag_names
-    |> Map.new(&{&1, false})
-    |> Map.merge(Flag.enabled?(flags))
+    Flag.enabled?(flags)
   end
 
   def enabled?(flag_names, for: item) when is_list(flag_names) do
     {:ok, flags} = @store.lookup(flag_names)
-
-    flag_names
-    |> Map.new(&{&1, false})
-    |> Map.merge(Flag.enabled?(flags, for: item))
+    Flag.enabled?(flags, for: item)
   end
 
   @doc """
