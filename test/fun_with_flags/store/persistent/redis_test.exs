@@ -336,6 +336,22 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     end
   end
 
+  describe "get_many(flag_names)" do
+    test "looking up an undefined flag returns an flag with no gates" do
+      name = unique_atom()
+      assert [{:ok, {^name, %Flag{name: ^name, gates: []}}}] = PersiRedis.get_many([name])
+    end
+
+    test "looking up a saved flag returns the flag" do
+      name = unique_atom()
+      gate = %Gate{type: :boolean, enabled: true}
+
+      assert [{:ok, {^name, %Flag{name: ^name, gates: []}}}] = PersiRedis.get_many([name])
+      PersiRedis.put(name, gate)
+      assert [{:ok, {^name, %Flag{name: ^name, gates: [^gate]}}}] = PersiRedis.get_many([name])
+    end
+  end
+
   describe "all_flags() returns the tuple {:ok, list} with all the flags" do
     test "with no saved flags it returns an empty list" do
       clear_test_db()
