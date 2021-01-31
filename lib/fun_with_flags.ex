@@ -37,6 +37,7 @@ defmodule FunWithFlags do
 
   It can be invoked with just the flag name, as an atom,
   to check the general status of a flag (i.e. the boolean gate).
+  It can also be invoked with list of flags names where each should be an atom.
 
   ## Options
 
@@ -52,11 +53,17 @@ defmodule FunWithFlags do
       iex> alias FunWithFlags.TestUser, as: User
       iex> harry = %User{id: 1, name: "Harry Potter", groups: ["wizards", "gryffindor"]}
       iex> FunWithFlags.disable(:elder_wand)
+      iex> FunWithFlags.enable(:wand)
       iex> FunWithFlags.enable(:elder_wand, for_actor: harry)
+      iex> FunWithFlags.enable(:wand, for_actor: harry)
       iex> FunWithFlags.enabled?(:elder_wand)
       false
+      iex> FunWithFlags.enabled?([:elder_wand, :wand])
+      %{elder_wand: false, wand: true}
       iex> FunWithFlags.enabled?(:elder_wand, for: harry)
       true
+      iex> FunWithFlags.enabled?([:wand, :elder_wand], for: harry)
+      %{elder_wand: true, wand: true}
       iex> voldemort = %User{id: 7, name: "Tom Riddle", groups: ["wizards", "slytherin"]}
       iex> FunWithFlags.enabled?(:elder_wand, for: voldemort)
       false
@@ -70,7 +77,7 @@ defmodule FunWithFlags do
       false
 
   """
-  @spec enabled?(atom, options) :: boolean
+  @spec enabled?(atom | list(), options) :: boolean | %{key: boolean}
   def enabled?(flag_name, options \\ [])
 
   def enabled?(flag_name, []) when is_atom(flag_name) do
@@ -85,6 +92,16 @@ defmodule FunWithFlags do
   def enabled?(flag_name, [for: item]) when is_atom(flag_name) do
     {:ok, flag} = @store.lookup(flag_name)
     Flag.enabled?(flag, for: item)
+  end
+
+  def enabled?(flag_names, []) when is_list(flag_names) do
+    {:ok, flags} = @store.lookup(flag_names)
+    Flag.enabled?(flags)
+  end
+
+  def enabled?(flag_names, for: item) when is_list(flag_names) do
+    {:ok, flags} = @store.lookup(flag_names)
+    Flag.enabled?(flags, for: item)
   end
 
 

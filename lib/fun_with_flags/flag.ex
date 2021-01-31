@@ -19,7 +19,7 @@ defmodule FunWithFlags.Flag do
 
 
   @doc false
-  @spec enabled?(t, options) :: boolean
+  @spec enabled?(t | list, options) :: boolean | map()
   def enabled?(flag, options \\ [])
 
   def enabled?(%__MODULE__{gates: []}, _), do: false
@@ -46,6 +46,23 @@ defmodule FunWithFlags.Flag do
     end
   end
 
+  def enabled?(flags, []) when is_list(flags) do
+    Map.new(
+      flags,
+      fn %__MODULE__{name: name} = flag ->
+        {name, enabled?(flag, [])}
+      end
+    )
+  end
+
+  def enabled?(flags, for: item) when is_list(flags) do
+    Map.new(
+      flags,
+      fn %__MODULE__{name: name} = flag ->
+        {name, enabled?(flag, for: item)}
+      end
+    )
+  end
 
   defp check_percentage_gate(gates, item, flag_name) do
     case percentage_of_actors_gate(gates) do

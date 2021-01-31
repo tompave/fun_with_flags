@@ -7,7 +7,7 @@ defmodule FunWithFlags.Store do
 
   import FunWithFlags.Config, only: [persistence_adapter: 0]
 
-  def lookup(flag_name) do
+  def lookup(flag_name) when is_atom(flag_name) do
     case Cache.get(flag_name) do
       {:ok, flag} ->
         {:ok, flag}
@@ -20,6 +20,50 @@ defmodule FunWithFlags.Store do
             try_to_use_the_cached_value(reason, stale_value_or_nil, flag_name)
         end
     end
+  end
+
+  def lookup(flag_names) when is_list(flag_names) do
+    flags =
+      flag_names
+      |> Task.async_stream(fn flag_name -> {flag_name, Cache.get(flag_name)} end)
+      |> Enum.map(fn {:ok, result} -> result end)
+
+    cached_flags =
+      flags
+      |> Enum.filter(fn
+        {_, {:ok, _flag}} -> true
+        _ -> false
+      end)
+      |> Enum.map(fn {_, {:ok, flag}} -> flag end)
+
+    missing_flags =
+      flags
+      |> Enum.filter(fn
+        {_, {:miss, _, _}} -> true
+        _ -> false
+      end)
+      |> Enum.map(fn {_, {:miss, _, _}} = missing_flag -> missing_flag end)
+
+    fetched_flags =
+      missing_flags
+      |> Enum.map(fn {flag_name, _} -> flag_name end)
+      |> persistence_adapter().get_many()
+      |> Enum.map(fn
+        {:ok, {_, flag}} ->
+          Cache.put(flag)
+          flag
+
+        {:error, {flag_name, _why}} ->
+          {_flag_name, {:miss, reason, stale_value_or_nil}} =
+            Enum.find(missing_flags, fn {name, _} ->
+              name == flag_name
+            end)
+
+          {:ok, flag} = try_to_use_the_cached_value(reason, stale_value_or_nil, flag_name)
+          flag
+      end)
+
+    {:ok, fetched_flags ++ cached_flags}
   end
 
 

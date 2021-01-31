@@ -37,6 +37,20 @@ defmodule FunWithFlags.Store.Persistent.Redis do
 
 
   @impl true
+  def get_many(flag_names) when is_list(flag_names) do
+    flag_names
+    |> Task.async_stream(fn flag_name -> {flag_name, get(flag_name)} end)
+    |> Enum.map(fn
+      {:ok, {flag_name, {:ok, result}}} ->
+        {:ok, {flag_name, result}}
+
+      {:ok, {flag_name, {:error, why}}} ->
+        {:error, {flag_name, why}}
+    end)
+  end
+
+
+  @impl true
   def put(flag_name, gate = %Gate{}) do
     data = Serializer.serialize(gate)
 

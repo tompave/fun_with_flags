@@ -20,6 +20,49 @@ defmodule FunWithFlagsTest do
     :ok
   end
 
+  describe "enabled?([name1, name2])" do
+    test "it returns false for non existing feature flags" do
+      flag_name1 = unique_atom()
+      flag_name2 = unique_atom()
+
+      assert %{flag_name1 => false, flag_name2 => false} ==
+               FunWithFlags.enabled?([flag_name1, flag_name2])
+    end
+
+    test "it returns false for a disabled feature flag" do
+      flag_name1 = unique_atom()
+      flag_name2 = unique_atom()
+
+      FunWithFlags.disable(flag_name1)
+      FunWithFlags.disable(flag_name2)
+
+      assert %{flag_name1 => false, flag_name2 => false} ==
+               FunWithFlags.enabled?([flag_name1, flag_name2])
+    end
+
+    test "it returns true for an enabled feature flag" do
+      flag_name1 = unique_atom()
+      flag_name2 = unique_atom()
+
+      FunWithFlags.enable(flag_name1)
+      FunWithFlags.disable(flag_name2)
+
+      assert %{flag_name1 => true, flag_name2 => false} ==
+               FunWithFlags.enabled?([flag_name1, flag_name2])
+    end
+
+    test "if the store raises an error, it lets it bubble up" do
+      name = unique_atom()
+      store = FunWithFlags.Config.store_module()
+
+      with_mock(store, [], lookup: fn ^name -> raise(RuntimeError, "mocked exception") end) do
+        assert_raise RuntimeError, "mocked exception", fn ->
+          FunWithFlags.enabled?(name)
+        end
+      end
+    end
+  end
+
   describe "enabled?(name)" do
     test "it returns false for non existing feature flags" do
       flag_name = unique_atom()

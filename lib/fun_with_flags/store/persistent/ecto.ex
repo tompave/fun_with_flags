@@ -38,6 +38,32 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
 
   @impl true
+  def get_many(flag_names) when is_list(flag_names) do
+    name_strings = Enum.map(flag_names, &to_string(&1))
+    query = from(r in Record, where: r.flag_name in ^name_strings)
+
+    try do
+      flags_data =
+        query
+        |> ecto_repo().all()
+        |> Enum.group_by(& &1.flag_name)
+
+      flag_names
+      |> Enum.map(fn flag_name ->
+        {_, results} =
+          Enum.find(flags_data, {"", []}, fn {key, _value} ->
+            key == Atom.to_string(flag_name)
+          end)
+
+        {:ok, {flag_name, deserialize(flag_name, results)}}
+      end)
+    rescue
+      e in [Ecto.QueryError] ->
+        Enum.map(flag_names, fn flag_name -> {:error, {flag_name, e}} end)
+    end
+  end
+
+  @impl true
   def put(flag_name, gate = %Gate{type: type})
   when type in [:percentage_of_time, :percentage_of_actors] do
     name_string = to_string(flag_name)

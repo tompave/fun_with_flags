@@ -424,6 +424,23 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
   end
 
 
+  describe "get_many(flag_names)" do
+    test "looking up an undefined flag returns an flag with no gates" do
+      name = unique_atom()
+      assert [{:ok, {^name, %Flag{name: ^name, gates: []}}}] = PersiEcto.get_many([name])
+    end
+
+    test "looking up a saved flag returns the flag" do
+      name = unique_atom()
+      gate = %Gate{type: :boolean, enabled: true}
+
+      assert [{:ok, {^name, %Flag{name: ^name, gates: []}}}] = PersiEcto.get_many([name])
+      PersiEcto.put(name, gate)
+      assert [{:ok, {^name, %Flag{name: ^name, gates: [^gate]}}}] = PersiEcto.get_many([name])
+    end
+  end
+
+
   describe "all_flags() returns the tuple {:ok, list} with all the flags" do
     test "with no saved flags it returns an empty list" do
       assert {:ok, []} = PersiEcto.all_flags()

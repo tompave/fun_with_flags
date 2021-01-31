@@ -32,6 +32,14 @@ defmodule FunWithFlags.Store.Persistent do
   @callback get(flag_name :: atom) ::
               {:ok, FunWithFlags.Flag.t}
 
+
+  @doc """
+  Retrieves a flags by names.
+  """
+  @callback get_many(flag_names :: []) :: [
+              {:ok, {String.t(), FunWithFlags.Flag.t()}} | {:error, {String.t(), any()}}
+            ]
+
   @doc """
   Persists a gate for a flag, identified by name.
   """
