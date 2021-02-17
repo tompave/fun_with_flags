@@ -1,0 +1,100 @@
+name: Mix Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: Elixir ${{ matrix.elixir }} with OTP ${{ matrix.otp }}
+    runs-on: ubuntu-18.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        elixir:
+          - '1.11'
+          - '1.10'
+          - '1.9'
+          - '1.8'
+        otp:
+          - '23.0'
+          - '22.3'
+          - '22.2'
+          - '21.3'
+        exclude:
+          - elixir: '1.9'
+            otp: '23.0'
+          - elixir: '1.8'
+            otp: '23.0'
+
+    services:
+      postgres:
+        image: postgres:11
+        ports: ['5432:5432']
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+      redis:
+        image: redis
+        ports: ['6379:6379']
+
+    steps:
+
+      - name: Start Default MySQL 5.7
+        run: |
+          sudo /etc/init.d/mysql start
+
+      - name: 'Wait for MySQL to be ready (TODO: needs timeout)'
+        run: |
+          while ! mysqladmin ping -h"127.0.0.1" -uroot -proot -P3306 --silent >/dev/null 2>&1; do
+            sleep 1
+          done
+
+      - name: Set up Elixir and OTP
+        uses: erlef/setup-elixir@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: 'Restore cache for deps/ and _build/ directories'
+        uses: actions/cache@v2
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-mix-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
+
+      - name: '[DEBUG] List cached dirs'
+        run: |
+          ls -la deps
+          ls -la _build
+          ls -la _build/test/lib
+
+      - name: Install Mix dependencies
+        run: mix deps.get
+
+      - name: Create and migrate the DB on Postgres
+        run: |
+          MIX_ENV=test PERSISTENCE=ecto RDBMS=postgres mix compile --warnings-as-errors
+          MIX_ENV=test PERSISTENCE=ecto RDBMS=postgres mix do ecto.create, ecto.migrate
+          rm -rf _build/test/lib/fun_with_flags
+
+      - name: Create and migrate the DB on MySQL
+        run: |
+          MIX_ENV=test PERSISTENCE=ecto RDBMS=mysql mix compile --warnings-as-errors
+          MIX_ENV=test PERSISTENCE=ecto RDBMS=mysql mix do ecto.create, ecto.migrate
+          rm -rf _build/test/lib/fun_with_flags
+
+      - name: Run all tests
+        run: mix test.all
