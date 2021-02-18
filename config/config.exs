@@ -63,7 +63,7 @@ if with_ecto do
     "mysql" ->
       config :fun_with_flags, FunWithFlags.Dev.EctoRepo,
         username: "root",
-        password: nil
+        password: "root"
     _ ->
       config :fun_with_flags, FunWithFlags.Dev.EctoRepo,
         username: "postgres",
