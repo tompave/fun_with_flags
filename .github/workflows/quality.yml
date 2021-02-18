@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [master]
 
+env:
+  elixir_version: '1.11'
+  otp_version: '23.2'
+
 jobs:
   credo:
     name: Credo
@@ -18,8 +22,8 @@ jobs:
       - name: Set up Elixir and OTP
         uses: erlef/setup-elixir@v1
         with:
-          elixir-version: '1.11'
-          otp-version: '23.2'
+          elixir-version: ${{ env.elixir_version }}
+          otp-version: ${{ env.otp_version }}
 
       - name: Checkout code
         uses: actions/checkout@v2
@@ -30,8 +34,8 @@ jobs:
           path: |
             deps
             _build
-          key: ${{ runner.os }}-mix-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('**/mix.lock') }}
-          restore-keys: ${{ runner.os }}-mix-${{ matrix.elixir }}-${{ matrix.otp }}-
+          key: ${{ runner.os }}-mix-${{ env.elixir_version }}-${{ env.otp_version }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-${{ env.elixir_version }}-${{ env.otp_version }}-
 
       - name: Install Mix dependencies
         run: mix deps.get
