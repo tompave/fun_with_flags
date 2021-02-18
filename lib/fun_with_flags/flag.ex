@@ -34,6 +34,7 @@ defmodule FunWithFlags.Flag do
   end
 
 
+
   def enabled?(%__MODULE__{gates: gates, name: flag_name}, [for: item]) do
     case check_actor_gates(gates, item) do
       {:ok, bool} -> bool
