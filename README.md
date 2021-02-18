@@ -1,7 +1,7 @@
 # FunWithFlags
 
 [![Mix Tests](https://github.com/tompave/fun_with_flags/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/tompave/fun_with_flags/actions/workflows/test.yml?query=branch%3Amaster)
-[![Code Quality](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml/badge.svg?branch=master)](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml?query=branch%3Amaster)
+[![Code Quality](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml/badge.svg?branch=master)](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml?query=branch%3Amaster)  
 [![Hex.pm](https://img.shields.io/hexpm/v/fun_with_flags.svg)](https://hex.pm/packages/fun_with_flags)
 [![hexdocs.pm](https://img.shields.io/badge/docs-1.6.0-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/)
 ![Hex.pm Downloads](https://img.shields.io/hexpm/dt/fun_with_flags)
