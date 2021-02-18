@@ -2,9 +2,9 @@ name: Mix Tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
@@ -20,15 +20,19 @@ jobs:
           - '1.9'
           - '1.8'
         otp:
-          - '23.0'
+          - '23.2'
+          - '23.1'
           - '22.3'
-          - '22.2'
           - '21.3'
         exclude:
           - elixir: '1.9'
-            otp: '23.0'
+            otp: '23.2'
+          - elixir: '1.9'
+            otp: '23.1'
           - elixir: '1.8'
-            otp: '23.0'
+            otp: '23.2'
+          - elixir: '1.8'
+            otp: '23.1'
 
     services:
       postgres:
@@ -48,8 +52,7 @@ jobs:
     steps:
 
       - name: Start Default MySQL 5.7
-        run: |
-          sudo /etc/init.d/mysql start
+        run: sudo /etc/init.d/mysql start
 
       - name: 'Wait for MySQL to be ready (TODO: needs timeout)'
         run: |
