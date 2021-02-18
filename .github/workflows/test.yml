@@ -75,11 +75,11 @@ jobs:
           key: ${{ runner.os }}-mix-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-mix-${{ matrix.elixir }}-${{ matrix.otp }}-
 
-      - name: '[DEBUG] List cached dirs'
-        run: |
-          ls -la deps
-          ls -la _build
-          ls -la _build/test/lib
+      # - name: '[DEBUG] List cached dirs'
+      #   run: |
+      #     ls -la deps
+      #     ls -la _build
+      #     ls -la _build/test/lib
 
       - name: Install Mix dependencies
         run: mix deps.get
