@@ -585,7 +585,7 @@ config :fun_with_flags, :cache_bust_notifications,
 Or, without Phoenix:
 
 ```elixir
-# possibly in the application's supervision tree
+# possibly in the application's supervision tree, alternatively specified below
 children = [
   {Phoenix.PubSub, [name: :my_pubsub_process_name, adapter: Phoenix.PubSub.PG2]}
 ]
@@ -597,6 +597,9 @@ config :fun_with_flags, :cache_bust_notifications,
   enabled: true,
   adapter: FunWithFlags.Notifications.PhoenixPubSub,
   client: :my_pubsub_process_name
+  # pubsub_driver: Phoenix.PubSub.PG2 (optional)
+  # pubsub_driver: {Phoenix.PubSub.PG2, pool_size: 10} (optional with options)
+
 ```
 
 ## Installation
