@@ -13,7 +13,8 @@ defmodule FunWithFlags.Config do
 
   @default_notifications_config [
     enabled: true,
-    adapter: FunWithFlags.Notifications.Redis
+    adapter: FunWithFlags.Notifications.Redis,
+    pubsub_driver: Phoenix.PubSub.PG2
   ]
 
   @default_persistence_config [
@@ -106,6 +107,9 @@ defmodule FunWithFlags.Config do
     Keyword.get(notifications_config(), :adapter)
   end
 
+  def notifications_pubsub_driver do
+    Keyword.get(notifications_config(), :pubsub_driver)
+  end
 
   def phoenix_pubsub? do
     notifications_adapter() == FunWithFlags.Notifications.PhoenixPubSub

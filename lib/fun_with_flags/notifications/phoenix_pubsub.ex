@@ -19,6 +19,15 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
     }
   end
 
+  def pubsub_worker_spec(driver, name, opts \\ []) do
+    %{
+      id: :driver,
+      start: {driver, :start_link, [opts |> Keyword.merge([name: name])]},
+      restart: :permanent,
+      type: :worker
+    }
+  end
+
 
   # Initialize the GenServer with a unique id (binary).
   # This id will stay with the GenServer until it's terminated, and is
