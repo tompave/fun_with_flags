@@ -10,12 +10,11 @@ defmodule FunWithFlags.Application do
     Supervisor.start_link(children(), opts)
   end
 
-
   defp children do
     [
       FunWithFlags.Store.Cache.worker_spec(),
-      persistence_spec(),
-      notifications_spec(),
+      persistence_spec() |
+      notifications_spec()
     ]
     |> Enum.reject(&(!&1))
   end
@@ -42,7 +41,21 @@ defmodule FunWithFlags.Application do
   #
   defp notifications_spec do
     try do
-      Config.change_notifications_enabled? && Config.notifications_adapter.worker_spec()
+      if Config.change_notifications_enabled? do
+
+        {driver, opts} = Config.notifications_pubsub_driver() |> case do
+          mod when is_atom(mod) -> {mod, []}
+          {mod, opts} = x when is_atom(mod) and is_list(opts) -> x
+        end
+
+        client = Config.pubsub_client()
+        [
+          Config.notifications_adapter.worker_spec(),
+          Config.notifications_adapter.pubsub_worker_spec(driver, client, opts)
+        ]
+      else
+        []
+      end
     rescue
       e in [UndefinedFunctionError] ->
         Logger.error "FunWithFlags: It looks like you're trying to use #{inspect(Config.notifications_adapter)} " <>
