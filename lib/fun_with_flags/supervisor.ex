@@ -1,22 +1,32 @@
 defmodule FunWithFlags.Supervisor do
   @moduledoc """
-  Implements `Supervisor.child_spec/1` to describe the supervision tree for the
+  A [Module-based supervisor](https://hexdocs.pm/elixir/Supervisor.html#module-module-based-supervisors).
+
+  It implements [`Supervisor.child_spec/1`](https://hexdocs.pm/elixir/Supervisor.html#module-child_spec-1) to describe the supervision tree for the
   `:fun_with_flags` application.
 
-  This module is used internally by the package when the application starts its
-  own supervision tree (the default). If that is disabled, the host applcation
-  should use this module to start the supervision tree directly.
+  This module is used internally by the package when the `:fun_with_flags` OTP
+  application starts its own supervision tree, which is the default behavior.
+  If that is disabled, the user's host applcation should use this module to start
+  the supervision tree directly.
+
+  The main purpose of this API is allow the user's host application to control
+  when FunWithFlag's supervision tree is started. This is helpful when the
+  package is configured to depend on some of the host application's modules, e.g.
+  the `Phoenix.PubSub` process ([as documented](readme.html#pubsub-adapters)).
   """
 
   alias FunWithFlags.Config
   require Logger
 
-  # Automatically defines child_spec/1.
+  # Automatically defines `child_spec/1`.
   use Supervisor
 
+  @doc """
+  How to start this supervisor and its tree.
 
-  # Requited because of the `child_spec/2` definition injected by `use Supervisor`.
-  #
+  This function is referenced by the `child_spec/1` definition for this supervisor module.
+  """
   def start_link(init_arg) do
     Supervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
   end
