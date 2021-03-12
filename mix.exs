@@ -113,9 +113,9 @@ defmodule FunWithFlags.Mixfile do
   #
   # Cache enabled, force re-compilation.
   #
-  defp run_tests__redis_pers__redis_pubsub(_) do
+  defp run_tests__redis_pers__redis_pubsub(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --exclude phoenix_pubsub --exclude ecto_persistence",
+      "mix test --color --force --exclude phoenix_pubsub --exclude ecto_persistence #{arg}",
       env: [
         {"CACHE_ENABLED", "true"},
       ]
@@ -125,9 +125,9 @@ defmodule FunWithFlags.Mixfile do
   # Runs the integration tests only.
   # Cache disabled, Redis as persistent store and Redis PubSub as broker.
   #
-  defp run_integration_tests__redis_pers__redis_pubsub__no_cache(_) do
+  defp run_integration_tests__redis_pers__redis_pubsub__no_cache(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --only integration",
+      "mix test --color --force --only integration #{arg}",
       env: [
         {"CACHE_ENABLED", "false"},
       ]
@@ -136,9 +136,9 @@ defmodule FunWithFlags.Mixfile do
 
   # Run the tests with Redis as persistent store and Phoenix.PubSub as broker.
   #
-  defp run_tests__redis_pers__phoenix_pubsub(_) do
+  defp run_tests__redis_pers__phoenix_pubsub(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --exclude redis_pubsub --exclude ecto_persistence --exclude phoenix_pubsub:with_ecto --include phoenix_pubsub:with_redis --include phoenix_pubsub:true",
+      "mix test --color --force --exclude redis_pubsub --exclude ecto_persistence --exclude phoenix_pubsub:with_ecto --include phoenix_pubsub:with_redis --include phoenix_pubsub:true #{arg}",
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -149,9 +149,9 @@ defmodule FunWithFlags.Mixfile do
   # Runs the integration tests only.
   # Cache disabled, Redis as persistent store and Phoenix.PubSubas broker.
   #
-  defp run_integration_tests__redis_pers__phoenix_pubsub__no_cache(_) do
+  defp run_integration_tests__redis_pers__phoenix_pubsub__no_cache(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --only integration",
+      "mix test --color --force --only integration #{arg}",
       env: [
         {"CACHE_ENABLED", "false"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -161,9 +161,9 @@ defmodule FunWithFlags.Mixfile do
 
   # Run the tests with Ecto+PostgreSQL as persistent store and Phoenix.PubSub as broker.
   #
-  defp run_tests__ecto_pers_postgres__phoenix_pubsub(_) do
+  defp run_tests__ecto_pers_postgres__phoenix_pubsub(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence",
+      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence #{arg}",
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -175,9 +175,9 @@ defmodule FunWithFlags.Mixfile do
 
   # Run the tests with Ecto+MySQL as persistent store and Phoenix.PubSub as broker.
   #
-  defp run_tests__ecto_pers_mysql__phoenix_pubsub(_) do
+  defp run_tests__ecto_pers_mysql__phoenix_pubsub(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence",
+      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence --exclude phoenix_pubsub:with_redis --include phoenix_pubsub:with_ecto --include phoenix_pubsub:true --include ecto_persistence #{arg}",
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -190,9 +190,9 @@ defmodule FunWithFlags.Mixfile do
   # Runs the integration tests only.
   # Cache disabled, Ecto+PostgreSQL as persistent store and Phoenix.PubSub as broker.
   #
-  defp run_integration_tests__ecto_pers_postgres__phoenix_pubsub__no_cache(_) do
+  defp run_integration_tests__ecto_pers_postgres__phoenix_pubsub__no_cache(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --only integration",
+      "mix test --color --force --only integration #{arg}",
       env: [
         {"CACHE_ENABLED", "false"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -205,9 +205,9 @@ defmodule FunWithFlags.Mixfile do
   # Runs the integration tests only.
   # Cache disabled, Ecto+MySQL as persistent store and Phoenix.PubSub as broker.
   #
-  defp run_integration_tests__ecto_pers_mysql__phoenix_pubsub__no_cache(_) do
+  defp run_integration_tests__ecto_pers_mysql__phoenix_pubsub__no_cache(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --only integration",
+      "mix test --color --force --only integration #{arg}",
       env: [
         {"CACHE_ENABLED", "false"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
