@@ -9,7 +9,9 @@ defmodule FunWithFlags.Store.Cache do
   @type ttl :: integer
   @type cached_at :: integer
 
+  @doc false
   use GenServer
+
   alias FunWithFlags.Timestamps
   alias FunWithFlags.Flag
   alias FunWithFlags.Config
