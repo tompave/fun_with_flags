@@ -5,6 +5,7 @@ alias FunWithFlags.{Actor,Group}
 
 alias FunWithFlags.Dev.EctoRepo, as: Repo
 alias FunWithFlags.Store.Persistent.Ecto.Record
+alias FunWithFlags.Supervisor, as: Sup
 
 
 # When calling `respawn` in a iex session, e.g. debugging tests,
