@@ -14,6 +14,9 @@ defmodule FunWithFlags.Supervisor do
   when FunWithFlag's supervision tree is started. This is helpful when the
   package is configured to depend on some of the host application's modules, e.g.
   the `Phoenix.PubSub` process ([as documented](readme.html#pubsub-adapters)).
+
+  More detailed instructions on how to configure this in an application are
+  available in the [readme](readme.html#application-start-behaviour).
   """
 
   alias FunWithFlags.Config
