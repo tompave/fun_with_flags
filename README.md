@@ -509,7 +509,7 @@ end
 
 Using `ecto_sql` for persisting the flags also requires an ecto adapter, e.g. `postgrex`, `mariaex` or `myxql`. Please refer to the Ecto documentation for the details.
 
-Since FunWithFlags depends on Elixir `>= 1.6`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
+Since FunWithFlags depends on Elixir `>= 1.8`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
 
 ## Configuration
 
