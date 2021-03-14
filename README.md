@@ -34,10 +34,10 @@ It stores flag information in Redis or a relational DB (PostgreSQL or MySQL, wit
 * [Origin](#origin)
 * [So, caching, huh?](#so-caching-huh)
 * [To Do](#to-do)
+* [Installation](#installation)
 * [Configuration](#configuration)
   - [Persistence Adapters](#persistence-adapters)
   - [PubSub Adapters](#pubsub-adapters)
-* [Installation](#installation)
 * [Extensibility](#extensibility)
   - [Custom Persistence Adapters](#custom-persistence-adapters)
 * [Testing](#testing)
@@ -485,6 +485,31 @@ In terms of performance, very synthetic benchmarks (where the DBs run on the sam
 
 * Add some optional randomness to the TTL, so that Redis or the DB don't get hammered at constant intervals after a server restart.
 
+## Installation
+
+The package can be installed by adding `fun_with_flags` to your list of dependencies in `mix.exs`.
+
+In order to have a small installation footprint, the dependencies for the different adapters are all optional. You must explicitly require the ones you wish to use.
+
+```elixir
+def deps do
+  [
+    {:fun_with_flags, "~> 1.6.0"},
+
+    # either:
+    {:redix, "~> 0.9"},
+    # or:
+    {:ecto_sql, "~> 3.0"},
+
+    # optionally, if you don't want to use Redis' builtin pubsub
+    {:phoenix_pubsub, "~> 2.0"},
+  ]
+end
+```
+
+Using `ecto_sql` for persisting the flags also requires an ecto adapter, e.g. `postgrex`, `mariaex` or `myxql`. Please refer to the Ecto documentation for the details.
+
+Since FunWithFlags depends on Elixir `>= 1.6`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
 
 ## Configuration
 
@@ -598,32 +623,6 @@ config :fun_with_flags, :cache_bust_notifications,
   adapter: FunWithFlags.Notifications.PhoenixPubSub,
   client: :my_pubsub_process_name
 ```
-
-## Installation
-
-The package can be installed by adding `fun_with_flags` to your list of dependencies in `mix.exs`.
-
-In order to have a small installation footprint, the dependencies for the different adapters are all optional. You must explicitly require the ones you wish to use.
-
-```elixir
-def deps do
-  [
-    {:fun_with_flags, "~> 1.6.0"},
-
-    # either:
-    {:redix, "~> 0.9"},
-    # or:
-    {:ecto_sql, "~> 3.0"},
-
-    # optionally, if you don't want to use Redis' builtin pubsub
-    {:phoenix_pubsub, "~> 2.0"},
-  ]
-end
-```
-
-Using `ecto_sql` for persisting the flags also requires an ecto adapter, e.g. `postgrex`, `mariaex` or `myxql`. Please refer to the Ecto documentation for the details.
-
-Since FunWithFlags depends on Elixir `>= 1.6`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
 
 ## Extensibility
 
