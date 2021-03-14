@@ -688,8 +688,8 @@ Then it's necessary to configure the Mix project to not start the `:fun_with_fla
 * Declare the `:fun_with_flags` dependency with either the `runtime: false` or `app: false` options. ([docs](https://hexdocs.pm/mix/1.11.3/Mix.Tasks.Deps.html#module-dependency-definition-options))
 
 ```diff
-+ {:fun_with_flags, "~> 1.6"},
-- {:fun_with_flags, "~> 1.6", runtime: false},
+- {:fun_with_flags, "~> 1.6"},
++ {:fun_with_flags, "~> 1.6", runtime: false},
 ```
 
 * Declare that the `:fun_with_flags` application is managed directly by your host application ([docs](https://hexdocs.pm/mix/1.11.3/Mix.Tasks.Compile.App.html)).
