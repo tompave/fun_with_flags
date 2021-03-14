@@ -40,6 +40,7 @@ It stores flag information in Redis or a relational DB (PostgreSQL or MySQL, wit
   - [PubSub Adapters](#pubsub-adapters)
 * [Extensibility](#extensibility)
   - [Custom Persistence Adapters](#custom-persistence-adapters)
+* [Application Start Behaviour](#application-start-behaviour)
 * [Testing](#testing)
 * [Development](#development)
 * [Common Issues](#common-issues)
@@ -511,6 +512,8 @@ Using `ecto_sql` for persisting the flags also requires an ecto adapter, e.g. `p
 
 Since FunWithFlags depends on Elixir `>= 1.8`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
 
+If you need to customize how the `:fun_with_flags` application is loaded and started, refer to the [Application Start Behaviour](#application-start-behaviour) section, below in this document.
+
 ## Configuration
 
 The library can be configured in host applications through Mix and the `config.exs` file. This example shows some default values:
@@ -648,6 +651,62 @@ And then configure the library to use it:
 ```elixir
 config :fun_with_flags, :persistence, adapter: MyApp.MyAlternativeFlagStore
 ```
+
+## Application Start Behaviour
+
+As explained in the [Installation](#installation) section, above in this document, the `:fun_with_flags` application will start automatically when you add the package as a dependency in your Mixfile. The `:fun_with_flags` application starts its own supervision tree which manages all required processes and is provided by the `FunWithFlags.Supervisor` module.
+
+Sometimes, this can cause issues and race conditions if FunWithFlags is configured to rely on Erlang processes that are owned by another application. For example, if you have configured the `Phoenix.PubSub` cache-busting notification adapter, one of FunWithFlag's processes will immediately try to subscribe to its notifications channel using the provided PubSub process identifier. If that process is not available, FunWithFlags will retry a few times and then give up and raise an exception. This will become a problem if you're using FunWithFlags in a large application (e.g. a Phoenix app) and the `:fun_with_flags` application starts much faster than the Phoenix supervision tree.
+
+In these cases, it's better to directly control how FunWithFlags starts its processes.
+
+The first step is to add the `FunWithFlags.Supervisor` module directly to the supervision tree of the host application. For example, in a Phoenix app it would look like this:
+
+```diff
+defmodule MyPhoenixApp.Application do
+  @moduledoc false
+  use Application
+
+  def start(_type, _args) do
+    children = [
+      MyPhoenixApp.Repo,
+      MyPhoenixAppWeb.Telemetry,
+      {Phoenix.PubSub, name: MyPhoenixApp.PubSub},
+      MyPhoenixAppWeb.Endpoint,
++     FunWithFlags.Supervisor,
+    ]
+
+    opts = [strategy: :one_for_one, name: MyPhoenixApp.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+
+  # ...
+```
+
+Then it's necessary to configure the Mix project to not start the `:fun_with_flags` application automatically. This can be accomplished in the Mixfile in a number of ways, for example: (**Note**: These are alternative solutions, you don't need to do both. You must decide which is more appropriate for your setup.)
+
+* Declare the `:fun_with_flags` dependency with either the `runtime: false` or `app: false` options. ([docs](https://hexdocs.pm/mix/1.11.3/Mix.Tasks.Deps.html#module-dependency-definition-options))
+
+```diff
++ {:fun_with_flags, "~> 1.6"},
+- {:fun_with_flags, "~> 1.6", runtime: false},
+```
+
+* Declare that the `:fun_with_flags` application is managed directly by your host application ([docs](https://hexdocs.pm/mix/1.11.3/Mix.Tasks.Compile.App.html)).
+
+```diff
+  def application do
+    [
+      mod: {MyPhoenixApp.Application, []},
++     included_applications: [:fun_with_flags],
+      extra_applications: [:logger, :runtime_tools]
+    ]
+  end
+```
+
+The result of those changes is that the `:fun_with_flags` application won't be loaded and started automatically, and therefore the FunWithFlags supervision tree won't risk to be started before the other processes in the host Phoenix application. Rather, the supervision tree will start alongside the other core Phoenix processes.
+
+One final note on this topic is that if you're also using [`FunWithFlags.UI`](https://github.com/tompave/fun_with_flags_ui) (refer to the [Web Dashboard](#web-dashboard) section, above in this document), then that will need to be configured as well. The reason is that `:fun_with_flags` is a dependency of `:fun_with_flags_ui`, so including the latter as a dependency will cause the former to be auto-started despite the configuration described above. To avoid this, the same configuration should be used for the `:fun_with_flags_ui` dependency, regardless of the approach used (`runtime: false`, `app: false`, or `included_applications`).
 
 
 ## Testing
