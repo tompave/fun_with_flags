@@ -685,14 +685,14 @@ defmodule MyPhoenixApp.Application do
 
 Then it's necessary to configure the Mix project to not start the `:fun_with_flags` application automatically. This can be accomplished in the Mixfile in a number of ways, for example: (**Note**: These are alternative solutions, you don't need to do both. You must decide which is more appropriate for your setup.)
 
-* Declare the `:fun_with_flags` dependency with either the `runtime: false` or `app: false` options. ([docs](https://hexdocs.pm/mix/1.11.3/Mix.Tasks.Deps.html#module-dependency-definition-options))
+* **Option A**: Declare the `:fun_with_flags` dependency with either the `runtime: false` or `app: false` options. ([docs](https://hexdocs.pm/mix/1.11.3/Mix.Tasks.Deps.html#module-dependency-definition-options))
 
 ```diff
 - {:fun_with_flags, "~> 1.6"},
 + {:fun_with_flags, "~> 1.6", runtime: false},
 ```
 
-* Declare that the `:fun_with_flags` application is managed directly by your host application ([docs](https://hexdocs.pm/mix/1.11.3/Mix.Tasks.Compile.App.html)).
+* **Option B**: Declare that the `:fun_with_flags` application is managed directly by your host application ([docs](https://hexdocs.pm/mix/1.11.3/Mix.Tasks.Compile.App.html)).
 
 ```diff
   def application do
@@ -706,7 +706,7 @@ Then it's necessary to configure the Mix project to not start the `:fun_with_fla
 
 The result of those changes is that the `:fun_with_flags` application won't be loaded and started automatically, and therefore the FunWithFlags supervision tree won't risk to be started before the other processes in the host Phoenix application. Rather, the supervision tree will start alongside the other core Phoenix processes.
 
-One final note on this topic is that if you're also using [`FunWithFlags.UI`](https://github.com/tompave/fun_with_flags_ui) (refer to the [Web Dashboard](#web-dashboard) section, above in this document), then that will need to be configured as well. The reason is that `:fun_with_flags` is a dependency of `:fun_with_flags_ui`, so including the latter as a dependency will cause the former to be auto-started despite the configuration described above. To avoid this, the same configuration should be used for the `:fun_with_flags_ui` dependency, regardless of the approach used (`runtime: false`, `app: false`, or `included_applications`).
+One final note on this topic is that if you're also using [`FunWithFlags.UI`](https://github.com/tompave/fun_with_flags_ui) (refer to the [Web Dashboard](#web-dashboard) section, above in this document), then that will need to be configured as well. The reason is that `:fun_with_flags` is a dependency of `:fun_with_flags_ui`, so including the latter as a dependency will cause the former to be auto-started despite the configuration described above. To avoid this, the same configuration should be used for the `:fun_with_flags_ui` dependency, regardless of the approach used (Option A: `runtime: false`, `app: false`; or Option B: `included_applications`).
 
 
 ## Testing
