@@ -48,7 +48,7 @@ defmodule FunWithFlags.Config do
   end
 
 
-  defp ets_cache_config do
+  def ets_cache_config do
     Keyword.merge(
       @default_cache_config,
       Application.get_env(:fun_with_flags, :cache, [])
