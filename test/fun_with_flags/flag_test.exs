@@ -75,9 +75,9 @@ defmodule FunWithFlags.FlagTest do
       arya = %TestUser{id: 151, email: "arya@stark.wf", groups: [:starks, :nameless_men]}
       {:ok, john: john, arya: arya}
     end
-    # Actor.score(john, :warging)
+    # Actor.Percentage.score(john, :warging)
     # 0.381500244140625
-    # Actor.score(arya, :warging)
+    # Actor.Percentage.score(arya, :warging)
     # 0.4635467529296875
 
 

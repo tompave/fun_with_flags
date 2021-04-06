@@ -302,13 +302,13 @@ sam    = %MyApp.User{id: 2, name: "Samwise Gamgee"}
 pippin = %MyApp.User{id: 3, name: "Peregrin Took"}
 merry  = %MyApp.User{id: 4, name: "Meriadoc Brandybuck"}
 
-FunWithFlags.Actor.score(frodo, :pipeweed)
+FunWithFlags.Actor.Percentage.score(frodo, :pipeweed)
 0.8658294677734375
-FunWithFlags.Actor.score(sam, :pipeweed)
+FunWithFlags.Actor.Percentage.score(sam, :pipeweed)
 0.68426513671875
-FunWithFlags.Actor.score(pippin, :pipeweed)
+FunWithFlags.Actor.Percentage.score(pippin, :pipeweed)
 0.510528564453125
-FunWithFlags.Actor.score(merry, :pipeweed)
+FunWithFlags.Actor.Percentage.score(merry, :pipeweed)
 0.2617645263671875
 
 {:ok, true} = FunWithFlags.enable(:pipeweed, for_percentage_of: {:actors, 0.60})
@@ -327,11 +327,11 @@ true
 FunWithFlags.enabled?(:pipeweed, for: sam)
 true
 
-FunWithFlags.Actor.score(pippin, :pipeweed)
+FunWithFlags.Actor.Percentage.score(pippin, :pipeweed)
 0.510528564453125
-FunWithFlags.Actor.score(pippin, :mushrooms)
+FunWithFlags.Actor.Percentage.score(pippin, :mushrooms)
 0.6050872802734375
-FunWithFlags.Actor.score(pippin, :palantir)
+FunWithFlags.Actor.Percentage.score(pippin, :palantir)
 0.144073486328125
 ```
 
