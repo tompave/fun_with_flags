@@ -124,7 +124,7 @@ defmodule FunWithFlags.Gate do
     actor     = Keyword.fetch!(opts, :for)
     flag_name = Keyword.fetch!(opts, :flag_name)
 
-    roll = Actor.score(actor, flag_name)
+    roll = Actor.Percentage.score(actor, flag_name)
     enabled = roll <= ratio
     {:ok, enabled}
   end

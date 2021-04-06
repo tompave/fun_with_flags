@@ -171,9 +171,9 @@ defmodule FunWithFlagsTest do
 
     # percentage of actors ------------------------------------
     #
-    # FunWithFlags.Actor.score scrooge, :potato
+    # FunWithFlags.Actor.Percentage.score scrooge, :potato
     # 0.72467041015625
-    # FunWithFlags.Actor.score donald, :potato
+    # FunWithFlags.Actor.Percentage.score donald, :potato
     # 0.3559112548828125
 
     test "when flag doesn't have a general value, it returns true and false for actors based on their scores",
@@ -345,13 +345,13 @@ defmodule FunWithFlagsTest do
     end
 
 
-    # FunWithFlags.Actor.score donald, :turnip
+    # FunWithFlags.Actor.Percentage.score donald, :turnip
     # 0.7209625244140625
     #
-    # FunWithFlags.Actor.score scrooge, :turnip
+    # FunWithFlags.Actor.Percentage.score scrooge, :turnip
     # 0.298553466796875
     #
-    # FunWithFlags.Actor.score mickey, :turnip
+    # FunWithFlags.Actor.Percentage.score mickey, :turnip
     # 0.3033447265625
     #
     test "flags can be enabled for a percentage of the actors", %{scrooge: scrooge, donald: donald, mickey: mickey} do

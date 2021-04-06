@@ -112,9 +112,6 @@ defprotocol FunWithFlags.Actor do
   """
   @spec id(term) :: binary
   def id(actor)
-
-  @doc false
-  defdelegate score(actor, flag_name), to: FunWithFlags.Actor.Percentage
 end
 
 
@@ -151,7 +148,7 @@ defmodule FunWithFlags.Actor.Percentage do
   def distributions(count, flag_name) do
     key_fun = fn(i) ->
       a = %{actor_id: i}
-      score = FunWithFlags.Actor.score(a, flag_name)
+      score = FunWithFlags.Actor.Percentage.score(a, flag_name)
       round(score * 100)
     end
 
