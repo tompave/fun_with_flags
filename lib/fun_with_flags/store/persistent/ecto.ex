@@ -9,7 +9,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   alias FunWithFlags.Store.Persistent.Ecto.Record
   alias FunWithFlags.Store.Serializer.Ecto, as: Serializer
 
-  import FunWithFlags.Config, only: [ecto_repo: 0]
+  import FunWithFlags.Config, only: [ecto_repo: 0, ecto_repo_options: 0]
   import Ecto.Query
 
   require Logger
@@ -21,14 +21,13 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   def worker_spec do
     nil
   end
-
-
+  
   @impl true
   def get(flag_name) do
     name_string = to_string(flag_name)
     query = from(r in Record, where: r.flag_name == ^name_string)
     try do
-      results = ecto_repo().all(query)
+      results = ecto_repo().all(query, ecto_repo_options())
       flag = deserialize(flag_name, results)
       {:ok, flag}
     rescue
@@ -56,7 +55,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     end
 
     out = transaction_fn.(repo, fn() ->
-      case repo.one(find_one_q) do
+      case repo.one(find_one_q, ecto_repo_options()) do
         record = %Record{} ->
           changeset = Record.update_target(record, gate)
           do_update(repo, flag_name, changeset)
@@ -98,7 +97,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
       repo.transaction fn() ->
         Ecto.Adapters.SQL.query!(repo,
           "SELECT pg_advisory_xact_lock(hashtext('fun_with_flags_percentage_gate_upsert'), hashtext($1))",
-          [to_string(flag_name)]
+          [to_string(flag_name)], 
+          ecto_repo_options()
         )
         upsert_fn.()
       end
@@ -146,7 +146,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     )
 
     try do
-      {_count, _} = ecto_repo().delete_all(query)
+      {_count, _} = ecto_repo().delete_all(query, ecto_repo_options())
       {:ok, flag} = get(flag_name)
       {:ok, flag}
     rescue
@@ -173,7 +173,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     )
 
     try do
-      {_count, _} = ecto_repo().delete_all(query)
+      {_count, _} = ecto_repo().delete_all(query, ecto_repo_options())
       {:ok, flag} = get(flag_name)
       {:ok, flag}
     rescue
@@ -198,7 +198,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     )
 
     try do
-      {_count, _} = ecto_repo().delete_all(query)
+      {_count, _} = ecto_repo().delete_all(query, ecto_repo_options())
       {:ok, flag} = get(flag_name)
       {:ok, flag}
     rescue
@@ -211,7 +211,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   def all_flags do
     flags =
       Record
-      |> ecto_repo().all()
+      |> ecto_repo().all(ecto_repo_options())
       |> Enum.group_by(&(&1.flag_name))
       |> Enum.map(fn ({name, records}) -> deserialize(name, records) end)
     {:ok, flags}
@@ -221,7 +221,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   @impl true
   def all_flag_names do
     query = from(r in Record, select: r.flag_name, distinct: true)
-    strings = ecto_repo().all(query)
+    strings = ecto_repo().all(query, ecto_repo_options())
     atoms = Enum.map(strings, &String.to_atom(&1))
     {:ok, atoms}
   end
@@ -235,7 +235,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   defp mysql_lock!(repo) do
     result = Ecto.Adapters.SQL.query!(
       repo,
-      "SELECT GET_LOCK('fun_with_flags_percentage_gate_upsert', #{@mysql_lock_timeout_s})"
+      "SELECT GET_LOCK('fun_with_flags_percentage_gate_upsert', #{@mysql_lock_timeout_s})",
+      ecto_repo_options()
     )
 
     %{rows: [[i]]} = result
@@ -246,7 +247,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   defp mysql_unlock!(repo) do
     result = Ecto.Adapters.SQL.query!(
       repo,
-      "SELECT RELEASE_LOCK('fun_with_flags_percentage_gate_upsert');"
+      "SELECT RELEASE_LOCK('fun_with_flags_percentage_gate_upsert');",
+      ecto_repo_options()
     )
 
     %{rows: [[i]]} = result
@@ -281,14 +283,14 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
 
   defp do_insert(repo, flag_name, changeset, options \\ []) do
     changeset
-    |> repo.insert(options)
+    |> repo.insert(Keyword.merge(options, ecto_repo_options()))
     |> handle_write(flag_name)
   end
 
 
   defp do_update(repo, flag_name, changeset, options \\ []) do
     changeset
-    |> repo.update(options)
+    |> repo.update(Keyword.merge(options, ecto_repo_options()))
     |> handle_write(flag_name)
   end
 
