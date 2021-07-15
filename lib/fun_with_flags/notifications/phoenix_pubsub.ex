@@ -77,8 +77,10 @@ if Code.ensure_loaded?(Phoenix.PubSub) do
         end
       rescue
         e ->
-          # The pubsub process was probably not running. This happens when using it in Phoenix, as it tries to connect the
-          # first time while the application is booting, and the Phoenix.PubSub process is not fully started yet.
+          # The pubsub process was probably not running.
+          # This happens when using it in Phoenix, as it tries to connect
+          # the first time while the application is booting,
+          # and the Phoenix.PubSub process is not fully started yet.
           Logger.debug(fn ->
             "FunWithFlags: Cannot subscribe to Phoenix.PubSub process #{inspect(client())} (exception: #{inspect(e)})."
           end)
