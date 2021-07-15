@@ -7,11 +7,10 @@ defimpl FunWithFlags.Actor, for: Map do
     map
     |> inspect()
     |> (&:crypto.hash(:md5, &1)).()
-    |> Base.encode16
+    |> Base.encode16()
     |> (&"map:#{&1}").()
   end
 end
-
 
 defimpl FunWithFlags.Actor, for: BitString do
   def id(str) do
@@ -25,9 +24,7 @@ defimpl FunWithFlags.Group, for: BitString do
   end
 end
 
-
 defimpl FunWithFlags.Group, for: Map do
   def in?(%{group: group_name}, group_name), do: true
   def in?(_, _), do: false
 end
-

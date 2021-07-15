@@ -16,19 +16,19 @@ defmodule FunWithFlags.Dev.EctoRepo.Migrations.EnsureColumnsAreNotNull do
 
   def up do
     alter table(:fun_with_flags_toggles) do
-      modify :flag_name, :string, null: false
-      modify :gate_type, :string, null: false
-      modify :target, :string, null: false
-      modify :enabled, :boolean, null: false
+      modify(:flag_name, :string, null: false)
+      modify(:gate_type, :string, null: false)
+      modify(:target, :string, null: false)
+      modify(:enabled, :boolean, null: false)
     end
   end
 
   def down do
     alter table(:fun_with_flags_toggles) do
-      modify :flag_name, :string, null: true
-      modify :gate_type, :string, null: true
-      modify :target, :string, null: true
-      modify :enabled, :boolean, null: true
+      modify(:flag_name, :string, null: true)
+      modify(:gate_type, :string, null: true)
+      modify(:target, :string, null: true)
+      modify(:enabled, :boolean, null: true)
     end
   end
 end

@@ -15,5 +15,4 @@ defmodule FunWithFlags.SimpleStore do
   defdelegate delete(flag_name), to: persistence_adapter()
   defdelegate all_flags(), to: persistence_adapter()
   defdelegate all_flag_names(), to: persistence_adapter()
-
 end

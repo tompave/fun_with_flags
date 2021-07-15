@@ -442,7 +442,7 @@ defmodule FunWithFlags do
   for example, will be considered disabled.
   """
   @spec all_flag_names() :: {:ok, [atom]}
-  def all_flag_names() do
+  def all_flag_names do
     store().all_flag_names()
   end
 

@@ -30,16 +30,17 @@ defmodule FunWithFlags.SupervisorTest do
             },
             %{
               id: Redix,
-              start: {Redix, :start_link,
-               [
+              start:
+                {Redix, :start_link,
                  [
-                   host: "localhost",
-                   port: 6379,
-                   database: 5,
-                   name: FunWithFlags.Store.Persistent.Redis,
-                   sync_connect: false
-                 ]
-               ]},
+                   [
+                     host: "localhost",
+                     port: 6379,
+                     database: 5,
+                     name: FunWithFlags.Store.Persistent.Redis,
+                     sync_connect: false
+                   ]
+                 ]},
               type: :worker
             },
             %{
@@ -71,16 +72,17 @@ defmodule FunWithFlags.SupervisorTest do
             },
             %{
               id: Redix,
-              start: {Redix, :start_link,
-               [
+              start:
+                {Redix, :start_link,
                  [
-                   host: "localhost",
-                   port: 6379,
-                   database: 5,
-                   name: FunWithFlags.Store.Persistent.Redis,
-                   sync_connect: false
-                 ]
-               ]},
+                   [
+                     host: "localhost",
+                     port: 6379,
+                     database: 5,
+                     name: FunWithFlags.Store.Persistent.Redis,
+                     sync_connect: false
+                   ]
+                 ]},
               type: :worker
             },
             %{
@@ -124,22 +126,26 @@ defmodule FunWithFlags.SupervisorTest do
     end
   end
 
-
   describe "initializing the config for the children (no cache)" do
     setup do
       # Capture the original cache config
       original_cache_config = Config.ets_cache_config()
 
       # Disable the cache for these tests.
-      Mix.Config.persist(fun_with_flags: [cache: [
-        enabled: false, ttl: original_cache_config[:ttl]
-      ]])
+      Mix.Config.persist(
+        fun_with_flags: [
+          cache: [
+            enabled: false,
+            ttl: original_cache_config[:ttl]
+          ]
+        ]
+      )
 
       # Restore the orignal config
-      on_exit fn ->
+      on_exit(fn ->
         Mix.Config.persist(fun_with_flags: [cache: original_cache_config])
         assert ^original_cache_config = Config.ets_cache_config()
-      end
+      end)
     end
 
     @tag :redis_persistence
@@ -152,16 +158,17 @@ defmodule FunWithFlags.SupervisorTest do
           [
             %{
               id: Redix,
-              start: {Redix, :start_link,
-               [
+              start:
+                {Redix, :start_link,
                  [
-                   host: "localhost",
-                   port: 6379,
-                   database: 5,
-                   name: FunWithFlags.Store.Persistent.Redis,
-                   sync_connect: false
-                 ]
-               ]},
+                   [
+                     host: "localhost",
+                     port: 6379,
+                     database: 5,
+                     name: FunWithFlags.Store.Persistent.Redis,
+                     sync_connect: false
+                   ]
+                 ]},
               type: :worker
             }
           ]
@@ -181,16 +188,17 @@ defmodule FunWithFlags.SupervisorTest do
           [
             %{
               id: Redix,
-              start: {Redix, :start_link,
-               [
+              start:
+                {Redix, :start_link,
                  [
-                   host: "localhost",
-                   port: 6379,
-                   database: 5,
-                   name: FunWithFlags.Store.Persistent.Redis,
-                   sync_connect: false
-                 ]
-               ]},
+                   [
+                     host: "localhost",
+                     port: 6379,
+                     database: 5,
+                     name: FunWithFlags.Store.Persistent.Redis,
+                     sync_connect: false
+                   ]
+                 ]},
               type: :worker
             }
           ]

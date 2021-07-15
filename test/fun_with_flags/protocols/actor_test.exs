@@ -44,7 +44,7 @@ defmodule FunWithFlags.ActorTest do
     end
 
     test "the float is between 0.0 and 1.0" do
-      for _ <- (0..100) do
+      for _ <- 0..100 do
         map = %{actor_id: random_string()}
         score = Actor.Percentage.score(map, :foobar)
         assert score <= 1.0
@@ -55,7 +55,7 @@ defmodule FunWithFlags.ActorTest do
     test "the same actor-flag combination always produces the same score", %{user: user} do
       score = Actor.Percentage.score(user, :foobar)
 
-      for _ <- (1..100) do
+      for _ <- 1..100 do
         assert ^score = Actor.Percentage.score(user, :foobar)
       end
     end
