@@ -18,17 +18,17 @@ defmodule FunWithFlags.ConfigTest do
     assert ^defaults = Config.redis_config
 
     # when configured to use a URL string, it returns the string and ignores the defaults
-    url = "redis:://locahost:1234/1"
+    url = "redis:://localhost:1234/1"
     configure_redis_with(url)
     assert ^url = Config.redis_config
 
-    # when confgured with keywords, it merges them with the default
+    # when configured with keywords, it merges them with the default
     configure_redis_with(database: 42, port: 2000)
     assert defaults[:host] == Config.redis_config[:host]
     assert            2000 == Config.redis_config[:port]
     assert              42 == Config.redis_config[:database]
 
-    # Whe configured with a {:system, env} tuple it looks up the value in the env
+    # When configured with a {:system, env} tuple it looks up the value in the env
     System.put_env("123_TEST_REDIS_URL", url)
     configure_redis_with({:system, "123_TEST_REDIS_URL"})
     assert url == Config.redis_config

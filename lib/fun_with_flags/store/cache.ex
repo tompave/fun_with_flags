@@ -42,7 +42,7 @@ defmodule FunWithFlags.Store.Cache do
 
 
   # We lookup without going through the GenServer
-  # for concurrency and perfomance.
+  # for concurrency and performance.
   #
   @doc false
   def get(flag_name) do

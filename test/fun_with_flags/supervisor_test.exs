@@ -135,7 +135,7 @@ defmodule FunWithFlags.SupervisorTest do
         enabled: false, ttl: original_cache_config[:ttl]
       ]])
 
-      # Restore the orignal config
+      # Restore the original config
       on_exit fn ->
         Mix.Config.persist(fun_with_flags: [cache: original_cache_config])
         assert ^original_cache_config = Config.ets_cache_config()

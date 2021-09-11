@@ -547,7 +547,7 @@ config :fun_with_flags, :redis,
   database: 0
 
 # a URL string can be used instead
-config :fun_with_flags, :redis, "redis://locahost:6379/0"
+config :fun_with_flags, :redis, "redis://localhost:6379/0"
 
 # a {:system, name} tuple can be used to read from the environment
 config :fun_with_flags, :redis, {:system, "REDIS_URL"}

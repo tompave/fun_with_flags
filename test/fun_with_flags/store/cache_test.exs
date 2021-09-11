@@ -16,7 +16,7 @@ defmodule FunWithFlags.Store.CacheTest do
 
 
   describe "put(%Flag{})" do
-    test "put(%Flag{}) changes the cahced flag", %{name: name, flag: flag} do
+    test "put(%Flag{}) changes the cached flag", %{name: name, flag: flag} do
       assert {:miss, :not_found, nil} = Cache.get(name)
       Cache.put(flag)
       assert {:ok, ^flag} = Cache.get(name)
