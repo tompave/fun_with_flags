@@ -15,20 +15,31 @@ jobs:
       fail-fast: false
       matrix:
         elixir:
+          - '1.12'
           - '1.11'
           - '1.10'
           - '1.9'
           - '1.8'
         otp:
+          - '24.1'
+          - '24.0'
           - '23.2'
           - '23.1'
           - '22.3'
           - '21.3'
         exclude:
           - elixir: '1.9'
+            otp: '24.1'
+          - elixir: '1.9'
+            otp: '24.0'
+          - elixir: '1.9'
             otp: '23.2'
           - elixir: '1.9'
             otp: '23.1'
+          - elixir: '1.8'
+            otp: '24.1'
+          - elixir: '1.8'
+            otp: '24.0'
           - elixir: '1.8'
             otp: '23.2'
           - elixir: '1.8'
