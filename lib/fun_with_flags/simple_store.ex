@@ -10,10 +10,23 @@ defmodule FunWithFlags.SimpleStore do
     end
   end
 
-  defdelegate put(flag_name, gate), to: persistence_adapter()
-  defdelegate delete(flag_name, gate), to: persistence_adapter()
-  defdelegate delete(flag_name), to: persistence_adapter()
-  defdelegate all_flags(), to: persistence_adapter()
-  defdelegate all_flag_names(), to: persistence_adapter()
+  def put(flag_name, gate) do
+    persistence_adapter().put(flag_name, gate)
+  end
 
+  def delete(flag_name, gate) do
+    persistence_adapter().delete(flag_name, gate)
+  end
+
+  def delete(flag_name) do
+    persistence_adapter().delete(flag_name)
+  end
+
+  def all_flags do
+    persistence_adapter().all_flags()
+  end
+
+  def all_flag_names do
+    persistence_adapter().all_flag_names()
+  end
 end
