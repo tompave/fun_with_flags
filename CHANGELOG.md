@@ -2,6 +2,7 @@
 
 ## v1.8.0 (Unreleased)
 
+* Add support for Elixir 1.13. Drop support for Elixir 1.9. Elixir >= 1.10 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
 * Removed all uses of [`defdelegate/2`](https://hexdocs.pm/elixir/Kernel.html#defdelegate/2). They caused some references to configured modules (that can change according to the config) to be reified at compile time, which lead to unexpected behaviour. They've been replaced with plain old function definitions that do the same job. (Thanks [connorlay](https://github.com/connorlay), [pull/111](https://github.com/tompave/fun_with_flags/pull/111).)
 
 ## v1.7.0
