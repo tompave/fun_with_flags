@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Add support for Elixir 1.12. Drop support for Elixir 1.8. Elixir >= 1.9 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
+* Drop support for Erlang/OTP 21, and Erlang/OTP >= 22 is now required. Dropping support for older versions of Erlang/OTP simply means that this package is not tested with them in CI, and that no compatibility issues are considered bugs.
 * Added support for the Erlang [dialyzer](https://erlang.org/doc/man/dialyzer.html) (via the [dialyxir](https://hex.pm/packages/dialyxir) package).
 * Addressed all dialyzer warnings. Fixed some incorrect typespecs and simplified the implementation of some functions.
 * Miscellaneous documentation fixes and improvements. (Thanks [kianmeng](https://github.com/kianmeng), [pull/89](https://github.com/tompave/fun_with_flags/pull/89), [pull/90](https://github.com/tompave/fun_with_flags/pull/90) and [pull/112](https://github.com/tompave/fun_with_flags/pull/112).)
