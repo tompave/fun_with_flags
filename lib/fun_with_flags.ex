@@ -444,7 +444,9 @@ defmodule FunWithFlags do
   for example, will be considered disabled.
   """
   @spec all_flag_names() :: {:ok, [atom]}
-  defdelegate all_flag_names(), to: @store
+  def all_flags do
+    Config.persistence_adapter().all_flags()
+  end
 
   @doc """
   Returns a list of all the flags currently configured, as data structures.
@@ -456,7 +458,9 @@ defmodule FunWithFlags do
   To query the value of a flag, please use the `enabled?2` function instead.
   """
   @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]}
-  defdelegate all_flags(), to: @store
+  def all_flag_names do
+    Config.persistence_adapter().all_flag_names()
+  end
 
 
   @doc """
