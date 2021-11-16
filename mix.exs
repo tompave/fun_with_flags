@@ -101,7 +101,7 @@ defmodule FunWithFlags.Mixfile do
     ]
 
     exit_codes = case System.get_env("CI") do
-      "1" ->
+      "true" ->
         tests |> Enum.map(fn test_fn -> _run_test_with_retries(3, 500, fn -> test_fn.(arg) end) end)
       _ ->
         tests |> Enum.map(fn test_fn -> test_fn.(arg) end)
