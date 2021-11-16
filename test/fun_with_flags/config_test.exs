@@ -67,17 +67,14 @@ defmodule FunWithFlags.ConfigTest do
   end
 
 
-  test "store_module" do
-    # defaults to FunWithFlags.Store
-    assert FunWithFlags.Store = Config.store_module
-
-    # can be configured
-    Application.put_all_env(fun_with_flags: [cache: [enabled: false]])
-    assert FunWithFlags.SimpleStore = Config.store_module
-
-    # cleanup
-    reset_cache_defaults()
-    assert FunWithFlags.Store = Config.store_module
+  @tag :integration
+  test "store_module_determined_at_compile_time()" do
+    # This is not great, but testing compile time stuff is tricky.
+    if Config.cache?() do
+      assert FunWithFlags.Store = Config.store_module_determined_at_compile_time()
+    else
+      assert FunWithFlags.SimpleStore = Config.store_module_determined_at_compile_time()
+    end
   end
 
 
