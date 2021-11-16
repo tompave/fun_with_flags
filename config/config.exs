@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 # config :fun_with_flags, :persistence,
 #   [adapter: FunWithFlags.Store.Persistent.Redis]
@@ -74,7 +74,7 @@ end
 # -------------------------------------------------
 # Import
 
-case Mix.env do
+case config_env() do
   :test -> import_config "test.exs"
   _     -> nil
 end
