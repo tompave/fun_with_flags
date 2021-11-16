@@ -131,13 +131,13 @@ defmodule FunWithFlags.SupervisorTest do
       original_cache_config = Config.ets_cache_config()
 
       # Disable the cache for these tests.
-      Mix.Config.persist(fun_with_flags: [cache: [
+      Application.put_all_env(fun_with_flags: [cache: [
         enabled: false, ttl: original_cache_config[:ttl]
       ]])
 
       # Restore the original config
       on_exit fn ->
-        Mix.Config.persist(fun_with_flags: [cache: original_cache_config])
+        Application.put_all_env(fun_with_flags: [cache: original_cache_config])
         assert ^original_cache_config = Config.ets_cache_config()
       end
     end
