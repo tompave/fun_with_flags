@@ -100,13 +100,34 @@ defmodule FunWithFlags.Mixfile do
       &run_tests__ecto_pers_mysql__phoenix_pubsub/1, &run_integration_tests__ecto_pers_mysql__phoenix_pubsub__no_cache/1,
     ]
 
-    exit_codes = tests |> Enum.map(fn(test_fn) -> test_fn.(arg) end)
+    exit_codes = tests |> Enum.map(fn test_fn ->
+      _run_test_with_retries(3, 500, fn -> test_fn.(arg) end)
+    end)
 
     if Enum.any?(exit_codes, &(&1 != 0)) do
       require Logger
       Logger.error("Some test configuration did not pass.")
       exit({:shutdown, 1})
     end
+  end
+
+  # Because some tests are flaky in CI.
+  #
+  def _run_test_with_retries(attempts, sleep_ms, test_fn) when attempts > 0 do
+    IO.puts("---\nRunning a test task with retries. Attempts left: #{attempts}, sleep ms: #{sleep_ms}.\n---")
+    case test_fn.() do
+      0 -> 0 # Successful run, simply return the status.
+      _ ->
+        :timer.sleep(sleep_ms)
+        remaining = attempts - 1
+        IO.puts("Test failed. Attempts left: #{remaining}")
+        _run_test_with_retries(remaining, sleep_ms, test_fn)
+    end
+  end
+
+  def _run_test_with_retries(_, _, _) do
+    IO.puts("---\nAll retries failed. Returning exit code 1.\n---")
+    1
   end
 
   # Run the tests with Redis as persistent store and Redis PubSub as broker.
