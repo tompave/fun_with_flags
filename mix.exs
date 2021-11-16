@@ -116,7 +116,7 @@ defmodule FunWithFlags.Mixfile do
 
   # Because some tests are flaky in CI.
   #
-  def _run_test_with_retries(attempts, sleep_ms, test_fn) when attempts > 0 do
+  defp _run_test_with_retries(attempts, sleep_ms, test_fn) when attempts > 0 do
     IO.puts("---\nRunning a test task with retries. Attempts left: #{attempts}, sleep ms: #{sleep_ms}.\n---")
     case test_fn.() do
       0 -> 0 # Successful run, simply return the status.
@@ -128,7 +128,7 @@ defmodule FunWithFlags.Mixfile do
     end
   end
 
-  def _run_test_with_retries(_, _, _) do
+  defp _run_test_with_retries(_, _, _) do
     IO.puts("---\nAll retries failed. Returning exit code 1.\n---")
     1
   end
