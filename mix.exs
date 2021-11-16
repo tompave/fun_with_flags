@@ -100,9 +100,12 @@ defmodule FunWithFlags.Mixfile do
       &run_tests__ecto_pers_mysql__phoenix_pubsub/1, &run_integration_tests__ecto_pers_mysql__phoenix_pubsub__no_cache/1,
     ]
 
-    exit_codes = tests |> Enum.map(fn test_fn ->
-      _run_test_with_retries(3, 500, fn -> test_fn.(arg) end)
-    end)
+    exit_codes = case System.get_env("CI") do
+      "1" ->
+        tests |> Enum.map(fn test_fn -> _run_test_with_retries(3, 500, fn -> test_fn.(arg) end) end)
+      _ ->
+        tests |> Enum.map(fn test_fn -> test_fn.(arg) end)
+    end
 
     if Enum.any?(exit_codes, &(&1 != 0)) do
       require Logger
