@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 # config :fun_with_flags, :persistence,
 #   [adapter: FunWithFlags.Store.Persistent.Redis]
@@ -73,8 +73,14 @@ end
 
 # -------------------------------------------------
 # Import
-
-case Mix.env do
+#
+# Unfortunately `Config.config_env/0` was introduced in Elixir 1.11.
+# In Elixir 1.10, `Mix.Env/0` must be used to check the current env.
+#
+# TODO: When support for Elixir 1.10 is dropped, update this to use
+#       `config_env()` instead.
+#
+case Mix.env() do
   :test -> import_config "test.exs"
   _     -> nil
 end

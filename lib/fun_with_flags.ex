@@ -27,7 +27,7 @@ defmodule FunWithFlags do
 
   alias FunWithFlags.{Flag, Gate, Config}
 
-  @store FunWithFlags.Config.store_module
+  @store FunWithFlags.Config.store_module_determined_at_compile_time()
 
   @type options :: Keyword.t
 
@@ -487,4 +487,12 @@ defmodule FunWithFlags do
   defp verify(flag, [for: data]) do
     {:ok, Flag.enabled?(flag, for: data)}
   end
+
+  # Used in some tests and to debug.
+  #
+  # Apparently calling `Config.store_module_determined_at_compile_time` even
+  # just once in a test causes all sorts of weird test failures everywhere.
+  #
+  @doc false
+  def compiled_store, do: @store
 end

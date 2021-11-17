@@ -43,7 +43,6 @@ It stores flag information in Redis or a relational DB (PostgreSQL or MySQL, wit
 * [Application Start Behaviour](#application-start-behaviour)
 * [Testing](#testing)
 * [Development](#development)
-* [Common Issues](#common-issues)
 
 ## What's a Feature Flag?
 
@@ -749,27 +748,3 @@ This package uses the [credo](https://hex.pm/packages/credo) and [dialyxir](http
 mix credo
 mix dialyzer
 ```
-
-## Common Issues
-
-### Configuration changes have no effect in `MIX_ENV=dev`
-
-**Issue**: changing the library settings in the host application's Mix config file has no effect, or "missing process" exceptions are raised when booting. This should only be an issue in the development environment.  
-**Solution**: clear the compiled BEAM bytecode with:
-
-```shell
-rm -r _build/dev/lib/fun_with_flags
-rm -r _build/dev/lib/YOUR_APP_NAME
-```
-
-Why does this happen?
-
-This library tries to be fast and performant and it optimizes some things at compile-time by conditionally compiling different references to modules.
-
-Specifically, if the cache is enabled or disabled the library will use a different module (either `Store` or `SimpleStore`). Because these modules are accessed in the hot path, compiling them in improves the performance of the library.
-
-While it would be possible to read that config dynamically with [`Application.get_env/3`](https://hexdocs.pm/elixir/Application.html#get_env/3), that would require a few extra calls that should not really be necessary for data that never changes while the application is running. These calls would be reading the config from the application environment ETS table, plus some function calls to merge it with the defaults and then read the right key. Those extra operations come with some overhead.
-
-For this reason, things that are referenced in the hot path of the library are frozen at compile time with [module attributes](https://elixir-lang.org/getting-started/module-attributes.html#as-constants). This effectively minimizes needless inter-process messages, and gives a nice performance boost to busy applications.
-
-This should only be a problem in the development environment, where if you change some settings after the initial compilation, Mix will not recompile the dependencies. In the production environment this should not be an issue.
