@@ -510,7 +510,7 @@ end
 
 Using `ecto_sql` for persisting the flags also requires an ecto adapter, e.g. `postgrex`, `mariaex` or `myxql`. Please refer to the Ecto documentation for the details.
 
-Since FunWithFlags depends on Elixir `>= 1.8`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
+Since FunWithFlags depends on an Elixir more recent than 1.4, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
 
 If you need to customize how the `:fun_with_flags` application is loaded and started, refer to the [Application Start Behaviour](#application-start-behaviour) section, below in this document.
 
@@ -555,7 +555,7 @@ config :fun_with_flags, :redis, {:system, "REDIS_URL"}
 
 ### Persistence Adapters
 
-The library comes with two persistence adapters for the [`Redix`](https://hex.pm/packages/redix) and [`Ecto`](https://hex.pm/packages/ecto) libraries, that allow to persist feature flag data in Redis, PostgreSQL or MySQL. In order to use any of them, you must declare the correct optional dependency in the Mixfile (see the [installation](#installation) instructions, below).
+The library comes with two persistence adapters for the [`Redix`](https://hex.pm/packages/redix) and [`Ecto`](https://hex.pm/packages/ecto) libraries, that allow to persist feature flag data in Redis, PostgreSQL or MySQL. In order to use any of them, you must declare the correct optional dependency in the Mixfile (see the [installation](#installation) instructions, above).
 
 The Redis adapter is the default and there is no need to explicitly declare it. All it needs is the Redis connection configuration.
 
