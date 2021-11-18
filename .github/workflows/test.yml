@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         elixir:
-          - 'v1.13.0-rc.0'
+          - 'v1.13.0-rc.1'
           - '1.12'
           - '1.11'
           - '1.10'
