@@ -123,7 +123,7 @@ defmodule FunWithFlags.Mixfile do
       _ ->
         :timer.sleep(sleep_ms)
         remaining = attempts - 1
-        IO.puts("Test failed. Attempts left: #{remaining}")
+        IO.puts("Test failed. Retries left: #{remaining}.")
         _run_test_with_retries(remaining, sleep_ms, test_fn)
     end
   end
