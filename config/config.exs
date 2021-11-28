@@ -80,7 +80,14 @@ end
 # TODO: When support for Elixir 1.10 is dropped, update this to use
 #       `config_env()` instead.
 #
-case Mix.env() do
+current_env =
+  if Version.compare(System.version(), "1.11.0") == :lt do
+    Mix.env()
+  else
+    config_env()
+  end
+
+case current_env do
   :test -> import_config "test.exs"
   _     -> nil
 end
