@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 env:
-  elixir_version: '1.12'
+  elixir_version: '1.13'
   otp_version: '24.1'
 
 jobs:
