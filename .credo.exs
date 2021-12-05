@@ -24,7 +24,7 @@
         included: [
           "lib/",
           "src/",
-          "test/",
+          # "test/",
           "web/",
           "apps/*/lib/",
           "apps/*/src/",
@@ -46,7 +46,7 @@
       # If you want to enforce a style guide and need a more traditional linting
       # experience, you can change `strict` to `true` below:
       #
-      strict: false,
+      strict: true, # false,
       #
       # To modify the timeout for parsing files, change this value:
       #
@@ -82,8 +82,9 @@
           # You can customize the priority of any check
           # Priority values are: `low, normal, high, higher`
           #
-          {Credo.Check.Design.AliasUsage,
-           [priority: :low, if_nested_deeper_than: 2, if_called_more_often_than: 0]},
+          # {Credo.Check.Design.AliasUsage,
+          #  [priority: :low, if_nested_deeper_than: 2, if_called_more_often_than: 0]},
+
           # You can also customize the exit_status of each check.
           # If you don't want TODO comments to cause `mix credo` to fail, just
           # set this value to 0 (zero).
@@ -105,8 +106,8 @@
           {Credo.Check.Readability.ParenthesesOnZeroArityDefs, []},
           {Credo.Check.Readability.PipeIntoAnonymousFunctions, []},
           {Credo.Check.Readability.PredicateFunctionNames, []},
-          {Credo.Check.Readability.PreferImplicitTry, []},
-          {Credo.Check.Readability.RedundantBlankLines, []},
+          # {Credo.Check.Readability.PreferImplicitTry, []},
+          {Credo.Check.Readability.RedundantBlankLines, [max_blank_lines: 2]},
           {Credo.Check.Readability.Semicolons, []},
           {Credo.Check.Readability.SpaceAfterCommas, []},
           {Credo.Check.Readability.StringSigils, []},
@@ -195,9 +196,12 @@
           {Credo.Check.Warning.LeakyEnvironment, []},
           {Credo.Check.Warning.MapGetUnsafePass, []},
           {Credo.Check.Warning.MixEnv, []},
-          {Credo.Check.Warning.UnsafeToAtom, []}
+          {Credo.Check.Warning.UnsafeToAtom, []},
 
           # {Credo.Check.Refactor.MapInto, []},
+
+          {Credo.Check.Design.AliasUsage, []},
+          {Credo.Check.Readability.PreferImplicitTry, []},
 
           #
           # Custom checks can be created using `mix credo.gen.check`.
