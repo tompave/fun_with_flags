@@ -1,7 +1,7 @@
 defmodule FunWithFlags.Store.Serializer.Redis do
   @moduledoc false
-  alias FunWithFlags.Gate
   alias FunWithFlags.Flag
+  alias FunWithFlags.Gate
 
   @type redis_hash_pair :: [String.t]
 

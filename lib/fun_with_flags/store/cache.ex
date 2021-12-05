@@ -12,9 +12,9 @@ defmodule FunWithFlags.Store.Cache do
   @doc false
   use GenServer
 
-  alias FunWithFlags.Timestamps
-  alias FunWithFlags.Flag
   alias FunWithFlags.Config
+  alias FunWithFlags.Flag
+  alias FunWithFlags.Timestamps
 
   @table_name :fun_with_flags_cache
   @table_options [

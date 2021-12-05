@@ -3,7 +3,7 @@ defmodule FunWithFlags.Store do
 
   require Logger
   alias FunWithFlags.Store.Cache
-  alias FunWithFlags.{Flag, Config}
+  alias FunWithFlags.{Config, Flag}
 
   import FunWithFlags.Config, only: [persistence_adapter: 0]
 

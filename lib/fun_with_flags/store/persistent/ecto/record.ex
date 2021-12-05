@@ -4,7 +4,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
-  alias FunWithFlags.{Gate, Config}
+  alias FunWithFlags.{Config, Gate}
 
   @primary_key {:id, :id, autogenerate: true}
 

@@ -25,7 +25,7 @@ defmodule FunWithFlags do
   explanation.
   """
 
-  alias FunWithFlags.{Flag, Gate, Config}
+  alias FunWithFlags.{Config, Flag, Gate}
 
   @store FunWithFlags.Config.store_module_determined_at_compile_time()
 
