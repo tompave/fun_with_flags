@@ -31,7 +31,7 @@ defmodule FunWithFlags.Flag do
   #
   def enabled?(%__MODULE__{gates: gates}, []) do
     grouped_gates = collect_gates_by_type(gates)
-    check_boolean_gate(get_head(grouped_gates[:boolean])) || check_percentage_of_time_gate(get_head(grouped_gates[:percentage_of_time]))
+    check_boolean_gate(grouped_gates[:boolean]) || check_percentage_of_time_gate(grouped_gates[:percentage_of_time])
   end
 
 
@@ -44,7 +44,7 @@ defmodule FunWithFlags.Flag do
         case check_group_gates(grouped_gates[:group], item) do
           {:ok, bool} -> bool
           :ignore ->
-            check_boolean_gate(get_head(grouped_gates[:boolean])) || check_percentage_gate(grouped_gates, item, flag_name)
+            check_boolean_gate(grouped_gates[:boolean]) || check_percentage_gate(grouped_gates, item, flag_name)
         end
     end
   end
@@ -53,7 +53,7 @@ defmodule FunWithFlags.Flag do
   defp check_percentage_gate(grouped_gates, item, flag_name) do
     case grouped_gates[:percentage_of_actors] do
       nil ->
-        check_percentage_of_time_gate(get_head(grouped_gates[:percentage_of_time]))
+        check_percentage_of_time_gate(grouped_gates[:percentage_of_time])
       [gate] ->
         check_percentage_of_actors_gate(gate, item, flag_name)
     end
@@ -99,14 +99,14 @@ defmodule FunWithFlags.Flag do
   defp do_check_group_gates(_, _, result), do: result
 
 
-  defp check_boolean_gate(gate = %Gate{type: :boolean}) do
+  defp check_boolean_gate([gate = %Gate{type: :boolean}]) do
     {:ok, bool} = Gate.enabled?(gate)
     bool
   end
   defp check_boolean_gate(nil), do: false
 
 
-  defp check_percentage_of_time_gate(gate = %Gate{type: :percentage_of_time}) do
+  defp check_percentage_of_time_gate([gate = %Gate{type: :percentage_of_time}]) do
     {:ok, bool} = Gate.enabled?(gate)
     bool
   end
@@ -121,7 +121,4 @@ defmodule FunWithFlags.Flag do
   defp collect_gates_by_type(gates) do
     Enum.group_by(gates, &(&1.type))
   end
-
-  defp get_head([%Gate{} = gate]), do: gate
-  defp get_head(_), do: nil
 end
