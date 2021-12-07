@@ -106,20 +106,29 @@ defmodule FunWithFlags.Store.Persistent.Redis do
 
   @impl true
   def all_flags do
-    {:ok, flag_names} = all_flag_names()
-    flags = Enum.map(flag_names, fn(name) ->
-      {:ok, flag} = get(name)
-      flag
-    end)
-    {:ok, flags}
+    case all_flag_names() do
+      {:ok, flag_names} ->
+        flags = Enum.map(flag_names, fn(name) ->
+          case get(name) do
+            {:ok, flag} -> flag
+            error -> error
+          end
+        end)
+        {:ok, flags}
+      error -> error
+    end
   end
 
 
   @impl true
   def all_flag_names do
-    {:ok, strings} = Redix.command(@conn, ["SMEMBERS", @flags_set])
-    atoms = Enum.map(strings, &String.to_atom(&1))
-    {:ok, atoms}
+    case Redix.command(@conn, ["SMEMBERS", @flags_set]) do
+      {:ok, strings} ->
+        atoms = Enum.map(strings, &String.to_atom(&1))
+        {:ok, atoms}
+      {:error, reason} ->
+        {:error, redis_error(reason)}
+    end
   end
 
 

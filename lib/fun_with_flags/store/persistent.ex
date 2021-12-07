@@ -31,6 +31,7 @@ defmodule FunWithFlags.Store.Persistent do
   """
   @callback get(flag_name :: atom) ::
               {:ok, FunWithFlags.Flag.t}
+              | {:error, any()}
 
   @doc """
   Persists a gate for a flag, identified by name.
@@ -60,10 +61,12 @@ defmodule FunWithFlags.Store.Persistent do
   """
   @callback all_flags() ::
               {:ok, [FunWithFlags.Flag.t]}
+              | {:error, any()}
 
   @doc """
   Retrieves all the names of the persisted flags.
   """
   @callback all_flag_names() ::
               {:ok, [atom]}
+              | {:error, any()}
 end
