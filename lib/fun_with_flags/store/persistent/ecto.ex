@@ -215,6 +215,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
       |> Enum.group_by(&(&1.flag_name))
       |> Enum.map(fn ({name, records}) -> deserialize(name, records) end)
     {:ok, flags}
+  rescue
+    e in [Ecto.QueryError] -> {:error, e}
   end
 
 
@@ -224,6 +226,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     strings = ecto_repo().all(query)
     atoms = Enum.map(strings, &String.to_atom(&1))
     {:ok, atoms}
+  rescue
+    e in [Ecto.QueryError] -> {:error, e}
   end
 
 
