@@ -60,7 +60,7 @@ defmodule FunWithFlags.Store do
   end
 
 
-  @spec reload(atom) :: {:ok, FunWithFlags.Flag.t}
+  @spec reload(atom) :: {:ok, FunWithFlags.Flag.t} | {:error, any()}
   def reload(flag_name) do
     Logger.debug fn -> "FunWithFlags: reloading cached flag '#{flag_name}' from storage " end
     flag_name
@@ -69,13 +69,13 @@ defmodule FunWithFlags.Store do
   end
 
 
-  @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]}
+  @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]} | {:error, any()}
   def all_flags do
     persistence_adapter().all_flags()
   end
 
 
-  @spec all_flag_names() :: {:ok, [atom]}
+  @spec all_flag_names() :: {:ok, [atom]} | {:error, any()}
   def all_flag_names do
     persistence_adapter().all_flag_names()
   end
