@@ -467,9 +467,9 @@ defmodule FunWithFlags do
   but it's not meant to be used at runtime. Undefined flags,
   for example, will be considered disabled.
   """
-  @spec all_flags() :: {:ok, [atom]} | {:error, any}
-  def all_flags do
-    Config.persistence_adapter().all_flags()
+  @spec all_flag_names() :: {:ok, [atom]} | {:error, any}
+  def all_flag_names do
+    Config.persistence_adapter().all_flag_names()
   end
 
   @doc """
@@ -481,9 +481,9 @@ defmodule FunWithFlags do
 
   To query the value of a flag, please use the `enabled?2` function instead.
   """
-  @spec all_flag_names() :: {:ok, [FunWithFlags.Flag.t]} | {:error, any}
-  def all_flag_names do
-    Config.persistence_adapter().all_flag_names()
+  @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]} | {:error, any}
+  def all_flags do
+    Config.persistence_adapter().all_flags()
   end
 
 
