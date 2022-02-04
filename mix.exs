@@ -63,6 +63,7 @@ defmodule FunWithFlags.Mixfile do
       {:postgrex, "~> 0.13", optional: true, only: [:dev, :test]},
       {:myxql, "~> 0.2", optional: true, only: [:dev, :test]},
       {:phoenix_pubsub, "~> 2.0", optional: true},
+      {:timex, ">= 0.0.0"},
 
       {:mock, "~> 0.3", only: :test},
 

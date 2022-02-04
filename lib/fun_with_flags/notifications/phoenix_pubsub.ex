@@ -3,6 +3,7 @@ if Code.ensure_loaded?(Phoenix.PubSub) do
 defmodule FunWithFlags.Notifications.PhoenixPubSub do
   @moduledoc false
   use GenServer
+  use Timex
   require Logger
   alias FunWithFlags.{Config, Store}
 
@@ -55,7 +56,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
   # The unique_id will become the state of the GenServer
   #
   def init(unique_id) do
-    subscribe(1)
+    wait_for_phoenix_pubsub_before_subscribing(now())
     {:ok, unique_id}
   end
 
@@ -88,6 +89,23 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
     raise "Tried to subscribe to Phoenix.PubSub process #{inspect(client())} #{@max_attempts} times. Giving up."
   end
 
+  defp wait_for_phoenix_pubsub_before_subscribing(since, attempt \\ 0) do
+    case Process.whereis(client()) do
+      nil ->
+        if attempt > 1 do
+          duration = now() - since
+          humanized = Duration.from_milliseconds(ceil_nearest(duration, 1000)) |> Elixir.Timex.Format.Duration.Formatters.Humanized.format
+          Logger.debug fn -> "FunWithFlags: Patiently waiting #{humanized} for the Phoenix.PubSub process to start." end
+        end
+        Process.send_after(self(), {:wait_for_phoenix_pubsub_retry, since, (attempt + 1)}, 1000)
+
+      _ ->
+        if attempt > 1 do
+          Logger.debug fn -> "FunWithFlags: Detected Phoenix.PubSub process." end
+        end
+        subscribe(1)
+    end
+  end
 
   # Wait 1 second and try again
   #
@@ -123,7 +141,14 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
     {:noreply, unique_id}
   end
 
+  def handle_info({:wait_for_phoenix_pubsub_retry, since, attempt}, unique_id) do
+    wait_for_phoenix_pubsub_before_subscribing(since, attempt)
+    {:noreply, unique_id}
+  end
+
   defp client, do: Config.pubsub_client()
+  defp now, do: System.monotonic_time(:millisecond)
+  def ceil_nearest(num, target), do: ceil(num/target)*target
 end
 
 end # Code.ensure_loaded?
