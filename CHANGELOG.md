@@ -2,7 +2,7 @@
 
 ## v1.8.1 (Unreleased)
 
-* Lock `postgrex` dependency to `~> 0.15.11`. Version `0.16` requires Elixir 1.11 ([changelog](https://github.com/elixir-ecto/postgrex/blob/master/CHANGELOG.md#v0160-2022-01-23)) and it doesn't compile with Elixit 1.10, which FunWithFlags still supports.
+* Lock `postgrex` dependency to `< 0.16`. Version `0.16` requires Elixir 1.11 ([changelog](https://github.com/elixir-ecto/postgrex/blob/master/CHANGELOG.md#v0160-2022-01-23)) and it doesn't compile with Elixit 1.10, which FunWithFlags still supports.
 
 ## v1.8.0
 
