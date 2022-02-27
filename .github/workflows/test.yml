@@ -18,14 +18,13 @@ jobs:
           - '1.13'
           - '1.12'
           - '1.11'
-          - '1.10'
         otp:
           - '24.1'
           - '23.3'
           - '22.3'
-        exclude:
-          - elixir: '1.10'
-            otp: '24.1'
+        # exclude:
+        #   - elixir: '1.10'
+        #     otp: '24.1'
 
     services:
       postgres:
