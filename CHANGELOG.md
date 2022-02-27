@@ -3,7 +3,7 @@
 ## Unreleased
 
 * Drop support for Elixir 1.10. Elixir >= 1.11 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
-* Relax supported version of `postgres` to `~> 0.16`.
+* Relax supported versions of `postgrex` to allow `~> 0.16`.
 
 ## v1.8.1
 
