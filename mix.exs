@@ -8,7 +8,7 @@ defmodule FunWithFlags.Mixfile do
     [
       app: :fun_with_flags,
       version: @version,
-      elixir: "~> 1.10",
+      elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env),
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
@@ -60,7 +60,7 @@ defmodule FunWithFlags.Mixfile do
     [
       {:redix, "~> 1.0", optional: true},
       {:ecto_sql, "~> 3.0", optional: true},
-      {:postgrex, ">= 0.13.0 and < 0.16.0", optional: true, only: [:dev, :test]},
+      {:postgrex, "~> 0.16", optional: true, only: [:dev, :test]},
       {:myxql, "~> 0.2", optional: true, only: [:dev, :test]},
       {:phoenix_pubsub, "~> 2.0", optional: true},
 

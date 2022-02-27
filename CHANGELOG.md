@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+* Drop support for Elixir 1.10. Elixir >= 1.11 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
+* Relax supported version of `postgres` to `~> 0.16`.
+
 ## v1.8.1
 
 * Lock `postgrex` dependency to `< 0.16`. Version `0.16` requires Elixir 1.11 ([changelog](https://github.com/elixir-ecto/postgrex/blob/master/CHANGELOG.md#v0160-2022-01-23)) and it doesn't compile with Elixit 1.10, which FunWithFlags still supports.

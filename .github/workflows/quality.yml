@@ -8,7 +8,7 @@ on:
 
 env:
   elixir_version: '1.13'
-  otp_version: '24.1'
+  otp_version: '24.2'
 
 jobs:
   credo:
