@@ -6,7 +6,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   import Ecto.Changeset
   alias FunWithFlags.{Config, Gate}
 
-  @primary_key {:id, :id, autogenerate: true}
+  @primary_key {:id, Config.ecto_primary_key_type(), autogenerate: true}
 
   schema Config.ecto_table_name() do
     field :flag_name, :string
