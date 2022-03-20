@@ -116,18 +116,9 @@ defmodule FunWithFlags.ConfigTest do
     end
   end
 
-  describe "ecto_table_name()" do
+  describe "ecto_table_name_determined_at_compile_time()" do
     test "it defaults to \"fun_with_flags_toggles\"" do
-      assert Config.ecto_table_name() == "fun_with_flags_toggles"
-    end
-
-    test "it can be configured" do
-      persistence_config = Application.get_env(:fun_with_flags,  :persistence, [])
-      Application.put_env(:fun_with_flags, :persistence, [ecto_table_name: "my_custom_table"])
-
-      assert Config.ecto_table_name() == "my_custom_table"
-
-      Application.put_env(:fun_with_flags, :persistence, persistence_config)
+      assert Config.ecto_table_name_determined_at_compile_time() == "fun_with_flags_toggles"
     end
   end
 
