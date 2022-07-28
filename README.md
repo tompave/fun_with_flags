@@ -691,6 +691,22 @@ Then it's necessary to configure the Mix project to not start the `:fun_with_fla
 + {:fun_with_flags, "~> 1.6", runtime: false},
 ```
 
+You'll also need to modify the `releases` section in `mix.exs` so that it loads the `fun_with_flags` application.
+
+```diff
+def project do
+  [
+    app: :my_phoenix_app,
++   releases: [
++     my_phoenix_app: [
++       applications: [
++         fun_with_flags: :load
++       ]
++    ]
+  ]
+end
+```
+
 * **Option B**: Declare that the `:fun_with_flags` application is managed directly by your host application ([docs](https://hexdocs.pm/mix/1.11.3/Mix.Tasks.Compile.App.html)).
 
 ```diff
