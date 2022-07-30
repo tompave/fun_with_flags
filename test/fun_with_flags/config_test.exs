@@ -22,6 +22,11 @@ defmodule FunWithFlags.ConfigTest do
     configure_redis_with(url)
     assert ^url = Config.redis_config
 
+    # when configured to use sentinel, it returns sentinel without default host and port
+    sentinel = [sentinel: [sentinels: ["redis:://locahost:1234/1"], group: "primary"], database: 5]
+    configure_redis_with(sentinel)
+    assert ^sentinel = Config.redis_config
+
     # when configured with keywords, it merges them with the default
     configure_redis_with(database: 42, port: 2000)
     assert defaults[:host] == Config.redis_config[:host]
