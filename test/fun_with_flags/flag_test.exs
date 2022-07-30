@@ -162,7 +162,7 @@ defmodule FunWithFlags.FlagTest do
     end
 
 
-    test "when the checked item belongs to multiple conflicting group gates, DISABLED gates take precence", %{john: john, arya: arya} do
+    test "when the checked item belongs to multiple conflicting group gates, DISABLED gates take precendence", %{john: john, arya: arya} do
       flag = %Flag{name: :pear, gates: [
         Gate.new(:group, :nights_watch, false),
         Gate.new(:group, :starks, true),
@@ -187,14 +187,14 @@ defmodule FunWithFlags.FlagTest do
 
     # precedence ----------------------------------------------------
 
-    test "an actor gate takes precendence over the boolean gate, when enabling", %{john: john, arya: arya} do
+    test "an actor gate takes precedence over the boolean gate, when enabling", %{john: john, arya: arya} do
       flag = %Flag{name: :pear, gates: [Gate.new(:boolean, false), Gate.new(:actor, john, true)]}
       assert Flag.enabled?(flag, for: john)
       refute Flag.enabled?(flag, for: arya)
       refute Flag.enabled?(flag)
     end
 
-    test "an actor gate takes precendence over the boolean gate, when disabling", %{john: john, arya: arya} do
+    test "an actor gate takes precedence over the boolean gate, when disabling", %{john: john, arya: arya} do
       flag = %Flag{name: :pear, gates: [Gate.new(:boolean, true), Gate.new(:actor, john, false)]}
       refute Flag.enabled?(flag, for: john)
       assert Flag.enabled?(flag, for: arya)
@@ -202,7 +202,7 @@ defmodule FunWithFlags.FlagTest do
     end
 
     @tag :flaky
-    test "an actor gate takes precendence over the percentage_of_time gate, when enabling", %{john: john, arya: arya} do
+    test "an actor gate takes precedence over the percentage_of_time gate, when enabling", %{john: john, arya: arya} do
       mostly_disabled = Gate.new(:percentage_of_time, 0.000000001)
       flag = %Flag{name: :pear, gates: [mostly_disabled, Gate.new(:actor, john, true)]}
       assert Flag.enabled?(flag, for: john)
@@ -211,7 +211,7 @@ defmodule FunWithFlags.FlagTest do
     end
 
     @tag :flaky
-    test "an actor gate takes precendence over the percentage_of_time gate, when disabling", %{john: john, arya: arya} do
+    test "an actor gate takes precedence over the percentage_of_time gate, when disabling", %{john: john, arya: arya} do
       mostly_enabled = Gate.new(:percentage_of_time, 0.999999999)
       flag = %Flag{name: :pear, gates: [mostly_enabled, Gate.new(:actor, john, false)]}
       refute Flag.enabled?(flag, for: john)
@@ -219,7 +219,7 @@ defmodule FunWithFlags.FlagTest do
       assert Flag.enabled?(flag)
     end
 
-    test "an actor gate takes precendence over the percentage_of_actors gate, when enabling", %{john: john, arya: arya} do
+    test "an actor gate takes precedence over the percentage_of_actors gate, when enabling", %{john: john, arya: arya} do
       gate = Gate.new(:percentage_of_actors, 0.2) # disabled for both
       flag = %Flag{name: :pear, gates: [gate, Gate.new(:actor, john, true)]}
       assert Flag.enabled?(flag, for: john)
@@ -227,7 +227,7 @@ defmodule FunWithFlags.FlagTest do
       refute Flag.enabled?(flag)
     end
 
-    test "an actor gate takes precendence over the percentage_of_actors gate, when disabling", %{john: john, arya: arya} do
+    test "an actor gate takes precedence over the percentage_of_actors gate, when disabling", %{john: john, arya: arya} do
       gate = Gate.new(:percentage_of_actors, 0.8) # enabled for both
       flag = %Flag{name: :pear, gates: [gate, Gate.new(:actor, john, false)]}
       refute Flag.enabled?(flag, for: john)
@@ -236,14 +236,14 @@ defmodule FunWithFlags.FlagTest do
     end
 
 
-    test "a group gate takes precendence over the boolean gate, when enabling", %{john: john, arya: arya} do
+    test "a group gate takes precedence over the boolean gate, when enabling", %{john: john, arya: arya} do
       flag = %Flag{name: :pear, gates: [Gate.new(:boolean, false), Gate.new(:group, :nameless_men, true)]}
       refute Flag.enabled?(flag, for: john)
       assert Flag.enabled?(flag, for: arya)
       refute Flag.enabled?(flag)
     end
 
-    test "a group gate takes precendence over the boolean gate, when disabling", %{john: john, arya: arya} do
+    test "a group gate takes precedence over the boolean gate, when disabling", %{john: john, arya: arya} do
       flag = %Flag{name: :pear, gates: [Gate.new(:boolean, true), Gate.new(:group, :nameless_men, false)]}
       assert Flag.enabled?(flag, for: john)
       refute Flag.enabled?(flag, for: arya)
@@ -251,7 +251,7 @@ defmodule FunWithFlags.FlagTest do
     end
 
     @tag :flaky
-    test "a group gate takes precendence over the percentage_of_time gate, when enabling", %{john: john, arya: arya} do
+    test "a group gate takes precedence over the percentage_of_time gate, when enabling", %{john: john, arya: arya} do
       mostly_disabled = Gate.new(:percentage_of_time, 0.000000001)
       flag = %Flag{name: :pear, gates: [mostly_disabled, Gate.new(:group, :nameless_men, true)]}
       refute Flag.enabled?(flag, for: john)
@@ -260,7 +260,7 @@ defmodule FunWithFlags.FlagTest do
     end
 
     @tag :flaky
-    test "a group gate takes precendence over the percentage_of_time gate, when disabling", %{john: john, arya: arya} do
+    test "a group gate takes precedence over the percentage_of_time gate, when disabling", %{john: john, arya: arya} do
       mostly_enabled = Gate.new(:percentage_of_time, 0.999999999)
       flag = %Flag{name: :pear, gates: [mostly_enabled, Gate.new(:group, :nameless_men, false)]}
       assert Flag.enabled?(flag, for: john)
@@ -268,7 +268,7 @@ defmodule FunWithFlags.FlagTest do
       assert Flag.enabled?(flag)
     end
 
-    test "a group gate takes precendence over the percentage_of_actors gate, when enabling", %{john: john, arya: arya} do
+    test "a group gate takes precedence over the percentage_of_actors gate, when enabling", %{john: john, arya: arya} do
       gate = Gate.new(:percentage_of_actors, 0.2) # disabled for both
       flag = %Flag{name: :pear, gates: [gate, Gate.new(:group, :nameless_men, true)]}
       refute Flag.enabled?(flag, for: john)
@@ -276,7 +276,7 @@ defmodule FunWithFlags.FlagTest do
       refute Flag.enabled?(flag)
     end
 
-    test "a group gate takes precendence over the percentage_of_actors gate, when disabling", %{john: john, arya: arya} do
+    test "a group gate takes precedence over the percentage_of_actors gate, when disabling", %{john: john, arya: arya} do
       gate = Gate.new(:percentage_of_actors, 0.8) # enabled for both
       flag = %Flag{name: :pear, gates: [gate, Gate.new(:group, :nameless_men, false)]}
       assert Flag.enabled?(flag, for: john)
@@ -285,7 +285,7 @@ defmodule FunWithFlags.FlagTest do
     end
 
 
-    test "an actor gate takes precendence over a group gate, when enabling", %{john: john, arya: arya} do
+    test "an actor gate takes precedence over a group gate, when enabling", %{john: john, arya: arya} do
       flag = %Flag{name: :pear, gates: [
         Gate.new(:group, :starks, false),
         Gate.new(:actor, john, true)
@@ -295,7 +295,7 @@ defmodule FunWithFlags.FlagTest do
       refute Flag.enabled?(flag)
     end
 
-    test "an actor gate takes precendence over a group gate, when disabling", %{john: john, arya: arya} do
+    test "an actor gate takes precedence over a group gate, when disabling", %{john: john, arya: arya} do
       flag = %Flag{name: :pear, gates: [
         Gate.new(:group, :starks, true),
         Gate.new(:actor, john, false)
@@ -307,7 +307,7 @@ defmodule FunWithFlags.FlagTest do
 
 
     @tag :flaky
-    test "a boolean gate takes precendence over the percentage_of_time gate, when enabling", %{john: john, arya: arya} do
+    test "a boolean gate takes precedence over the percentage_of_time gate, when enabling", %{john: john, arya: arya} do
       mostly_disabled = Gate.new(:percentage_of_time, 0.000000001)
       flag = %Flag{name: :pear, gates: [mostly_disabled, Gate.new(:boolean, true)]}
       assert Flag.enabled?(flag, for: john)
@@ -316,7 +316,7 @@ defmodule FunWithFlags.FlagTest do
     end
 
     @tag :flaky
-    test "a boolean gate does NOT take precendence over the percentage_of_time gate, when disabling", %{john: john, arya: arya} do
+    test "a boolean gate does NOT take precedence over the percentage_of_time gate, when disabling", %{john: john, arya: arya} do
       mostly_enabled = Gate.new(:percentage_of_time, 0.999999999)
       flag = %Flag{name: :pear, gates: [mostly_enabled, Gate.new(:boolean, false)]}
       assert Flag.enabled?(flag, for: john)
@@ -325,7 +325,7 @@ defmodule FunWithFlags.FlagTest do
     end
 
 
-    test "a boolean gate takes precendence over the percentage_of_actors gate, when enabling", %{john: john, arya: arya} do
+    test "a boolean gate takes precedence over the percentage_of_actors gate, when enabling", %{john: john, arya: arya} do
       gate = Gate.new(:percentage_of_actors, 0.2) # disabled for both
       flag = %Flag{name: :pear, gates: [gate, Gate.new(:boolean, true)]}
       assert Flag.enabled?(flag, for: john)
@@ -333,7 +333,7 @@ defmodule FunWithFlags.FlagTest do
       assert Flag.enabled?(flag)
     end
 
-    test "a boolean gate does NOT take precendence over the percentage_of_actors gate, when disabling", %{john: john, arya: arya} do
+    test "a boolean gate does NOT take precedence over the percentage_of_actors gate, when disabling", %{john: john, arya: arya} do
       gate = Gate.new(:percentage_of_actors, 0.8) # enabled for both
       flag = %Flag{name: :pear, gates: [gate, Gate.new(:boolean, false)]}
       assert Flag.enabled?(flag, for: john)
@@ -342,7 +342,7 @@ defmodule FunWithFlags.FlagTest do
     end
 
 
-    test "precendence order", %{john: john, arya: arya} do
+    test "precedence order", %{john: john, arya: arya} do
       # precedence order:
       # - actor,
       # - then groups,
@@ -351,7 +351,7 @@ defmodule FunWithFlags.FlagTest do
       #    - percentage_of_time (if present, applies with or without actors in the enabled?() call)
       #   or:
       #    - percentage_of_actors (only if an actor is provided)
-    
+
       # score with :warging flag = 0.122283935546875
       other_actor = %{actor_id: "a valid actor, but not an enabled one"}
 

@@ -3,8 +3,8 @@
 [![Mix Tests](https://github.com/tompave/fun_with_flags/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/tompave/fun_with_flags/actions/workflows/test.yml?query=branch%3Amaster)
 [![Code Quality](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml/badge.svg?branch=master)](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml?query=branch%3Amaster)  
 [![Hex.pm](https://img.shields.io/hexpm/v/fun_with_flags.svg)](https://hex.pm/packages/fun_with_flags)
-[![hexdocs.pm](https://img.shields.io/badge/docs-1.6.0-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/)
-![Hex.pm Downloads](https://img.shields.io/hexpm/dt/fun_with_flags)
+[![hexdocs.pm](https://img.shields.io/badge/docs-1.8.1-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/1.8.1/FunWithFlags.html)
+[![Hex.pm Downloads](https://img.shields.io/hexpm/dt/fun_with_flags)](https://hex.pm/packages/fun_with_flags)
 [![License](https://img.shields.io/hexpm/l/fun_with_flags.svg)](https://github.com/tompave/fun_with_flags/blob/master/LICENSE.txt)
 [![ElixirWeekly](https://img.shields.io/badge/featured-ElixirWeekly-8e5ab5.svg)](https://elixirweekly.net/issues/43)
 [![ElixirCasts](https://img.shields.io/badge/featured-ElixirCasts-ff931e.svg)](https://elixircasts.io/feature-flags)
@@ -43,7 +43,6 @@ It stores flag information in Redis or a relational DB (PostgreSQL or MySQL, wit
 * [Application Start Behaviour](#application-start-behaviour)
 * [Testing](#testing)
 * [Development](#development)
-* [Common Issues](#common-issues)
 
 ## What's a Feature Flag?
 
@@ -495,7 +494,7 @@ In order to have a small installation footprint, the dependencies for the differ
 ```elixir
 def deps do
   [
-    {:fun_with_flags, "~> 1.6.0"},
+    {:fun_with_flags, "~> 1.8.1"},
 
     # either:
     {:redix, "~> 0.9"},
@@ -510,7 +509,7 @@ end
 
 Using `ecto_sql` for persisting the flags also requires an ecto adapter, e.g. `postgrex`, `mariaex` or `myxql`. Please refer to the Ecto documentation for the details.
 
-Since FunWithFlags depends on Elixir `>= 1.8`, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
+Since FunWithFlags depends on an Elixir more recent than 1.4, there is [no need to explicitly declare the application](https://github.com/elixir-lang/elixir/blob/v1.4/CHANGELOG.md#application-inference).
 
 If you need to customize how the `:fun_with_flags` application is loaded and started, refer to the [Application Start Behaviour](#application-start-behaviour) section, below in this document.
 
@@ -547,7 +546,7 @@ config :fun_with_flags, :redis,
   database: 0
 
 # a URL string can be used instead
-config :fun_with_flags, :redis, "redis://locahost:6379/0"
+config :fun_with_flags, :redis, "redis://localhost:6379/0"
 
 # a {:system, name} tuple can be used to read from the environment
 config :fun_with_flags, :redis, {:system, "REDIS_URL"}
@@ -555,7 +554,7 @@ config :fun_with_flags, :redis, {:system, "REDIS_URL"}
 
 ### Persistence Adapters
 
-The library comes with two persistence adapters for the [`Redix`](https://hex.pm/packages/redix) and [`Ecto`](https://hex.pm/packages/ecto) libraries, that allow to persist feature flag data in Redis, PostgreSQL or MySQL. In order to use any of them, you must declare the correct optional dependency in the Mixfile (see the [installation](#installation) instructions, below).
+The library comes with two persistence adapters for the [`Redix`](https://hex.pm/packages/redix) and [`Ecto`](https://hex.pm/packages/ecto) libraries, that allow to persist feature flag data in Redis, PostgreSQL or MySQL. In order to use any of them, you must declare the correct optional dependency in the Mixfile (see the [installation](#installation) instructions, above).
 
 The Redis adapter is the default and there is no need to explicitly declare it. All it needs is the Redis connection configuration.
 
@@ -749,27 +748,3 @@ This package uses the [credo](https://hex.pm/packages/credo) and [dialyxir](http
 mix credo
 mix dialyzer
 ```
-
-## Common Issues
-
-### Configuration changes have no effect in `MIX_ENV=dev`
-
-**Issue**: changing the library settings in the host application's Mix config file has no effect, or "missing process" exceptions are raised when booting. This should only be an issue in the development environment.  
-**Solution**: clear the compiled BEAM bytecode with:
-
-```shell
-rm -r _build/dev/lib/fun_with_flags
-rm -r _build/dev/lib/YOUR_APP_NAME
-```
-
-Why does this happen?
-
-This library tries to be fast and performant and it optimizes some things at compile-time by conditionally compiling different references to modules.
-
-Specifically, if the cache is enabled or disabled the library will use a different module (either `Store` or `SimpleStore`). Because these modules are accessed in the hot path, compiling them in improves the performance of the library.
-
-While it would be possible to read that config dynamically with [`Application.get_env/3`](https://hexdocs.pm/elixir/Application.html#get_env/3), that would require a few extra calls that should not really be necessary for data that never changes while the application is running. These calls would be reading the config from the application environment ETS table, plus some function calls to merge it with the defaults and then read the right key. Those extra operations come with some overhead.
-
-For this reason, things that are referenced in the hot path of the library are frozen at compile time with [module attributes](https://elixir-lang.org/getting-started/module-attributes.html#as-constants). This effectively minimizes needless inter-process messages, and gives a nice performance boost to busy applications.
-
-This should only be a problem in the development environment, where if you change some settings after the initial compilation, Mix will not recompile the dependencies. In the production environment this should not be an issue.

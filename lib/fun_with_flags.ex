@@ -25,9 +25,9 @@ defmodule FunWithFlags do
   explanation.
   """
 
-  alias FunWithFlags.{Flag, Gate, Config}
+  alias FunWithFlags.{Config, Flag, Gate}
 
-  @store FunWithFlags.Config.store_module
+  @store FunWithFlags.Config.store_module_determined_at_compile_time()
 
   @type options :: Keyword.t
 
@@ -174,12 +174,15 @@ defmodule FunWithFlags do
       false
 
   """
-  @spec enable(atom, options) :: {:ok, true}
+  @spec enable(atom, options) :: {:ok, true} | {:error, any}
   def enable(flag_name, options \\ [])
 
   def enable(flag_name, []) when is_atom(flag_name) do
-    {:ok, flag} = @store.put(flag_name, Gate.new(:boolean, true))
-    verify(flag)
+    gate = Gate.new(:boolean, true)
+    case @store.put(flag_name, gate) do
+      {:ok, flag} -> verify(flag)
+      error -> error
+    end
   end
 
   def enable(flag_name, [for_actor: nil]) do
@@ -188,8 +191,10 @@ defmodule FunWithFlags do
 
   def enable(flag_name, [for_actor: actor]) when is_atom(flag_name) do
     gate = Gate.new(:actor, actor, true)
-    {:ok, flag} = @store.put(flag_name, gate)
-    verify(flag, for: actor)
+    case @store.put(flag_name, gate) do
+      {:ok, flag} -> verify(flag, for: actor)
+      error -> error
+    end
   end
 
 
@@ -199,21 +204,27 @@ defmodule FunWithFlags do
 
   def enable(flag_name, [for_group: group_name]) when is_atom(flag_name) do
     gate = Gate.new(:group, group_name, true)
-    {:ok, _flag} = @store.put(flag_name, gate)
-    {:ok, true}
+    case @store.put(flag_name, gate) do
+      {:ok, _flag} -> {:ok, true}
+      error -> error
+    end
   end
 
 
   def enable(flag_name, [for_percentage_of: {:time, ratio}]) when is_atom(flag_name) do
     gate = Gate.new(:percentage_of_time, ratio)
-    {:ok, _flag} = @store.put(flag_name, gate)
-    {:ok, true}
+    case @store.put(flag_name, gate) do
+      {:ok, _flag} -> {:ok, true}
+      error -> error
+    end
   end
 
   def enable(flag_name, [for_percentage_of: {:actors, ratio}]) when is_atom(flag_name) do
     gate = Gate.new(:percentage_of_actors, ratio)
-    {:ok, _flag} = @store.put(flag_name, gate)
-    {:ok, true}
+    case @store.put(flag_name, gate) do
+      {:ok, _flag} -> {:ok, true}
+      error -> error
+    end
   end
 
 
@@ -295,12 +306,15 @@ defmodule FunWithFlags do
       {:ok, false}
 
   """
-  @spec disable(atom, options) :: {:ok, false}
+  @spec disable(atom, options) :: {:ok, false} | {:error, any}
   def disable(flag_name, options \\ [])
 
   def disable(flag_name, []) when is_atom(flag_name) do
-    {:ok, flag} = @store.put(flag_name, Gate.new(:boolean, false))
-    verify(flag)
+    gate = Gate.new(:boolean, false)
+    case @store.put(flag_name, gate) do
+      {:ok, flag} -> verify(flag)
+      error -> error
+    end
   end
 
   def disable(flag_name, [for_actor: nil]) do
@@ -309,8 +323,10 @@ defmodule FunWithFlags do
 
   def disable(flag_name, [for_actor: actor]) when is_atom(flag_name) do
     gate = Gate.new(:actor, actor, false)
-    {:ok, flag} = @store.put(flag_name, gate)
-    verify(flag, for: actor)
+    case @store.put(flag_name, gate) do
+      {:ok, flag} -> verify(flag, for: actor)
+      error -> error
+    end
   end
 
   def disable(flag_name, [for_group: nil]) do
@@ -319,16 +335,20 @@ defmodule FunWithFlags do
 
   def disable(flag_name, [for_group: group_name]) when is_atom(flag_name) do
     gate = Gate.new(:group, group_name, false)
-    {:ok, _flag} = @store.put(flag_name, gate)
-    {:ok, false}
+    case @store.put(flag_name, gate) do
+      {:ok, _flag} -> {:ok, false}
+      error -> error
+    end
   end
 
 
   def disable(flag_name, [for_percentage_of: {type, ratio}])
   when is_atom(flag_name) and is_float(ratio) do
     inverted_ratio = 1.0 - ratio
-    {:ok, true} = enable(flag_name, [for_percentage_of: {type, inverted_ratio}])
-    {:ok, false}
+    case enable(flag_name, [for_percentage_of: {type, inverted_ratio}]) do
+      {:ok, true} -> {:ok, false}
+      error -> error
+    end
   end
 
 
@@ -394,12 +414,14 @@ defmodule FunWithFlags do
       false
 
   """
-  @spec clear(atom, options) :: :ok
+  @spec clear(atom, options) :: :ok | {:error, any}
   def clear(flag_name, options \\ [])
 
   def clear(flag_name, []) when is_atom(flag_name) do
-    {:ok, _flag} = @store.delete(flag_name)
-    :ok
+    case @store.delete(flag_name) do
+      {:ok, _flag} -> :ok
+      error -> error
+    end
   end
 
   def clear(flag_name, [boolean: true]) do
@@ -431,8 +453,10 @@ defmodule FunWithFlags do
   end
 
   defp _clear_gate(flag_name, gate) do
-    {:ok, _flag} = @store.delete(flag_name, gate)
-    :ok
+    case @store.delete(flag_name, gate) do
+      {:ok, _flag} -> :ok
+      error -> error
+    end
   end
 
 
@@ -443,8 +467,10 @@ defmodule FunWithFlags do
   but it's not meant to be used at runtime. Undefined flags,
   for example, will be considered disabled.
   """
-  @spec all_flag_names() :: {:ok, [atom]}
-  defdelegate all_flag_names(), to: @store
+  @spec all_flag_names() :: {:ok, [atom]} | {:error, any}
+  def all_flag_names do
+    Config.persistence_adapter().all_flag_names()
+  end
 
   @doc """
   Returns a list of all the flags currently configured, as data structures.
@@ -455,8 +481,10 @@ defmodule FunWithFlags do
 
   To query the value of a flag, please use the `enabled?2` function instead.
   """
-  @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]}
-  defdelegate all_flags(), to: @store
+  @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]} | {:error, any}
+  def all_flags do
+    Config.persistence_adapter().all_flags()
+  end
 
 
   @doc """
@@ -465,14 +493,19 @@ defmodule FunWithFlags do
 
   Useful for debugging.
   """
-  @spec get_flag(atom) :: FunWithFlags.Flag.t | nil
+  @spec get_flag(atom) :: FunWithFlags.Flag.t | nil | {:error, any}
   def get_flag(name) do
-    {:ok, names} = all_flag_names()
-    if name in names do
-      {:ok, flag} = Config.persistence_adapter().get(name)
-      flag
-    else
-      nil
+    case all_flag_names() do
+      {:ok, names} ->
+        if name in names do
+          case Config.persistence_adapter().get(name) do
+            {:ok, flag} -> flag
+            error -> error
+          end
+        else
+          nil
+        end
+      error -> error
     end
   end
 
@@ -483,4 +516,12 @@ defmodule FunWithFlags do
   defp verify(flag, [for: data]) do
     {:ok, Flag.enabled?(flag, for: data)}
   end
+
+  # Used in some tests and to debug.
+  #
+  # Apparently calling `Config.store_module_determined_at_compile_time` even
+  # just once in a test causes all sorts of weird test failures everywhere.
+  #
+  @doc false
+  def compiled_store, do: @store
 end

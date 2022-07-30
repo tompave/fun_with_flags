@@ -2,13 +2,13 @@ defmodule FunWithFlags.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/tompave/fun_with_flags"
-  @version "1.6.0"
+  @version "1.8.1"
 
   def project do
     [
       app: :fun_with_flags,
       version: @version,
-      elixir: "~> 1.8",
+      elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env),
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
@@ -60,14 +60,14 @@ defmodule FunWithFlags.Mixfile do
     [
       {:redix, "~> 1.0", optional: true},
       {:ecto_sql, "~> 3.0", optional: true},
-      {:postgrex, "~> 0.13", optional: true, only: [:dev, :test]},
+      {:postgrex, "~> 0.16", optional: true, only: [:dev, :test]},
       {:myxql, "~> 0.2", optional: true, only: [:dev, :test]},
       {:phoenix_pubsub, "~> 2.0", optional: true},
 
       {:mock, "~> 0.3", only: :test},
 
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
-      {:credo, "~> 1.4", only: :dev, runtime: false},
+      {:credo, "~> 1.6", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0", only: :dev, runtime: false}
     ]
   end
@@ -100,13 +100,37 @@ defmodule FunWithFlags.Mixfile do
       &run_tests__ecto_pers_mysql__phoenix_pubsub/1, &run_integration_tests__ecto_pers_mysql__phoenix_pubsub__no_cache/1,
     ]
 
-    exit_codes = tests |> Enum.map(fn(test_fn) -> test_fn.(arg) end)
+    exit_codes = case System.get_env("CI") do
+      "true" ->
+        tests |> Enum.map(fn test_fn -> _run_test_with_retries(3, 500, fn -> test_fn.(arg) end) end)
+      _ ->
+        tests |> Enum.map(fn test_fn -> test_fn.(arg) end)
+    end
 
     if Enum.any?(exit_codes, &(&1 != 0)) do
       require Logger
       Logger.error("Some test configuration did not pass.")
       exit({:shutdown, 1})
     end
+  end
+
+  # Because some tests are flaky in CI.
+  #
+  defp _run_test_with_retries(attempts, sleep_ms, test_fn) when attempts > 0 do
+    IO.puts("---\nRunning a test task with retries. Attempts left: #{attempts}, sleep ms: #{sleep_ms}.\n---")
+    case test_fn.() do
+      0 -> 0 # Successful run, simply return the status.
+      _ ->
+        :timer.sleep(sleep_ms)
+        remaining = attempts - 1
+        IO.puts("Test failed. Retries left: #{remaining}.")
+        _run_test_with_retries(remaining, sleep_ms, test_fn)
+    end
+  end
+
+  defp _run_test_with_retries(_, _, _) do
+    IO.puts("---\nAll retries failed. Returning exit code 1.\n---")
+    1
   end
 
   # Run the tests with Redis as persistent store and Redis PubSub as broker.

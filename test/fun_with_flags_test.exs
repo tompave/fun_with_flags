@@ -40,7 +40,7 @@ defmodule FunWithFlagsTest do
 
     test "if the store raises an error, it lets it bubble up" do
       name = unique_atom()
-      store = FunWithFlags.Config.store_module
+      store = FunWithFlags.compiled_store()
 
       with_mock(store, [], lookup: fn(^name) -> raise(RuntimeError, "mocked exception") end) do
         assert_raise RuntimeError, "mocked exception", fn() ->

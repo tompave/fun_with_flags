@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 # config :fun_with_flags, :persistence,
 #   [adapter: FunWithFlags.Store.Persistent.Redis]
@@ -51,6 +51,10 @@ if with_ecto do
     adapter: FunWithFlags.Store.Persistent.Ecto,
     repo: FunWithFlags.Dev.EctoRepo
 
+  # To test the compile-time config warnings.
+  # config :fun_with_flags, :persistence,
+  #   ecto_table_name: System.get_env("ECTO_TABLE_NAME", "fun_with_flags_toggles")
+
   # ecto's config
   config :fun_with_flags, ecto_repos: [FunWithFlags.Dev.EctoRepo]
 
@@ -73,8 +77,8 @@ end
 
 # -------------------------------------------------
 # Import
-
-case Mix.env do
+#
+case config_env() do
   :test -> import_config "test.exs"
   _     -> nil
 end

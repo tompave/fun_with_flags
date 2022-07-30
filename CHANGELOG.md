@@ -2,9 +2,31 @@
 
 ## Unreleased
 
+* Drop support for Elixir 1.10. Elixir >= 1.11 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
+* Relax supported versions of `postgrex` to allow `~> 0.16`.
+* Use [`Application.compile_env/3`](https://hexdocs.pm/elixir/1.13.3/Application.html#compile_env/3) to read the persistence config at compile time, which is used to configure the DB table name when using the Ecto persistence adapter (among other things). This fixes another instance of the issue where users of the package would change the config after compilation and observe unexpected inconsistencies and errors. ([pull/130](https://github.com/tompave/fun_with_flags/pull/130))
+
+## v1.8.1
+
+* Lock `postgrex` dependency to `< 0.16`. Version `0.16` requires Elixir 1.11 ([changelog](https://github.com/elixir-ecto/postgrex/blob/master/CHANGELOG.md#v0160-2022-01-23)) and it doesn't compile with Elixit 1.10, which FunWithFlags still supports.
+
+## v1.8.0
+
+* Add support for Elixir 1.13. Drop support for Elixir 1.9. Elixir >= 1.10 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
+* Removed all uses of [`defdelegate/2`](https://hexdocs.pm/elixir/1.13.0/Kernel.html#defdelegate/2). They caused some references to configured modules (that can change according to the config) to be reified at compile time, which lead to unexpected behaviour. They've been replaced with plain old function definitions that do the same job. (Thanks [connorlay](https://github.com/connorlay), [pull/111](https://github.com/tompave/fun_with_flags/pull/111).)
+* Local dev: Update the config for the library to use [`Config`](https://hexdocs.pm/elixir/1.13.0/Config.html) instead of the deprecated [`Mix.Config`](https://hexdocs.pm/mix/1.13.0/Mix.Config.html). For the avoidance of doubt: this has no effect when using the package in your projects, because the `config/*.exs` files are not present in the bundles downloaded from Hex.pm.
+* Use [`Application.compile_env/3`](https://hexdocs.pm/elixir/1.13.0/Application.html#compile_env/3) to read the cache configuration at compile-time, which is used to define a module attribute (therefore, set at compile-time). That part of the config is compiled into a module attribute for performance reasons, and it has been a long standing issue because users of the package would get confused by their config changes not being reflected in an already compiled application ([link to relevant section in previous version of the readme](https://github.com/tompave/fun_with_flags/tree/v1.7.0#configuration-changes-have-no-effect-in-mix_envdev)). Now, if the relevant configuration changes, users will get a [clear error](https://github.com/elixir-lang/elixir/blob/v1.10/CHANGELOG.md#tracking-of-compile-time-configuration).
+* Improve error handling in different layers of the package. From the persistence adapters all the way to the public functions of the top-level module. In practice, this means that some situations that would have caused a `MatchError` now instead will bubble up an error tuple. Most importantly, this does **not** affect the signature or behaviour of the `FunWithFlags.enabled?/2` function, which continues to return a simple boolean. ([pull/120](https://github.com/tompave/fun_with_flags/pull/120))
+* Typespec improvements. These include new typespecs for previously unspecced functions, amended typespecs for the new error tuples that are now bubbled up (see previous point) and fixed typespec that incorrectly ignored a returned error tuple. ([pull/120](https://github.com/tompave/fun_with_flags/pull/120))
+* The typespecs for the `FunWithFlags.Store.Persistence` Elixir behaviour have been updated (see previous point). Users of the package who implemented their own custom persistence adapters are encouraged to double-check that these respect the typespecs. ([pull/120](https://github.com/tompave/fun_with_flags/pull/120))
+
+## v1.7.0
+
+* Add support for Elixir 1.12. Drop support for Elixir 1.8. Elixir >= 1.9 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
+* Drop support for Erlang/OTP 21, and Erlang/OTP >= 22 is now required. Dropping support for older versions of Erlang/OTP simply means that this package is not tested with them in CI, and that no compatibility issues are considered bugs.
 * Added support for the Erlang [dialyzer](https://erlang.org/doc/man/dialyzer.html) (via the [dialyxir](https://hex.pm/packages/dialyxir) package).
 * Addressed all dialyzer warnings. Fixed some incorrect typespecs and simplified the implementation of some functions.
-* Miscellaneous documentation fixes and improvements. (Thanks [kianmeng](https://github.com/kianmeng), [pull/89](https://github.com/tompave/fun_with_flags/pull/89) and [pull/90](https://github.com/tompave/fun_with_flags/pull/90).)
+* Miscellaneous documentation fixes and improvements. (Thanks [kianmeng](https://github.com/kianmeng), [pull/89](https://github.com/tompave/fun_with_flags/pull/89), [pull/90](https://github.com/tompave/fun_with_flags/pull/90) and [pull/112](https://github.com/tompave/fun_with_flags/pull/112).)
 * Documented the `FunWithFlags.Store.Cache` module, and its `Cache.flush/0` and `Cache.dump/0` functions. They're now part of the public API of the package.
 * Introduced a new `FunWithFlags.Supervisor` module to manage the supervision tree for the package. The supervision strategy and configuration are unchanged, and host applications don't need to do anything to upgrade. However, this module is part of the public API of the package and can be used to better control the start behaviour of FunWithFlags. This has also been documented [in a new section of the readme](https://github.com/tompave/fun_with_flags#application-start-behaviour).
 * Internal changes to stop using an undocumented feature of Elixir that will go away in future versions. This affects how the function to calculate Actor scores for the %-of-actors gate is invoked, but that's an internal change, so it won't affect users of the package unless they're using undocumented features. (Thanks [kelvinst](https://github.com/kelvinst), [pull/105](https://github.com/tompave/fun_with_flags/pull/105).)

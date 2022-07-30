@@ -1,4 +1,6 @@
 defmodule FunWithFlags.Config do
+  require Application
+
   @moduledoc false
   @default_redis_config [
     host: "localhost",
@@ -39,10 +41,6 @@ defmodule FunWithFlags.Config do
     end
   end
 
-  def ecto_table_name do
-    Keyword.get(persistence_config(), :ecto_table_name)
-  end
-
 
   def cache? do
     Keyword.get(ets_cache_config(), :enabled)
@@ -61,16 +59,38 @@ defmodule FunWithFlags.Config do
     )
   end
 
+  # Used to determine the store module at compile time, which is stored in a
+  # module attribute. `Application.compile_env` cannot be used in functions,
+  # so here we are.
+  @compile_time_cache_config Application.compile_env(:fun_with_flags, :cache, [])
 
   # If we're not using the cache, then don't bother with
   # the 2-level logic in the default Store module.
   #
-  def store_module do
-    if __MODULE__.cache? do
+  def store_module_determined_at_compile_time do
+    cache_conf = Keyword.merge(
+      @default_cache_config,
+      @compile_time_cache_config
+    )
+
+    if Keyword.get(cache_conf, :enabled) do
       FunWithFlags.Store
     else
       FunWithFlags.SimpleStore
     end
+  end
+
+
+  # Used to determine the Ecto table name at compile time.
+  @compile_time_persistence_config Application.compile_env(:fun_with_flags, :persistence, [])
+
+
+  def ecto_table_name_determined_at_compile_time do
+    pers_conf = Keyword.merge(
+      @default_persistence_config,
+      @compile_time_persistence_config
+    )
+    Keyword.get(pers_conf, :ecto_table_name)
   end
 
 

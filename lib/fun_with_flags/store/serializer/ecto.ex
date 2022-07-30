@@ -3,8 +3,8 @@ if Code.ensure_loaded?(Ecto) do
 defmodule FunWithFlags.Store.Serializer.Ecto do
   @moduledoc false
 
-  alias FunWithFlags.Gate
   alias FunWithFlags.Flag
+  alias FunWithFlags.Gate
   alias FunWithFlags.Store.Persistent.Ecto.Record
 
   def deserialize_flag(name, []), do: Flag.new(to_atom(name), [])

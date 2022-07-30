@@ -18,7 +18,7 @@ defmodule FunWithFlags.ConfigTest do
     assert ^defaults = Config.redis_config
 
     # when configured to use a URL string, it returns the string and ignores the defaults
-    url = "redis:://locahost:1234/1"
+    url = "redis:://localhost:1234/1"
     configure_redis_with(url)
     assert ^url = Config.redis_config
 
@@ -27,13 +27,13 @@ defmodule FunWithFlags.ConfigTest do
     configure_redis_with(sentinel)
     assert ^sentinel = Config.redis_config
 
-    # when confgured with keywords, it merges them with the default
+    # when configured with keywords, it merges them with the default
     configure_redis_with(database: 42, port: 2000)
     assert defaults[:host] == Config.redis_config[:host]
     assert            2000 == Config.redis_config[:port]
     assert              42 == Config.redis_config[:database]
 
-    # Whe configured with a {:system, env} tuple it looks up the value in the env
+    # When configured with a {:system, env} tuple it looks up the value in the env
     System.put_env("123_TEST_REDIS_URL", url)
     configure_redis_with({:system, "123_TEST_REDIS_URL"})
     assert url == Config.redis_config
@@ -49,7 +49,7 @@ defmodule FunWithFlags.ConfigTest do
     assert true == Config.cache?
 
     # can be configured
-    Mix.Config.persist(fun_with_flags: [cache: [enabled: false]])
+    Application.put_all_env(fun_with_flags: [cache: [enabled: false]])
     assert false == Config.cache?
 
     # cleanup
@@ -63,7 +63,7 @@ defmodule FunWithFlags.ConfigTest do
     assert 60 = Config.cache_ttl
 
     # can be configured
-    Mix.Config.persist(fun_with_flags: [cache: [ttl: 3600]])
+    Application.put_all_env(fun_with_flags: [cache: [ttl: 3600]])
     assert 3600 = Config.cache_ttl
 
     # cleanup
@@ -72,17 +72,14 @@ defmodule FunWithFlags.ConfigTest do
   end
 
 
-  test "store_module" do
-    # defaults to FunWithFlags.Store
-    assert FunWithFlags.Store = Config.store_module
-
-    # can be configured
-    Mix.Config.persist(fun_with_flags: [cache: [enabled: false]])
-    assert FunWithFlags.SimpleStore = Config.store_module
-
-    # cleanup
-    reset_cache_defaults()
-    assert FunWithFlags.Store = Config.store_module
+  @tag :integration
+  test "store_module_determined_at_compile_time()" do
+    # This is not great, but testing compile time stuff is tricky.
+    if Config.cache?() do
+      assert FunWithFlags.Store = Config.store_module_determined_at_compile_time()
+    else
+      assert FunWithFlags.SimpleStore = Config.store_module_determined_at_compile_time()
+    end
   end
 
 
@@ -124,18 +121,9 @@ defmodule FunWithFlags.ConfigTest do
     end
   end
 
-  describe "ecto_table_name()" do
+  describe "ecto_table_name_determined_at_compile_time()" do
     test "it defaults to \"fun_with_flags_toggles\"" do
-      assert Config.ecto_table_name() == "fun_with_flags_toggles"
-    end
-
-    test "it can be configured" do
-      persistence_config = Application.get_env(:fun_with_flags,  :persistence, [])
-      Application.put_env(:fun_with_flags, :persistence, [ecto_table_name: "my_custom_table"])
-
-      assert Config.ecto_table_name() == "my_custom_table"
-
-      Application.put_env(:fun_with_flags, :persistence, persistence_config)
+      assert Config.ecto_table_name_determined_at_compile_time() == "fun_with_flags_toggles"
     end
   end
 
@@ -178,7 +166,7 @@ defmodule FunWithFlags.ConfigTest do
     end
 
     test "returns false if the cache is disabled" do
-      Mix.Config.persist(fun_with_flags: [cache: [enabled: false]])
+      Application.put_all_env(fun_with_flags: [cache: [enabled: false]])
       refute Config.change_notifications_enabled?
 
       # cleanup
@@ -189,7 +177,7 @@ defmodule FunWithFlags.ConfigTest do
     test "returns false if no notification adapter is configured" do
       original_adapter = Config.notifications_adapter()
       original_client = Config.pubsub_client
-      Mix.Config.persist(fun_with_flags: [cache_bust_notifications: [adapter: nil]])
+      Application.put_all_env(fun_with_flags: [cache_bust_notifications: [adapter: nil]])
       refute Config.change_notifications_enabled?
 
       # cleanup
@@ -200,7 +188,7 @@ defmodule FunWithFlags.ConfigTest do
     test "returns false if it's explicitly disabled" do
       original_adapter = Config.notifications_adapter()
       original_client = Config.pubsub_client
-      Mix.Config.persist(fun_with_flags: [cache_bust_notifications: [enabled: false]])
+      Application.put_all_env(fun_with_flags: [cache_bust_notifications: [enabled: false]])
       refute Config.change_notifications_enabled?
 
       # cleanup
@@ -210,7 +198,7 @@ defmodule FunWithFlags.ConfigTest do
   end
 
   defp configure_redis_with(conf) do
-    Mix.Config.persist(fun_with_flags: [redis: conf])
+    Application.put_all_env(fun_with_flags: [redis: conf])
     assert ^conf = Application.get_env(:fun_with_flags, :redis)
   end
 
@@ -219,11 +207,11 @@ defmodule FunWithFlags.ConfigTest do
   end
 
   defp reset_cache_defaults do
-    Mix.Config.persist(fun_with_flags: [cache: [enabled: true, ttl: 60]])
+    Application.put_all_env(fun_with_flags: [cache: [enabled: true, ttl: 60]])
   end
 
   defp reset_notifications_defaults(adapter, client) do
-    Mix.Config.persist(fun_with_flags: [
+    Application.put_all_env(fun_with_flags: [
       cache_bust_notifications: [
         enabled: true, adapter: adapter, client: client
       ]

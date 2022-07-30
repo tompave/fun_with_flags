@@ -7,7 +7,7 @@ defmodule FunWithFlags.Supervisor do
 
   This module is used internally by the package when the `:fun_with_flags` OTP
   application starts its own supervision tree, which is the default behavior.
-  If that is disabled, the user's host applcation should use this module to start
+  If that is disabled, the user's host application should use this module to start
   the supervision tree directly.
 
   The main purpose of this API is allow the user's host application to control

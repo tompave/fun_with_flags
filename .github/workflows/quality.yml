@@ -7,8 +7,8 @@ on:
     branches: [master]
 
 env:
-  elixir_version: '1.11'
-  otp_version: '23.2'
+  elixir_version: '1.13'
+  otp_version: '24.3'
 
 jobs:
   credo:
@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Set up Elixir and OTP
-        uses: erlef/setup-elixir@v1
+        uses: erlef/setup-beam@v1
         with:
           elixir-version: ${{ env.elixir_version }}
           otp-version: ${{ env.otp_version }}

@@ -12,9 +12,9 @@ defmodule FunWithFlags.Store.Cache do
   @doc false
   use GenServer
 
-  alias FunWithFlags.Timestamps
-  alias FunWithFlags.Flag
   alias FunWithFlags.Config
+  alias FunWithFlags.Flag
+  alias FunWithFlags.Timestamps
 
   @table_name :fun_with_flags_cache
   @table_options [
@@ -42,7 +42,7 @@ defmodule FunWithFlags.Store.Cache do
 
 
   # We lookup without going through the GenServer
-  # for concurrency and perfomance.
+  # for concurrency and performance.
   #
   @doc false
   def get(flag_name) do

@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :fun_with_flags, :redis,
   database: 5

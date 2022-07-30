@@ -15,24 +15,20 @@ jobs:
       fail-fast: false
       matrix:
         elixir:
+          - '1.13'
+          - '1.12'
           - '1.11'
-          - '1.10'
-          - '1.9'
-          - '1.8'
         otp:
-          - '23.2'
-          - '23.1'
+          - '25.0'
+          - '24.3'
+          - '24.2'
+          - '23.3'
           - '22.3'
-          - '21.3'
         exclude:
-          - elixir: '1.9'
-            otp: '23.2'
-          - elixir: '1.9'
-            otp: '23.1'
-          - elixir: '1.8'
-            otp: '23.2'
-          - elixir: '1.8'
-            otp: '23.1'
+          - elixir: '1.12'
+            otp: '25.0'
+          - elixir: '1.11'
+            otp: '25.0'
 
     services:
       postgres:
@@ -61,7 +57,7 @@ jobs:
           done
 
       - name: Set up Elixir and OTP
-        uses: erlef/setup-elixir@v1
+        uses: erlef/setup-beam@v1
         with:
           elixir-version: ${{ matrix.elixir }}
           otp-version: ${{ matrix.otp }}
