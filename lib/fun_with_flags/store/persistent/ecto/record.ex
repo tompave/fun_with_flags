@@ -1,4 +1,4 @@
-if Code.ensure_loaded?(Ecto) do
+if Code.ensure_loaded?(Ecto.Adapters.SQL) do
 
 defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   @moduledoc false
