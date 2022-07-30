@@ -552,6 +552,17 @@ config :fun_with_flags, :redis, "redis://localhost:6379/0"
 config :fun_with_flags, :redis, {:system, "REDIS_URL"}
 ```
 
+[Redis Sentinel](https://redis.io/docs/manual/sentinel/) is also supported. See the [Redix docs](https://github.com/whatyouhide/redix/tree/v1.1.5#redis-sentinel) for more details.
+
+```elixir
+config :fun_with_flags, :redis,
+  sentinel: [
+    sentinels: ["redis:://locahost:1234/1"],
+    group: "primary",
+  ],
+  database: 5
+```
+
 ### Persistence Adapters
 
 The library comes with two persistence adapters for the [`Redix`](https://hex.pm/packages/redix) and [`Ecto`](https://hex.pm/packages/ecto) libraries, that allow to persist feature flag data in Redis, PostgreSQL or MySQL. In order to use any of them, you must declare the correct optional dependency in the Mixfile (see the [installation](#installation) instructions, above).
