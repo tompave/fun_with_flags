@@ -691,7 +691,7 @@ Then it's necessary to configure the Mix project to not start the `:fun_with_fla
 + {:fun_with_flags, "~> 1.6", runtime: false},
 ```
 
-You'll also need to modify the `releases` section in `mix.exs` so that it loads the `fun_with_flags` application.
+You'll also need to modify the `releases` section in `mix.exs` so that it loads the `fun_with_flags` application explicitly (since `runtime: false` / `app: false` will exclude it from the assembled release).
 
 ```diff
 def project do
