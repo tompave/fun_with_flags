@@ -6,6 +6,8 @@
 * Relax supported versions of `postgrex` to allow `~> 0.16`.
 * Use [`Application.compile_env/3`](https://hexdocs.pm/elixir/1.13.3/Application.html#compile_env/3) to read the persistence config at compile time, which is used to configure the DB table name when using the Ecto persistence adapter (among other things). This fixes another instance of the issue where users of the package would change the config after compilation and observe unexpected inconsistencies and errors. ([pull/130](https://github.com/tompave/fun_with_flags/pull/130))
 * Redis adapters: add support to configure [Redis Sentinel](https://redis.io/docs/manual/sentinel/). Please see the [Redix docs](https://github.com/whatyouhide/redix/tree/v1.1.5#redis-sentinel) for more details. (Thanks [parkdoyeon](https://github.com/parkdoyeon), [pull/107](https://github.com/tompave/fun_with_flags/pull/107).)
+* More precise conditional checks when deciding whether Ecto files should be compiled. ([pull/140](https://github.com/tompave/fun_with_flags/pull/140))
+* Improved documentation for running the package in a custom supervision tree, when using releases. (Thanks [`zaid`](https://github.com/zaid), [pull/139](https://github.com/tompave/fun_with_flags/pull/139))
 
 ## v1.8.1
 
