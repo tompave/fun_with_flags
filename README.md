@@ -37,6 +37,7 @@ It stores flag information in Redis or a relational DB (PostgreSQL or MySQL, wit
 * [Installation](#installation)
 * [Configuration](#configuration)
   - [Persistence Adapters](#persistence-adapters)
+    - [Ecto Multi-tenancy](#ecto-multi-tenancy)
   - [PubSub Adapters](#pubsub-adapters)
 * [Extensibility](#extensibility)
   - [Custom Persistence Adapters](#custom-persistence-adapters)
@@ -576,7 +577,6 @@ Only PostgreSQL (via [`postgrex`](https://hex.pm/packages/postgrex)) and MySQL (
 To configure the Ecto adapter:
 
 ```elixir
-
 # Normal Phoenix and Ecto configuration.
 # The repo can either use the Postgres or MySQL adapter.
 config :my_app, ecto_repos: [MyApp.Repo]
@@ -597,10 +597,14 @@ config :fun_with_flags, :persistence,
 
 It's also necessary to create the DB table that will hold the feature flag data. To do that, [create a new migration](https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Gen.Migration.html) in your project and copy the contents of [the provided migration file](https://github.com/tompave/fun_with_flags/blob/master/priv/ecto_repo/migrations/00000000000000_create_feature_flags_table.exs). Then [run the migration](https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Migrate.html).
 
-If you followed the Ecto guide on setting up [multi-tenancy with foreign keys](https://hexdocs.pm/ecto/multi-tenancy-with-foreign-keys.html), you must add an exception for queries originating from FunWithFlags. These queries have a custom query option named `:fun_with_flags` set to `true`:
+When using the Ecto persistence adapter, FunWithFlags will annotate all queries using the [Ecto Repo Query API](https://hexdocs.pm/ecto/3.8.4/Ecto.Repo.html#query-api) with a custom option: `[fun_with_flags: true]`. This is done to make it easier to identify FunWithFlags queries when working with Ecto customization hooks, e.g. the [`Ecto.Repo.prepare_query/3` callback](https://hexdocs.pm/ecto/3.8.4/Ecto.Repo.html#c:prepare_query/3). Since this sort of annotations via custom query options are only useful with the Ecto Query API ([context](https://elixirforum.com/t/proposal-prepare-query-for-write-operations/50510)), other repo functions are not annotated with the custom option.
+
+#### Ecto Multi-tenancy
+
+If you followed the Ecto guide on setting up [multi-tenancy with foreign keys](https://hexdocs.pm/ecto/3.8.4/multi-tenancy-with-foreign-keys.html), you must add an exception for queries originating from FunWithFlags. As mentioned in the section above, these queries have a custom query option named `:fun_with_flags` set to `true`:
 
 ```elixir
-# Sample code, only relevant if you followed the Ecto guide on multi tenancy with foreign keys
+# Sample code, only relevant if you followed the Ecto guide on multi tenancy with foreign keys.
 defmodule MyApp.Repo do
   use Ecto.Repo, otp_app: :my_app
 
