@@ -597,6 +597,32 @@ config :fun_with_flags, :persistence,
 
 It's also necessary to create the DB table that will hold the feature flag data. To do that, [create a new migration](https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Gen.Migration.html) in your project and copy the contents of [the provided migration file](https://github.com/tompave/fun_with_flags/blob/master/priv/ecto_repo/migrations/00000000000000_create_feature_flags_table.exs). Then [run the migration](https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Migrate.html).
 
+If you followed the Ecto guide on setting up [multi-tenancy with foreign keys](https://hexdocs.pm/ecto/multi-tenancy-with-foreign-keys.html), you must add an exception for queries originating from FunWithFlags. These queries have a custom query option named `:fun_with_flags` set to `true`:
+
+```elixir
+# Sample code, only relevant if you followed the Ecto guide on multi tenancy with foreign keys
+defmodule MyApp.Repo do
+  use Ecto.Repo, otp_app: :my_app
+
+  require Ecto.Query
+
+  @impl true
+  def prepare_query(_operation, query, opts) do
+    cond do
+      # add the check for opts[:fun_with_flags] here:
+      opts[:skip_org_id] || opts[:schema_migration] || opts[:fun_with_flags] ->
+        {query, opts}
+
+      org_id = opts[:org_id] ->
+        {Ecto.Query.where(query, org_id: ^org_id), opts}
+
+      true ->
+        raise "expected org_id or skip_org_id to be set"
+    end
+  end
+end
+```
+
 ### PubSub Adapters
 
 The library comes with two PubSub adapters for the [`Redix`](https://hex.pm/packages/redix) and [`Phoenix.PubSub`](https://hex.pm/packages/phoenix_pubsub) libraries. In order to use any of them, you must declare the correct optional dependency in the Mixfile. (see the [installation](#installation) instructions, below)

@@ -15,6 +15,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   require Logger
 
   @mysql_lock_timeout_s 3
+  @query_opts [fun_with_flags: true]
 
 
   @impl true
@@ -28,7 +29,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     name_string = to_string(flag_name)
     query = from(r in Record, where: r.flag_name == ^name_string)
     try do
-      results = ecto_repo().all(query)
+      results = ecto_repo().all(query, @query_opts)
       flag = deserialize(flag_name, results)
       {:ok, flag}
     rescue
@@ -56,7 +57,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     end
 
     out = transaction_fn.(repo, fn() ->
-      case repo.one(find_one_q) do
+      case repo.one(find_one_q, @query_opts) do
         record = %Record{} ->
           changeset = Record.update_target(record, gate)
           do_update(repo, flag_name, changeset)
@@ -146,7 +147,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     )
 
     try do
-      {_count, _} = ecto_repo().delete_all(query)
+      {_count, _} = ecto_repo().delete_all(query, @query_opts)
       {:ok, flag} = get(flag_name)
       {:ok, flag}
     rescue
@@ -173,7 +174,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     )
 
     try do
-      {_count, _} = ecto_repo().delete_all(query)
+      {_count, _} = ecto_repo().delete_all(query, @query_opts)
       {:ok, flag} = get(flag_name)
       {:ok, flag}
     rescue
@@ -198,7 +199,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     )
 
     try do
-      {_count, _} = ecto_repo().delete_all(query)
+      {_count, _} = ecto_repo().delete_all(query, @query_opts)
       {:ok, flag} = get(flag_name)
       {:ok, flag}
     rescue
@@ -211,7 +212,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   def all_flags do
     flags =
       Record
-      |> ecto_repo().all()
+      |> ecto_repo().all(@query_opts)
       |> Enum.group_by(&(&1.flag_name))
       |> Enum.map(fn ({name, records}) -> deserialize(name, records) end)
     {:ok, flags}
@@ -223,7 +224,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   @impl true
   def all_flag_names do
     query = from(r in Record, select: r.flag_name, distinct: true)
-    strings = ecto_repo().all(query)
+    strings = ecto_repo().all(query, @query_opts)
     atoms = Enum.map(strings, &String.to_atom(&1))
     {:ok, atoms}
   rescue

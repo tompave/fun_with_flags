@@ -12,5 +12,23 @@ if FunWithFlags.Config.persist_in_ecto? do
     end)
 
     use Ecto.Repo, otp_app: :fun_with_flags, adapter: @variant
+    
+    # for testing setups that use multi-tenancy using foreign keys
+    # as described in the Ecto docs:
+    # https://hexdocs.pm/ecto/multi-tenancy-with-foreign-keys.html
+    #
+    # FunWithFlags sets the custom query option `:fun_with_flags` to
+    # true to allow such setups to detect queries originating from
+    # FunWithFlags
+    @impl true
+    def prepare_query(_operation, query, opts) do
+      cond do
+        opts[:schema_migration] || opts[:fun_with_flags] ->
+          {query, opts}
+
+        true ->
+          raise "expected fun_with_flags query option to be set"
+      end
+    end
   end
 end
