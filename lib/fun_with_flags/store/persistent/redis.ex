@@ -19,6 +19,8 @@ defmodule FunWithFlags.Store.Persistent.Redis do
     conf = case Config.redis_config do
       uri when is_binary(uri) ->
         {uri, @conn_options}
+      {uri, opts} when is_binary(uri) and is_list(opts) ->
+        {uri, Keyword.merge(opts, @conn_options)}
       opts when is_list(opts) ->
         Keyword.merge(opts, @conn_options)
     end
