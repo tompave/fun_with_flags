@@ -28,6 +28,8 @@ defmodule FunWithFlags.Config do
     case Application.get_env(:fun_with_flags, :redis, []) do
       uri  when is_binary(uri) ->
         uri
+      {uri, opts} when is_binary(uri) and is_list(opts) ->
+        {uri, opts}
       opts when is_list(opts) ->
         if Keyword.has_key?(opts, :sentinel) do
           @default_redis_config

@@ -22,6 +22,12 @@ defmodule FunWithFlags.ConfigTest do
     configure_redis_with(url)
     assert ^url = Config.redis_config
 
+    # when configured to use a URL + Redis config tuple, it returns the tuple and ignores the defaults
+    url = "redis:://localhost:1234/1"
+    configure_redis_with({url, socket_opts: [:inet6]})
+    {^url, opts} = Config.redis_config
+    assert [socket_opts: [:inet6]] == opts
+
     # when configured to use sentinel, it returns sentinel without default host and port
     sentinel = [sentinel: [sentinels: ["redis:://locahost:1234/1"], group: "primary"], database: 5]
     configure_redis_with(sentinel)
