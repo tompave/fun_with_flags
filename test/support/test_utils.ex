@@ -1,5 +1,6 @@
 defmodule FunWithFlags.TestUtils do
   alias FunWithFlags.Config
+  import ExUnit.Assertions, only: [assert: 1]
 
   @test_db 5
   @redis FunWithFlags.Store.Persistent.Redis
@@ -46,8 +47,6 @@ defmodule FunWithFlags.TestUtils do
     end
   end
 
-
-  
   defmacro timetravel([by: offset], [do: body]) do
     quote do
       fake_now = FunWithFlags.Timestamps.now + unquote(offset)
@@ -68,9 +67,20 @@ defmodule FunWithFlags.TestUtils do
     end
   end
 
-
   def kill_process(name) do
     true = GenServer.whereis(name) |> Process.exit(:kill)
   end
 
+  def configure_redis_with(conf) do
+    Application.put_all_env(fun_with_flags: [redis: conf])
+    assert ^conf = Application.get_env(:fun_with_flags, :redis)
+  end
+
+  def ensure_default_redis_config_in_app_env do
+    assert match?([database: 5], Application.get_env(:fun_with_flags, :redis))
+  end
+
+  def reset_app_env_to_default_redis_config do
+    configure_redis_with([database: 5])
+  end
 end
