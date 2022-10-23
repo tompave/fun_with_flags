@@ -549,6 +549,9 @@ config :fun_with_flags, :redis,
 # a URL string can be used instead
 config :fun_with_flags, :redis, "redis://localhost:6379/0"
 
+# or a {URL, [opts]} tuple
+config :fun_with_flags, :redis, {"redis://localhost:6379/0", socket_opts: [:inet6]}
+
 # a {:system, name} tuple can be used to read from the environment
 config :fun_with_flags, :redis, {:system, "REDIS_URL"}
 ```

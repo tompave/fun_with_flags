@@ -5,6 +5,7 @@
 * Add support for Elixir 1.14. Drop support for Elixir 1.11. Elixir >= 1.12 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
 * Drop support for Erlang/OTP 22, and Erlang/OTP >= 23 is now required. Dropping support for older versions of Erlang/OTP simply means that this package is not tested with them in CI, and that no compatibility issues are considered bugs.
 * Ecto persistence adapter: FunWithFlags will now pass a custom option when using the [Ecto Repo Query API](https://hexdocs.pm/ecto/3.8.4/Ecto.Repo.html#query-api): `[fun_with_flags: true]`. This is done to make it easier to identify FunWithFlags queries when working with Ecto customization hooks, e.g. the [`Ecto.Repo.prepare_query/3` callback](https://hexdocs.pm/ecto/3.8.4/Ecto.Repo.html#c:prepare_query/3). (Thanks [SteffenDE](https://github.com/SteffenDE), [pull/143](https://github.com/tompave/fun_with_flags/pull/143))
+* Redis persistence adapter: added support to configure Redis with a `{"redis URL", [...kw opts]}` tuple, [as is supported in Redix itself](https://hexdocs.pm/redix/1.2.0/Redix.html#start_link/2). (Thanks [iamvery](https://github.com/iamvery), [pull/145](https://github.com/tompave/fun_with_flags/pull/145))
 
 ## v1.9.0
 
