@@ -12,6 +12,75 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
     :ok
   end
 
+  describe "worker_spec" do
+    setup do
+      # Before each test ensure that the initial config is the default one.
+      ensure_default_redis_config_in_app_env()
+
+      # Cleanup
+      on_exit(&reset_app_env_to_default_redis_config/0)
+      :ok
+    end
+
+    test "when the Redis config is a URL string" do
+      url = "redis:://1.2.3.4:5678/42"
+      configure_redis_with(url)
+
+      expected = %{
+        id: Redix,
+        start: {Redix, :start_link, [
+          url,
+          [name: FunWithFlags.Store.Persistent.Redis, sync_connect: false]
+        ]},
+        type: :worker
+      }
+
+      assert ^expected = PersiRedis.worker_spec()
+    end
+
+    test "when the Redis config is a {URL, opts} tuple" do
+      url = "redis:://1.2.3.4:5678/42"
+      opts = [socket_opts: [:inet6]]
+      configure_redis_with({url, opts})
+
+      expected = %{
+        id: Redix,
+        start: {Redix, :start_link, [
+          url,
+          [
+            socket_opts: [:inet6],
+            name: FunWithFlags.Store.Persistent.Redis,
+            sync_connect: false,
+          ]
+        ]},
+        type: :worker
+      }
+
+      assert ^expected = PersiRedis.worker_spec()
+    end
+
+    test "when the Redis config is keyword list" do
+      kw = [database: 100, port: 2000]
+      configure_redis_with(kw)
+
+      expected = %{
+        id: Redix,
+        start: {Redix, :start_link, [
+          [
+            host: "localhost",
+            database: 100,
+            port: 2000,
+            name: FunWithFlags.Store.Persistent.Redis,
+            sync_connect: false
+          ]
+        ]},
+        type: :worker
+      }
+
+      assert ^expected = PersiRedis.worker_spec()
+    end
+  end
+
 
   describe "put(flag_name, %Gate{})" do
     setup do
@@ -215,7 +284,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = PersiRedis.get(name)
       PersiRedis.put(name, gate)
       assert {:ok, %Flag{name: ^name, gates: [^gate]}} = PersiRedis.get(name)
-    end  
+    end
   end
 
 
@@ -295,7 +364,7 @@ defmodule FunWithFlags.Store.Persistent.RedisTest do
       end
     end
   end
-  
+
 
 
   describe "integration: enable and disable with the top-level API" do

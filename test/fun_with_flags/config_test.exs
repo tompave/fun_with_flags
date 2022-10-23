@@ -2,6 +2,12 @@ defmodule FunWithFlags.ConfigTest do
   use FunWithFlags.TestCase, async: true
   alias FunWithFlags.Config
 
+  import FunWithFlags.TestUtils, only: [
+    configure_redis_with: 1,
+    ensure_default_redis_config_in_app_env: 0,
+    reset_app_env_to_default_redis_config: 0,
+  ]
+
   # Test all of these in the same test case because Mix provides
   # no API to clear or reset the App configuration. Since the test
   # order is randomized, testing these cases separately makes them
@@ -13,7 +19,7 @@ defmodule FunWithFlags.ConfigTest do
   #
   test "the redis configuration" do
     # without configuration, it returns the defaults
-    ensure_no_redis_config()
+    ensure_default_redis_config_in_app_env()
     defaults = [host: "localhost", port: 6379, database: 5]
     assert ^defaults = Config.redis_config
 
@@ -46,7 +52,7 @@ defmodule FunWithFlags.ConfigTest do
     System.delete_env("123_TEST_REDIS_URL")
 
     # cleanup
-    configure_redis_with(defaults)
+    reset_app_env_to_default_redis_config()
   end
 
 
@@ -201,15 +207,6 @@ defmodule FunWithFlags.ConfigTest do
       reset_notifications_defaults(original_adapter, original_client)
       assert Config.change_notifications_enabled?
     end
-  end
-
-  defp configure_redis_with(conf) do
-    Application.put_all_env(fun_with_flags: [redis: conf])
-    assert ^conf = Application.get_env(:fun_with_flags, :redis)
-  end
-
-  defp ensure_no_redis_config do
-    assert match?([database: 5], Application.get_env(:fun_with_flags, :redis))
   end
 
   defp reset_cache_defaults do
