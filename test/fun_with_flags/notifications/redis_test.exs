@@ -91,7 +91,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
       assert {:ok, _pid} = NotifiRedis.publish_change(name)
 
       payload = "#{u_id}:#{to_string(name)}"
-      
+
       receive do
         {:redix_pubsub, ^receiver, ^ref, :message, %{channel: ^channel, payload: ^payload}} -> :ok
       after
@@ -150,7 +150,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
 
     test "when the message is not valid, it is ignored" do
       channel = "fun_with_flags_changes"
-      
+
       with_mock(Store, [:passthrough], []) do
         Redix.command(PersiRedis, ["PUBLISH", channel, "foobar"])
         :timer.sleep(30)
@@ -163,7 +163,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
       u_id = NotifiRedis.unique_id()
       channel = "fun_with_flags_changes"
       message = "#{u_id}:foobar"
-      
+
       with_mock(Store, [:passthrough], []) do
         Redix.command(PersiRedis, ["PUBLISH", channel, message])
         :timer.sleep(30)
@@ -178,7 +178,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
 
       channel = "fun_with_flags_changes"
       message = "#{another_u_id}:foobar"
-      
+
       with_mock(Store, [:passthrough], []) do
         Redix.command(PersiRedis, ["PUBLISH", channel, message])
         :timer.sleep(30)
@@ -216,7 +216,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
 
     test "when the message is not valid, the Cached value is not changed", %{name: name, cached_flag: cached_flag} do
       channel = "fun_with_flags_changes"
-      
+
       Redix.command(PersiRedis, ["PUBLISH", channel, to_string(name)])
       :timer.sleep(30)
       assert {:ok, ^cached_flag} = Cache.get(name)
@@ -227,7 +227,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
       u_id = NotifiRedis.unique_id()
       channel = "fun_with_flags_changes"
       message = "#{u_id}:#{to_string(name)}"
-      
+
       Redix.command(PersiRedis, ["PUBLISH", channel, message])
       :timer.sleep(30)
       assert {:ok, ^cached_flag} = Cache.get(name)
@@ -240,7 +240,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
 
       channel = "fun_with_flags_changes"
       message = "#{another_u_id}:#{to_string(name)}"
-      
+
       assert {:ok, ^cached_flag} = Cache.get(name)
       Redix.command(PersiRedis, ["PUBLISH", channel, message])
       :timer.sleep(30)
