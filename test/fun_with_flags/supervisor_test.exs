@@ -45,7 +45,9 @@ defmodule FunWithFlags.SupervisorTest do
             %{
               id: FunWithFlags.Notifications.Redis,
               restart: :permanent,
-              start: {FunWithFlags.Notifications.Redis, :start_link, []},
+              start: {FunWithFlags.Notifications.Redis, :start_link, [
+                [host: "localhost", port: 6379, database: 5, name: :fun_with_flags_notifications, sync_connect: false]
+              ]},
               type: :worker
             }
           ]

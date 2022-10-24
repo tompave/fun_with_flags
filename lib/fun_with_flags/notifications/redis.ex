@@ -14,10 +14,20 @@ defmodule FunWithFlags.Notifications.Redis do
   @conn_options [name: @conn, sync_connect: false]
   @channel "fun_with_flags_changes"
 
+  # Retrieve the configuration to connect to Redis, and package it as an argument
+  # to be passed to the start_link function.
+  #
   def worker_spec do
+    redis_conn_config = case Config.redis_config do
+      uri when is_binary(uri) ->
+        {uri, @conn_options}
+      opts when is_list(opts) ->
+        Keyword.merge(opts, @conn_options)
+    end
+
     %{
       id: __MODULE__,
-      start: {__MODULE__, :start_link, []},
+      start: {__MODULE__, :start_link, [redis_conn_config]},
       restart: :permanent,
       type: :worker,
     }
@@ -29,8 +39,8 @@ defmodule FunWithFlags.Notifications.Redis do
   # used to build the outgoing notification payloads and to ignore
   # incoming messages that originated from this node.
   #
-  def start_link do
-    GenServer.start_link(__MODULE__, Config.build_unique_id, [name: __MODULE__])
+  def start_link(redis_conn_config) do
+    GenServer.start_link(__MODULE__, {redis_conn_config, Config.build_unique_id}, [name: __MODULE__])
   end
 
 
@@ -69,12 +79,12 @@ defmodule FunWithFlags.Notifications.Redis do
 
   # The unique_id will become the state of the GenServer
   #
-  def init(unique_id) do
-    {:ok, _pid} = case Config.redis_config do
-      uri when is_binary(uri) ->
-        Redix.PubSub.start_link(uri, @conn_options)
+  def init({redis_conn_config, unique_id}) do
+    {:ok, _pid} = case redis_conn_config do
+      {uri, opts} when is_binary(uri) and is_list(opts) ->
+        Redix.PubSub.start_link(uri, opts)
       opts when is_list(opts) ->
-        Redix.PubSub.start_link(Keyword.merge(opts, @conn_options))
+        Redix.PubSub.start_link(opts)
     end
 
     {:ok, ref} = Redix.PubSub.subscribe(@conn, @channel, self())
