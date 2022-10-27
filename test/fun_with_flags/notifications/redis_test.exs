@@ -7,6 +7,90 @@ defmodule FunWithFlags.Notifications.RedisTest do
 
   @moduletag :redis_pubsub
 
+  describe "worker_spec" do
+    setup do
+      # Before each test ensure that the initial config is the default one.
+      ensure_default_redis_config_in_app_env()
+
+      # Cleanup
+      on_exit(&reset_app_env_to_default_redis_config/0)
+      :ok
+    end
+
+    test "when the Redis config is a URL string" do
+      url = "redis:://1.2.3.4:5678/42"
+      configure_redis_with(url)
+
+      expected = %{
+        id: FunWithFlags.Notifications.Redis,
+        start: {
+          FunWithFlags.Notifications.Redis,
+          :start_link,
+          [
+            {url, name: :fun_with_flags_notifications, sync_connect: false}
+          ]
+        },
+        type: :worker,
+        restart: :permanent
+      }
+
+      assert ^expected = NotifiRedis.worker_spec()
+    end
+
+    @tag :skip
+    test "when the Redis config is a {URL, opts} tuple" do
+      url = "redis:://1.2.3.4:5678/42"
+      opts = [socket_opts: [:inet6]]
+      configure_redis_with({url, opts})
+
+      expected = %{
+        id: FunWithFlags.Notifications.Redis,
+        start: {
+          FunWithFlags.Notifications.Redis,
+          :start_link,
+          [
+            url,
+            [
+              socket_opts: [:inet6],
+              name: FunWithFlags.Store.Notifications.Redis,
+              sync_connect: false
+            ]
+          ]
+        },
+        type: :worker,
+        restart: :permanent
+      }
+
+      assert ^expected = NotifiRedis.worker_spec()
+    end
+
+    test "when the Redis config is keyword list" do
+      kw = [database: 100, port: 2000]
+      configure_redis_with(kw)
+
+      expected = %{
+        id: FunWithFlags.Notifications.Redis,
+        start: {
+          FunWithFlags.Notifications.Redis,
+          :start_link,
+          [
+            [
+              host: "localhost",
+              database: 100,
+              port: 2000,
+              name: :fun_with_flags_notifications,
+              sync_connect: false
+            ]
+          ]
+        },
+        type: :worker,
+        restart: :permanent
+      }
+
+      assert ^expected = NotifiRedis.worker_spec()
+    end
+  end
+
   describe "unique_id()" do
     test "it returns a string" do
       assert is_binary(NotifiRedis.unique_id())
