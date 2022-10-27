@@ -37,7 +37,6 @@ defmodule FunWithFlags.Notifications.RedisTest do
       assert ^expected = NotifiRedis.worker_spec()
     end
 
-    @tag :skip
     test "when the Redis config is a {URL, opts} tuple" do
       url = "redis:://1.2.3.4:5678/42"
       opts = [socket_opts: [:inet6]]
@@ -49,12 +48,14 @@ defmodule FunWithFlags.Notifications.RedisTest do
           FunWithFlags.Notifications.Redis,
           :start_link,
           [
-            url,
-            [
-              socket_opts: [:inet6],
-              name: FunWithFlags.Store.Notifications.Redis,
-              sync_connect: false
-            ]
+            {
+              url,
+              [
+                socket_opts: [:inet6],
+                name: :fun_with_flags_notifications,
+                sync_connect: false
+              ]
+            }
           ]
         },
         type: :worker,
