@@ -21,8 +21,6 @@ defmodule FunWithFlags.Notifications.Redis do
     redis_conn_config = case Config.redis_config do
       uri when is_binary(uri) ->
         {uri, @conn_options}
-      {uri, opts} when is_binary(uri) and is_list(opts) ->
-        Redix.PubSub.start_link(uri, Keyword.merge(opts, @conn_options))
       opts when is_list(opts) ->
         Keyword.merge(opts, @conn_options)
     end
