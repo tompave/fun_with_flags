@@ -14,6 +14,9 @@ defmodule FunWithFlags.Store.Persistent.Redis do
   @flags_set "fun_with_flags"
 
 
+  # Retrieve the configuration to connect to Redis, and package it as an argument
+  # to be passed to the start_link function.
+  #
   @impl true
   def worker_spec do
     conf = case Config.redis_config do
