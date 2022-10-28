@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Redis notifications adapter: minor internal changes to what data is passed to the supervisor in the child spec. ([pull/148](https://github.com/tompave/fun_with_flags/pull/148))
+
 ## v1.10.0
 
 * Add support for Elixir 1.14. Drop support for Elixir 1.11. Elixir >= 1.12 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
