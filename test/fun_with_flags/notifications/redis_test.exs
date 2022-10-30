@@ -7,6 +7,91 @@ defmodule FunWithFlags.Notifications.RedisTest do
 
   @moduletag :redis_pubsub
 
+  describe "worker_spec" do
+    setup do
+      # Before each test ensure that the initial config is the default one.
+      ensure_default_redis_config_in_app_env()
+
+      # Cleanup
+      on_exit(&reset_app_env_to_default_redis_config/0)
+      :ok
+    end
+
+    test "when the Redis config is a URL string" do
+      url = "redis:://1.2.3.4:5678/42"
+      configure_redis_with(url)
+
+      expected = %{
+        id: FunWithFlags.Notifications.Redis,
+        start: {
+          FunWithFlags.Notifications.Redis,
+          :start_link,
+          [
+            {url, name: :fun_with_flags_notifications, sync_connect: false}
+          ]
+        },
+        type: :worker,
+        restart: :permanent
+      }
+
+      assert ^expected = NotifiRedis.worker_spec()
+    end
+
+    test "when the Redis config is a {URL, opts} tuple" do
+      url = "redis:://1.2.3.4:5678/42"
+      opts = [socket_opts: [:inet6]]
+      configure_redis_with({url, opts})
+
+      expected = %{
+        id: FunWithFlags.Notifications.Redis,
+        start: {
+          FunWithFlags.Notifications.Redis,
+          :start_link,
+          [
+            {
+              url,
+              [
+                socket_opts: [:inet6],
+                name: :fun_with_flags_notifications,
+                sync_connect: false
+              ]
+            }
+          ]
+        },
+        type: :worker,
+        restart: :permanent
+      }
+
+      assert ^expected = NotifiRedis.worker_spec()
+    end
+
+    test "when the Redis config is keyword list" do
+      kw = [database: 100, port: 2000]
+      configure_redis_with(kw)
+
+      expected = %{
+        id: FunWithFlags.Notifications.Redis,
+        start: {
+          FunWithFlags.Notifications.Redis,
+          :start_link,
+          [
+            [
+              host: "localhost",
+              database: 100,
+              port: 2000,
+              name: :fun_with_flags_notifications,
+              sync_connect: false
+            ]
+          ]
+        },
+        type: :worker,
+        restart: :permanent
+      }
+
+      assert ^expected = NotifiRedis.worker_spec()
+    end
+  end
+
   describe "unique_id()" do
     test "it returns a string" do
       assert is_binary(NotifiRedis.unique_id())
@@ -91,7 +176,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
       assert {:ok, _pid} = NotifiRedis.publish_change(name)
 
       payload = "#{u_id}:#{to_string(name)}"
-      
+
       receive do
         {:redix_pubsub, ^receiver, ^ref, :message, %{channel: ^channel, payload: ^payload}} -> :ok
       after
@@ -150,7 +235,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
 
     test "when the message is not valid, it is ignored" do
       channel = "fun_with_flags_changes"
-      
+
       with_mock(Store, [:passthrough], []) do
         Redix.command(PersiRedis, ["PUBLISH", channel, "foobar"])
         :timer.sleep(30)
@@ -163,7 +248,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
       u_id = NotifiRedis.unique_id()
       channel = "fun_with_flags_changes"
       message = "#{u_id}:foobar"
-      
+
       with_mock(Store, [:passthrough], []) do
         Redix.command(PersiRedis, ["PUBLISH", channel, message])
         :timer.sleep(30)
@@ -178,7 +263,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
 
       channel = "fun_with_flags_changes"
       message = "#{another_u_id}:foobar"
-      
+
       with_mock(Store, [:passthrough], []) do
         Redix.command(PersiRedis, ["PUBLISH", channel, message])
         :timer.sleep(30)
@@ -216,7 +301,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
 
     test "when the message is not valid, the Cached value is not changed", %{name: name, cached_flag: cached_flag} do
       channel = "fun_with_flags_changes"
-      
+
       Redix.command(PersiRedis, ["PUBLISH", channel, to_string(name)])
       :timer.sleep(30)
       assert {:ok, ^cached_flag} = Cache.get(name)
@@ -227,7 +312,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
       u_id = NotifiRedis.unique_id()
       channel = "fun_with_flags_changes"
       message = "#{u_id}:#{to_string(name)}"
-      
+
       Redix.command(PersiRedis, ["PUBLISH", channel, message])
       :timer.sleep(30)
       assert {:ok, ^cached_flag} = Cache.get(name)
@@ -240,7 +325,7 @@ defmodule FunWithFlags.Notifications.RedisTest do
 
       channel = "fun_with_flags_changes"
       message = "#{another_u_id}:#{to_string(name)}"
-      
+
       assert {:ok, ^cached_flag} = Cache.get(name)
       Redix.command(PersiRedis, ["PUBLISH", channel, message])
       :timer.sleep(30)
