@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.10.1 (unreleased)
+## v1.10.1
 
 * Redis notifications adapter: minor internal changes to what data is passed to the supervisor in the child spec. ([pull/148](https://github.com/tompave/fun_with_flags/pull/148))
 * Redis notifications adapter: fix an issue that would arise when configuring both a Redis URL string and key-word options (this config API was introduced in v1.10.0): the config would work for the Redis persistence adapter, but not for the Redis notifications adapter. (Thanks [iamvery](https://github.com/iamvery), [pull/149](https://github.com/tompave/fun_with_flags/pull/149))
