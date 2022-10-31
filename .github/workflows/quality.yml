@@ -13,7 +13,7 @@ env:
 jobs:
   credo:
     name: Credo
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
 
     strategy:
       fail-fast: false
@@ -26,10 +26,10 @@ jobs:
           otp-version: ${{ env.otp_version }}
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: 'Restore cache for deps/ and _build/ directories'
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             deps
