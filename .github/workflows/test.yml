@@ -64,7 +64,7 @@ jobs:
           otp-version: ${{ matrix.otp }}
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: 'Restore cache for deps/ and _build/ directories'
         uses: actions/cache@v3
