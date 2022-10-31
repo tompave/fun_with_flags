@@ -67,7 +67,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: 'Restore cache for deps/ and _build/ directories'
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             deps
