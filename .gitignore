@@ -21,3 +21,11 @@ erl_crash.dump
 
 # Redis db
 dump.rdb
+
+# VSCode
+.vscode
+
+# Sqlite3 db
+fun_with_flags_test
+fun_with_flags_test-shm
+fun_with_flags_test-wal
