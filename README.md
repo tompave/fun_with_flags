@@ -779,7 +779,7 @@ MIX_ENV=test PERSISTENCE=ecto mix do ecto.create, ecto.migrate              # fo
 rm -rf _build/test/lib/fun_with_flags/
 MIX_ENV=test PERSISTENCE=ecto RDBMS=mysql mix do ecto.create, ecto.migrate  # for mysql
 rm -rf _build/test/lib/fun_with_flags/
-MIX_ENV=test PERSISTENCE=ecto RDBMS=sqlite3 mix do ecto.create, ecto.migrate  # for sqlite3
+MIX_ENV=test PERSISTENCE=ecto RDBMS=sqlite mix do ecto.create, ecto.migrate  # for sqlite
 
 ```
 

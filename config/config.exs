@@ -68,12 +68,10 @@ if with_ecto do
       config :fun_with_flags, FunWithFlags.Dev.EctoRepo,
         username: "root",
         password: "root"
-
-    "sqlite3" ->
+    "sqlite" ->
       config :fun_with_flags, FunWithFlags.Dev.EctoRepo,
-        username: "sqlite3",
-        password: "sqlite3"
-
+        username: "sqlite",
+        password: "sqlite"
     _ ->
       config :fun_with_flags, FunWithFlags.Dev.EctoRepo,
         username: "postgres",
