@@ -135,7 +135,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     end
   end
 
-  # Is itself a transaction-wrapper function for SQLite3.
+  # Is itself a transaction-wrapper function for SQLite.
   #
   defp transaction_with_sqlite(repo, upsert_fn) do
     repo.transaction(fn ->

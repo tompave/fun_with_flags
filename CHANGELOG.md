@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-* Add support for SQLite3 with the [`ecto_sqlite3`](https://hex.pm/packages/ecto_sqlite3) adapter.
+* Add support for SQLite with the [`ecto_sqlite3`](https://hex.pm/packages/ecto_sqlite3) adapter.
 
 ## v1.10.1
 
