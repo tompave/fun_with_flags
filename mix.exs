@@ -200,20 +200,6 @@ defmodule FunWithFlags.Mixfile do
     )
   end
 
-  # Run the tests with Ecto+SQLite as persistent store and Phoenix.PubSub as broker.
-  #
-  defp run_tests__ecto_pers_sqlite__phoenix_pubsub(arg) do
-    Mix.shell.cmd(
-      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence #{arg}",
-      env: [
-        {"CACHE_ENABLED", "true"},
-        {"PUBSUB_BROKER", "phoenix_pubsub"},
-        {"PERSISTENCE", "ecto"},
-        {"RDBMS", "sqlite"},
-      ]
-    )
-  end
-
   # Run the tests with Ecto+MySQL as persistent store and Phoenix.PubSub as broker.
   #
   defp run_tests__ecto_pers_mysql__phoenix_pubsub(arg) do
@@ -224,6 +210,20 @@ defmodule FunWithFlags.Mixfile do
         {"PUBSUB_BROKER", "phoenix_pubsub"},
         {"PERSISTENCE", "ecto"},
         {"RDBMS", "mysql"},
+      ]
+    )
+  end
+
+  # Run the tests with Ecto+SQLite as persistent store and Phoenix.PubSub as broker.
+  #
+  defp run_tests__ecto_pers_sqlite__phoenix_pubsub(arg) do
+    Mix.shell.cmd(
+      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence #{arg}",
+      env: [
+        {"CACHE_ENABLED", "true"},
+        {"PUBSUB_BROKER", "phoenix_pubsub"},
+        {"PERSISTENCE", "ecto"},
+        {"RDBMS", "sqlite"},
       ]
     )
   end
