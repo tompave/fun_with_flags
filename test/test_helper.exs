@@ -41,6 +41,8 @@ if does_anything_need_redis do
   FunWithFlags.TestUtils.use_redis_test_db()
 end
 
+FunWithFlags.Supervisor.start_link(nil)
+
 ExUnit.start()
 
 if FunWithFlags.Config.persist_in_ecto? do

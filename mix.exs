@@ -23,8 +23,7 @@ defmodule FunWithFlags.Mixfile do
 
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
-    [extra_applications: extra_applications(Mix.env),
-     mod: {FunWithFlags.Application, []}]
+    [extra_applications: extra_applications(Mix.env())]
   end
 
   defp extra_applications(:test), do: local_extra_applications()
