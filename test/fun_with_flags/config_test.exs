@@ -139,6 +139,12 @@ defmodule FunWithFlags.ConfigTest do
     end
   end
 
+  describe "ecto_primary_key_type_determined_at_compile_time()" do
+    test "it defaults to :id" do
+      assert Config.ecto_primary_key_type_determined_at_compile_time() == :id
+    end
+  end
+
   describe "When we are sending notifications with Redis PubSub" do
     @describetag :redis_pubsub
 
