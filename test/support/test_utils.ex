@@ -83,4 +83,8 @@ defmodule FunWithFlags.TestUtils do
   def reset_app_env_to_default_redis_config do
     configure_redis_with([database: 5])
   end
+
+  def on_elixir_15? do
+    Version.match?(System.version, ">= 1.15.0")
+  end
 end

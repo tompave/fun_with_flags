@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.11.0 (unreleased)
+
+* Add support for Elixir 1.15. Drop support for Elixir 1.12. Elixir >= 1.13 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
+* Drop support for Erlang/OTP 23, and Erlang/OTP >= 24 is now required. Dropping support for older versions of Erlang/OTP simply means that this package is not tested with them in CI, and that no compatibility issues are considered bugs.
+
 ## v1.10.1
 
 * Redis notifications adapter: minor internal changes to what data is passed to the supervisor in the child spec. ([pull/148](https://github.com/tompave/fun_with_flags/pull/148))
