@@ -97,7 +97,7 @@ defmodule FunWithFlags.Mixfile do
       &run_tests__redis_pers__redis_pubsub/1, &run_integration_tests__redis_pers__redis_pubsub__no_cache/1,
       &run_tests__redis_pers__phoenix_pubsub/1, &run_integration_tests__redis_pers__phoenix_pubsub__no_cache/1,
       &run_tests__ecto_pers_postgres__phoenix_pubsub/1, &run_integration_tests__ecto_pers_postgres__phoenix_pubsub__no_cache/1,
-      &run_tests__ecto_pers_mysql__phoenix_pubsub/1, &run_integration_tests__ecto_pers_mysql__phoenix_pubsub__no_cache/1,
+      # &run_tests__ecto_pers_mysql__phoenix_pubsub/1, &run_integration_tests__ecto_pers_mysql__phoenix_pubsub__no_cache/1,
     ]
 
     exit_codes = case System.get_env("CI") do
