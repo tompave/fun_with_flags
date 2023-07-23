@@ -8,7 +8,7 @@ defmodule FunWithFlags.Mixfile do
     [
       app: :fun_with_flags,
       version: @version,
-      elixir: "~> 1.12",
+      elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env),
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
@@ -68,7 +68,7 @@ defmodule FunWithFlags.Mixfile do
       {:mock, "~> 0.3", only: :test},
 
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
-      {:credo, "~> 1.6", only: :dev, runtime: false},
+      {:credo, "~> 1.7", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0", only: :dev, runtime: false}
     ]
   end

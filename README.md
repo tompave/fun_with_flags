@@ -44,6 +44,7 @@ It stores flag information in Redis or a relational DB (PostgreSQL, MySQL, or SQ
 * [Application Start Behaviour](#application-start-behaviour)
 * [Testing](#testing)
 * [Development](#development)
+  - [Working with PubSub Locally](#working-with-pubsub-locally)
 
 ## What's a Feature Flag?
 
@@ -811,3 +812,21 @@ This package uses the [credo](https://hex.pm/packages/credo) and [dialyxir](http
 mix credo
 mix dialyzer
 ```
+
+### Working with PubSub Locally
+
+It's possible to test the PubSub functionality locally, in `iex`.
+
+When using Redis, it's enough to start two `iex -S mix` sessions in two terminals, and they'll talk with one another via Redis.
+
+When using `Phoenix.PubSub` (which is typically the case with `Ecto`), then the process is similar but you must establish a connection between the two Erlang nodes running in the two terminals. There are a number of ways to do this, and the simplest is to do it manually within `iex`.
+
+Steps:
+
+1. Run `bin/console_pubsub foo` in one terminal.
+2. Run `bin/console_pubsub bar` in another terminal.
+3. In either terminal, grab the current name with `Node.self()`. (The name will also be shown in the `iex` prompts).
+4. In the other terminal, run `Node.connect(:"THE_OTHER_NODE_NAME")`. Keep in mind that the names are atoms.
+5. In either terminal, run `Node.list()` to check that there is a connection.
+
+Done that, modifying any flag data in either terminal will notify the other one via PubSub.
