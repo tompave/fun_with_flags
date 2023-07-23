@@ -13,7 +13,6 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
     field :gate_type, :string
     field :target, :string
     field :enabled, :boolean
-    timestamps()
   end
 
   @fields [:flag_name, :gate_type, :target, :enabled]
