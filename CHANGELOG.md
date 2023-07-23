@@ -4,6 +4,7 @@
 
 * Add support for Elixir 1.15. Drop support for Elixir 1.12. Elixir >= 1.13 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
 * Drop support for Erlang/OTP 23, and Erlang/OTP >= 24 is now required. Dropping support for older versions of Erlang/OTP simply means that this package is not tested with them in CI, and that no compatibility issues are considered bugs.
+* Ecto persistence, breaking change: add `insterted_at` and `updated_at` timestamp columns to the DB table. In order to upgrade without downtime, first apply [the new incremental migration](https://github.com/tompave/fun_with_flags/blob/master/priv/ecto_repo/migrations/00000000000002_add_timestamps.exs) (you can remove the conditional code to make it a no-op, if you're upgrading), and then update the `fun_with_flag` package in your Mix file. (Thanks [PaulOstazeski](https://github.com/PaulOstazeski), [pull/154](https://github.com/tompave/fun_with_flags/pull/154))
 
 ## v1.10.1
 
