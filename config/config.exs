@@ -65,9 +65,14 @@ if with_ecto do
 
   case System.get_env("RDBMS") do
     "mysql" ->
+      mysql_password = case System.get_env("CI") do
+        "true" -> "root" # On GitHub Actions.
+        _      -> ""     # For a default dev-insecure installation, e.g. via Homebrew on macOS.
+      end
+
       config :fun_with_flags, FunWithFlags.Dev.EctoRepo,
         username: "root",
-        password: "" # for a default dev-insecure installation, e.g. via Homebrew on macOS.
+        password: mysql_password
     _ ->
       config :fun_with_flags, FunWithFlags.Dev.EctoRepo,
         username: "postgres",
