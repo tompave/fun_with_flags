@@ -12,6 +12,7 @@ defmodule FunWithFlags.Dev.EctoRepo.Migrations.CreateFeatureFlagsTable do
       add :gate_type, :string, null: false
       add :target, :string, null: false
       add :enabled, :boolean, null: false
+      timestamps()
     end
 
     create index(
