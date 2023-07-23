@@ -1,9 +1,9 @@
 #!/bin/bash
 
-rdbms=${1:-postgres}
+nodename=${1:-one}
 
 # Support `$@` to pass extra options to `iex`.
 
 rm -rf _build/dev/lib/fun_with_flags/ &&
 rm -rf _build/test/lib/fun_with_flags/ &&
-PERSISTENCE=ecto RDBMS="$rdbms" PUBSUB_BROKER=phoenix_pubsub iex -S mix;
+PERSISTENCE=ecto RDBMS="postgres" PUBSUB_BROKER=phoenix_pubsub iex --name "$nodename" -S mix;

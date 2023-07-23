@@ -820,11 +820,10 @@ When using `Phoenix.PubSub` (which is typically the case with `Ecto`), then the 
 
 Steps:
 
-1. Ensure you've cleared previously build artifacts with `rm -rf _build/dev/lib/fun_with_flags/`.
-2. Run `bin/console_ecto --name foo` in one terminal.
-3. Run `bin/console_ecto --name bar` in another terminal.
-4. In either terminal, grab the current name with `Node.self()`. (The name will also be shown in the `iex` prompts).
-5. In the other terminal, run `Node.connect(:"THE_OTHER_NODE_NAME")`. Keep in mind that the names are atoms.
-6. In either terminal, run `Node.list()` to check that there is a connection.
+1. Run `bin/console_pubsub foo` in one terminal.
+2. Run `bin/console_pubsub bar` in another terminal.
+3. In either terminal, grab the current name with `Node.self()`. (The name will also be shown in the `iex` prompts).
+4. In the other terminal, run `Node.connect(:"THE_OTHER_NODE_NAME")`. Keep in mind that the names are atoms.
+5. In either terminal, run `Node.list()` to check that there is a connection.
 
 Done that, modifying any flag data in either terminal will notify the other one via PubSub.
