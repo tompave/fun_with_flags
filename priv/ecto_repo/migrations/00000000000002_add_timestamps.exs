@@ -29,4 +29,11 @@ defmodule FunWithFlags.Dev.EctoRepo.Migrations.EnsureColumnsAreNotNull do
         end
     end
   end
+
+  def down do
+    alter table(:fun_with_flags_toggles) do
+      remove :inserted_at
+      remove :updated_at
+    end
+  end
 end
