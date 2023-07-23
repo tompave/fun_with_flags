@@ -17,7 +17,7 @@ defmodule FunWithFlags.Dev.EctoRepo.Migrations.EnsureColumnsAreNotNull do
   # change this migration accordingly.
 
   def up do
-    case repo.query("select inserted_at, updated_at from fun_with_flags_toggles where false") do
+    case repo().query("select inserted_at, updated_at from fun_with_flags_toggles where false") do
       {:ok, %{num_rows: 0}} ->
         # timestamp columns exist, do nothing
         true
