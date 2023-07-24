@@ -54,6 +54,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     transaction_fn = case db_type(repo) do
       :postgres -> build_transaction_with_lock_postgres_fn(flag_name)
       :mysql -> &transaction_with_lock_mysql/2
+      :sqlite -> &transaction_with_sqlite/2
     end
 
     out = transaction_fn.(repo, fn() ->
@@ -132,6 +133,24 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
         repo.rollback("couldn't acquire lock")
       end
     end
+  end
+
+  # Is itself a transaction-wrapper function for SQLite.
+  #
+  defp transaction_with_sqlite(repo, upsert_fn) do
+    repo.transaction(fn ->
+      try do
+        upsert_fn.()
+      rescue
+        e ->
+          repo.rollback("Exception: #{inspect(e)}")
+      else
+        {:error, reason} ->
+          repo.rollback("Error while upserting the gate: #{inspect(reason)}")
+        {:ok, value} ->
+          {:ok, value}
+      end
+    end)
   end
 
 
@@ -259,8 +278,8 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   end
 
 
-  # PostgreSQL's UPSERTs require an explicit conflict target.
-  # MySQL's UPSERTs don't need it.
+  # PostgreSQL UPSERTs require an explicit conflict target.
+  # MySQL/SQLite3 UPSERTs don't need it.
   #
   defp upsert_options(repo, gate = %Gate{}) do
     options = [on_conflict: [set: [enabled: gate.enabled]]]
@@ -268,17 +287,17 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
     case db_type(repo) do
       :postgres ->
         options ++ [conflict_target: [:flag_name, :gate_type, :target]]
-      :mysql ->
+      type when type in [:mysql, :sqlite] ->
         options
     end
   end
-
 
   defp db_type(repo) do
     case repo.__adapter__() do
       Ecto.Adapters.Postgres -> :postgres
       Ecto.Adapters.MySQL -> :mysql # legacy, Mariaex
       Ecto.Adapters.MyXQL -> :mysql # new in ecto_sql 3.1
+      Ecto.Adapters.SQLite3 -> :sqlite
       other -> raise "Ecto adapter #{inspect(other)} is not supported"
     end
   end

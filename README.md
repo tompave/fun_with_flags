@@ -17,7 +17,7 @@ If you're reading this on the [GitHub repo](https://github.com/tompave/fun_with_
 
 FunWithFlags is an OTP application that provides a 2-level storage to save and retrieve feature flags, an Elixir API to toggle and query them, and a [web dashboard](#web-dashboard) as control panel.
 
-It stores flag information in Redis or a relational DB (PostgreSQL or MySQL, with Ecto) for persistence and synchronization across different nodes, but it also maintains a local cache in an ETS table for fast lookups. When flags are added or toggled on a node, the other nodes are notified via PubSub and reload their local ETS caches.
+It stores flag information in Redis or a relational DB (PostgreSQL, MySQL, or SQLite - with Ecto) for persistence and synchronization across different nodes, but it also maintains a local cache in an ETS table for fast lookups. When flags are added or toggled on a node, the other nodes are notified via PubSub and reload their local ETS caches.
 
 ## Content
 
@@ -570,13 +570,13 @@ config :fun_with_flags, :redis,
 
 ### Persistence Adapters
 
-The library comes with two persistence adapters for the [`Redix`](https://hex.pm/packages/redix) and [`Ecto`](https://hex.pm/packages/ecto) libraries, that allow to persist feature flag data in Redis, PostgreSQL or MySQL. In order to use any of them, you must declare the correct optional dependency in the Mixfile (see the [installation](#installation) instructions, above).
+The library comes with two persistence adapters for the [`Redix`](https://hex.pm/packages/redix) and [`Ecto`](https://hex.pm/packages/ecto) libraries, that allow to persist feature flag data in Redis, PostgreSQL, MySQL, or SQLite. In order to use any of them, you must declare the correct optional dependency in the Mixfile (see the [installation](#installation) instructions, above).
 
 The Redis adapter is the default and there is no need to explicitly declare it. All it needs is the Redis connection configuration.
 
 In order to use the Ecto adapter, an Ecto repo must be provided in the configuration. FunWithFlags expects the Ecto repo to be initialized by the host application, which also needs to start and supervise any required processes. If using Phoenix this is managed automatically by the framework, and it's fine to use the same repo used by the rest of the application.
 
-Only PostgreSQL (via [`postgrex`](https://hex.pm/packages/postgrex)) and MySQL (via [`mariaex`](https://hex.pm/packages/mariaex) or [`myxql`](https://hex.pm/packages/myxql)) are supported at the moment. Support for other RDBMSs might come in the future.
+Only PostgreSQL (via [`postgrex`](https://hex.pm/packages/postgrex)), MySQL (via [`mariaex`](https://hex.pm/packages/mariaex) or [`myxql`](https://hex.pm/packages/myxql)), and SQLite (via [`ecto_sqlite3`](https://hex.pm/packages/ecto_sqlite3)) are supported at the moment. Support for other RDBMSs might come in the future.
 
 To configure the Ecto adapter:
 
@@ -779,6 +779,9 @@ To setup the test DB for the Ecto persistence tests, run:
 MIX_ENV=test PERSISTENCE=ecto mix do ecto.create, ecto.migrate              # for postgres
 rm -rf _build/test/lib/fun_with_flags/
 MIX_ENV=test PERSISTENCE=ecto RDBMS=mysql mix do ecto.create, ecto.migrate  # for mysql
+rm -rf _build/test/lib/fun_with_flags/
+MIX_ENV=test PERSISTENCE=ecto RDBMS=sqlite mix do ecto.create, ecto.migrate  # for sqlite
+
 ```
 
 Then, to run all the tests:

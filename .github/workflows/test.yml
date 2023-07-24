@@ -91,5 +91,11 @@ jobs:
           MIX_ENV=test PERSISTENCE=ecto RDBMS=mysql mix do ecto.create, ecto.migrate
           rm -rf _build/test/lib/fun_with_flags
 
+      - name: Create and migrate the DB on SQLite
+        run: |
+          MIX_ENV=test PERSISTENCE=ecto RDBMS=sqlite mix compile --warnings-as-errors
+          MIX_ENV=test PERSISTENCE=ecto RDBMS=sqlite mix do ecto.create, ecto.migrate
+          rm -rf _build/test/lib/fun_with_flags
+
       - name: Run all tests
         run: mix test.all

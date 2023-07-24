@@ -5,6 +5,7 @@
 * Add support for Elixir 1.15. Drop support for Elixir 1.12. Elixir >= 1.13 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
 * Drop support for Erlang/OTP 23, and Erlang/OTP >= 24 is now required. Dropping support for older versions of Erlang/OTP simply means that this package is not tested with them in CI, and that no compatibility issues are considered bugs.
 * Removed from the repo the [DB migration](https://github.com/tompave/fun_with_flags/blob/v1.1.0/priv/ecto_repo/migrations/00000000000001_ensure_columns_are_not_null.exs) added in [v1.1.0](https://github.com/tompave/fun_with_flags/blob/master/CHANGELOG.md#v110) (November 2018), as an upgrade step. After almost 5 years, chances are that users of the library are already using the correct schema, and that extra "upgrade" migration is incompatible with RDBMS other than Postgres and MySQL.
+* Add support for SQLite with the [`ecto_sqlite3`](https://hex.pm/packages/ecto_sqlite3) adapter.
 
 ## v1.10.1
 
