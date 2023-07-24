@@ -4,6 +4,7 @@
 
 * Add support for Elixir 1.15. Drop support for Elixir 1.12. Elixir >= 1.13 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
 * Drop support for Erlang/OTP 23, and Erlang/OTP >= 24 is now required. Dropping support for older versions of Erlang/OTP simply means that this package is not tested with them in CI, and that no compatibility issues are considered bugs.
+* Removed from the repo the [DB migration](https://github.com/tompave/fun_with_flags/blob/v1.1.0/priv/ecto_repo/migrations/00000000000001_ensure_columns_are_not_null.exs) added in [v1.1.0](https://github.com/tompave/fun_with_flags/blob/master/CHANGELOG.md#v110) (November 2018), as an upgrade step. After almost 5 years, chances are that users of the library are already using the correct schema, and that extra "upgrade" migration is incompatible with RDBMS other than Postgres and MySQL.
 
 ## v1.10.1
 
@@ -109,7 +110,7 @@ There is no other change in this release, but this is a minor version bump becau
 * Drop support for OTP 19. OTP >= 20 is now required.
 * Update to Ecto 3 with the `ecto_sql` package.
 * Update to Redix 0.8 and Redix.PubSub 0.5.
-* Ecto persistence: add `NOT NULL` constraints to the table definition in the Ecto migration. This is not a breaking change: the constraints have been added because those values are never null anyway. If users of the library want to add them, they can do so by adding [this migration](https://github.com/tompave/fun_with_flags/blob/master/priv/ecto_repo/migrations/00000000000001_ensure_columns_are_not_null.exs) to their projects.
+* Ecto persistence: add `NOT NULL` constraints to the table definition in the Ecto migration. This is not a breaking change: the constraints have been added because those values are never null anyway. If users of the library want to add them, they can do so by adding [this migration](https://github.com/tompave/fun_with_flags/blob/v1.1.0/priv/ecto_repo/migrations/00000000000001_ensure_columns_are_not_null.exs) to their projects.
 * Redis persistence: allow to configure the Redis URL with a system tuple to read it from an environment variable. (Thanks [seangeo](https://github.com/seangeo), [pull/29](https://github.com/tompave/fun_with_flags/pull/29))
 
 ## v1.0.0
