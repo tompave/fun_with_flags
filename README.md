@@ -38,6 +38,7 @@ It stores flag information in Redis or a relational DB (PostgreSQL, MySQL, or SQ
 * [Configuration](#configuration)
   - [Persistence Adapters](#persistence-adapters)
     - [Ecto Multi-tenancy](#ecto-multi-tenancy)
+    - [Ecto Custom Primary Key Types](#ecto-custom-primary-key-types)
   - [PubSub Adapters](#pubsub-adapters)
 * [Extensibility](#extensibility)
   - [Custom Persistence Adapters](#custom-persistence-adapters)
@@ -632,6 +633,13 @@ defmodule MyApp.Repo do
 end
 ```
 
+#### Ecto Custom Primary Key Types
+
+The library defaults to using an integer (`bigserial`) as the type of the `id` primary key column. If, for any reason, you need the ID to be a UUID, you can configure it to be of type `:binary_id`. To do that, you need to:
+
+  1. Set the `:ecto_primary_key_type` configuration option to `:binary_id`.
+  2. Use `:binary_id` as the type of the `:id` column in the [provided migration file](https://github.com/tompave/fun_with_flags/blob/master/priv/ecto_repo/migrations/00000000000000_create_feature_flags_table.exs).
+
 ### PubSub Adapters
 
 The library comes with two PubSub adapters for the [`Redix`](https://hex.pm/packages/redix) and [`Phoenix.PubSub`](https://hex.pm/packages/phoenix_pubsub) libraries. In order to use any of them, you must declare the correct optional dependency in the Mixfile. (see the [installation](#installation) instructions, below)
@@ -671,13 +679,6 @@ config :fun_with_flags, :cache_bust_notifications,
   adapter: FunWithFlags.Notifications.PhoenixPubSub,
   client: :my_pubsub_process_name
 ```
-
-#### Ecto Custom Primary Key Types
-
-The library defaults to using an integer (`bigserial`) as the type of the `id` primary key column. If, for any reason, you need the ID to be a UUID, you can configure it to be of type `:binary_id`. To do that, you need to:
-
-  1. Set the `:ecto_primary_key_type` configuration option to `:binary_id`.
-  2. Use `:binary_id` as the type of the `:id` column in the [provided migration file](https://github.com/tompave/fun_with_flags/blob/master/priv/ecto_repo/migrations/00000000000000_create_feature_flags_table.exs).
 
 ## Extensibility
 
