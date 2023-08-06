@@ -595,8 +595,9 @@ config :my_app, MyApp.Repo,
 config :fun_with_flags, :persistence,
   adapter: FunWithFlags.Store.Persistent.Ecto,
   repo: MyApp.Repo,
-  ecto_table_name: "your_table_name" # optional
-  # Default table name is "fun_with_flags_toggles".
+  ecto_table_name: "your_table_name", # optional, defaults to "fun_with_flags_toggles"
+  ecto_primary_key_type: :binary_id # optional, defaults to :id
+  # For the primary key type, see also: https://hexdocs.pm/ecto/3.10.3/Ecto.Schema.html#module-schema-attributes
 ```
 
 It's also necessary to create the DB table that will hold the feature flag data. To do that, [create a new migration](https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Gen.Migration.html) in your project and copy the contents of [the provided migration file](https://github.com/tompave/fun_with_flags/blob/master/priv/ecto_repo/migrations/00000000000000_create_feature_flags_table.exs). Then [run the migration](https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Migrate.html).
@@ -670,6 +671,13 @@ config :fun_with_flags, :cache_bust_notifications,
   adapter: FunWithFlags.Notifications.PhoenixPubSub,
   client: :my_pubsub_process_name
 ```
+
+#### Ecto Custom Primary Key Types
+
+The library defaults to using an integer (`bigserial`) as the type of the `id` primary key column. If, for any reason, you need the ID to be a UUID, you can configure it to be of type `:binary_id`. To do that, you need to:
+
+  1. Set the `:ecto_primary_key_type` configuration option to `:binary_id`.
+  2. Use `:binary_id` as the type of the `:id` column in the [provided migration file](https://github.com/tompave/fun_with_flags/blob/master/priv/ecto_repo/migrations/00000000000000_create_feature_flags_table.exs).
 
 ## Extensibility
 
