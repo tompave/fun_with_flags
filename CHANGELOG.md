@@ -6,6 +6,7 @@
 * Drop support for Erlang/OTP 23, and Erlang/OTP >= 24 is now required. Dropping support for older versions of Erlang/OTP simply means that this package is not tested with them in CI, and that no compatibility issues are considered bugs.
 * Remove from the repo the [DB migration](https://github.com/tompave/fun_with_flags/blob/v1.1.0/priv/ecto_repo/migrations/00000000000001_ensure_columns_are_not_null.exs) added in [v1.1.0](https://github.com/tompave/fun_with_flags/blob/master/CHANGELOG.md#v110) (November 2018), as an upgrade step. After almost 5 years, chances are that users of the library are already using the correct schema, and that extra "upgrade" migration is incompatible with RDBMS other than Postgres and MySQL.
 * Add support for SQLite with the [`ecto_sqlite3`](https://hex.pm/packages/ecto_sqlite3) adapter. (Thanks [tylerbarker](https://github.com/tylerbarker), [pull/151](https://github.com/tompave/fun_with_flags/pull/151))
+* Add support for text (binary) primary key columns with the Ecto adapter. (Thanks [whatyouhide](https://github.com/whatyouhide) and [vinniefranco](https://github.com/vinniefranco), [pull/156](https://github.com/tompave/fun_with_flags/pull/156) and [pull/129](https://github.com/tompave/fun_with_flags/pull/129))
 
 ## v1.10.1
 
