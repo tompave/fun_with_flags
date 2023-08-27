@@ -62,34 +62,43 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
 
       first_actor_gate = %Gate{type: :actor, for: "string:qwerty", enabled: true}
       PersiEcto.put(name, first_actor_gate)
-      assert {:ok, %Flag{name: ^name, gates: [^first_actor_gate, ^other_bool_gate]}} = PersiEcto.get(name)
+      expected_flag = make_expected_flag(name, [first_actor_gate, other_bool_gate])
+      assert {:ok, ^expected_flag} = sort_db_result_gates(PersiEcto.get(name))
 
       PersiEcto.put(name, first_bool_gate)
-      assert {:ok, %Flag{name: ^name, gates: [^first_actor_gate, ^first_bool_gate]}} = PersiEcto.get(name)
+      expected_flag = make_expected_flag(name, [first_actor_gate, first_bool_gate])
+      assert {:ok, ^expected_flag} = sort_db_result_gates(PersiEcto.get(name))
 
 
       other_actor_gate = %Gate{type: :actor, for: "string:asd", enabled: true}
       PersiEcto.put(name, other_actor_gate)
-      assert {:ok, %Flag{name: ^name, gates: [^other_actor_gate, ^first_actor_gate, ^first_bool_gate]}} = PersiEcto.get(name)
+      expected_flag = make_expected_flag(name, [other_actor_gate, first_actor_gate, first_bool_gate])
+      assert {:ok, ^expected_flag} = sort_db_result_gates(PersiEcto.get(name))
 
       first_actor_gate_disabled = %Gate{first_actor_gate | enabled: false}
       PersiEcto.put(name, first_actor_gate_disabled)
-      assert {:ok, %Flag{name: ^name, gates: [^other_actor_gate, ^first_actor_gate_disabled, ^first_bool_gate]}} = PersiEcto.get(name)
-      refute match? {:ok, %Flag{name: ^name, gates: [^other_actor_gate, ^first_actor_gate, ^first_bool_gate]}}, PersiEcto.get(name)
+      expected_flag = make_expected_flag(name, [other_actor_gate, first_actor_gate_disabled, first_bool_gate])
+      assert {:ok, ^expected_flag} = sort_db_result_gates(PersiEcto.get(name))
+      expected_flag = make_expected_flag(name, [other_actor_gate, first_actor_gate, first_bool_gate])
+      refute match? {:ok, ^expected_flag}, sort_db_result_gates(PersiEcto.get(name))
 
 
       first_group_gate = %Gate{type: :group, for: "smurfs", enabled: true}
       PersiEcto.put(name, first_group_gate)
-      assert {:ok, %Flag{name: ^name, gates: [^other_actor_gate, ^first_actor_gate_disabled, ^first_bool_gate, ^first_group_gate]}} = PersiEcto.get(name)
+      expected_flag = make_expected_flag(name, [other_actor_gate, first_actor_gate_disabled, first_bool_gate, first_group_gate])
+      assert {:ok, ^expected_flag} = sort_db_result_gates(PersiEcto.get(name))
 
       other_group_gate = %Gate{type: :group, for: "gnomes", enabled: true}
       PersiEcto.put(name, other_group_gate)
-      assert {:ok, %Flag{name: ^name, gates: [^other_actor_gate, ^first_actor_gate_disabled, ^first_bool_gate, ^other_group_gate, ^first_group_gate]}} = PersiEcto.get(name)
+      expected_flag = make_expected_flag(name, [other_actor_gate, first_actor_gate_disabled, first_bool_gate, other_group_gate, first_group_gate])
+      assert {:ok, ^expected_flag} = sort_db_result_gates(PersiEcto.get(name))
 
       first_group_gate_disabled = %Gate{first_group_gate | enabled: false}
       PersiEcto.put(name, first_group_gate_disabled)
-      assert {:ok, %Flag{name: ^name, gates: [^other_actor_gate, ^first_actor_gate_disabled, ^first_bool_gate, ^other_group_gate, ^first_group_gate_disabled]}} = PersiEcto.get(name)
-      refute match? {:ok, %Flag{name: ^name, gates: [^other_actor_gate, ^first_actor_gate_disabled, ^first_bool_gate, ^other_group_gate, ^first_group_gate]}}, PersiEcto.get(name)
+      expected_flag = make_expected_flag(name, [other_actor_gate, first_actor_gate_disabled, first_bool_gate, other_group_gate, first_group_gate_disabled])
+      assert {:ok, ^expected_flag} = sort_db_result_gates(PersiEcto.get(name))
+      expected_flag = make_expected_flag(name, [other_actor_gate, first_actor_gate_disabled, first_bool_gate, other_group_gate, first_group_gate])
+      refute match? {:ok, ^expected_flag}, sort_db_result_gates(PersiEcto.get(name))
     end
   end
 
@@ -127,7 +136,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       assert {:ok, %Flag{name: ^name, gates: [^pot_gate]}} = PersiEcto.put(name, pot_gate)
     end
 
-    
+
     test "put()'ing more gates will return an increasily updated flag", %{name: name, pot_gate: pot_gate} do
       bool_gate = Gate.new(:boolean, false)
       assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = PersiEcto.put(name, bool_gate)
@@ -169,7 +178,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       assert {:ok, %Flag{name: ^name, gates: [^poa_gate]}} = PersiEcto.put(name, poa_gate)
     end
 
-    
+
     test "put()'ing more gates will return an increasily updated flag", %{name: name, poa_gate: poa_gate} do
       bool_gate = Gate.new(:boolean, false)
       assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = PersiEcto.put(name, bool_gate)
@@ -185,7 +194,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       bool_gate = %Gate{type: :boolean, enabled: false}
       group_gate = %Gate{type: :group, for: "admins", enabled: true}
       actor_gate = %Gate{type: :actor, for: "string_actor", enabled: true}
-      flag = %Flag{name: name, gates: sort_gates([bool_gate, group_gate, actor_gate])}
+      flag = %Flag{name: name, gates: sort_gates_by_type([bool_gate, group_gate, actor_gate])}
 
       {:ok, %Flag{name: ^name}} = PersiEcto.put(name, bool_gate)
       {:ok, %Flag{name: ^name}} = PersiEcto.put(name, group_gate)
@@ -246,7 +255,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       actor_gate = %Gate{type: :actor, for: "string_actor", enabled: true}
       pot_gate = %Gate{type: :percentage_of_time, for: 0.5, enabled: true}
 
-      flag = %Flag{name: name, gates: sort_gates([bool_gate, group_gate, actor_gate, pot_gate])}
+      flag = %Flag{name: name, gates: sort_gates_by_type([bool_gate, group_gate, actor_gate, pot_gate])}
 
       {:ok, %Flag{name: ^name}} = PersiEcto.put(name, bool_gate)
       {:ok, %Flag{name: ^name}} = PersiEcto.put(name, group_gate)
@@ -274,7 +283,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
     test "delete(flag_name, gate) returns the tuple {:ok, %Flag{}}",
          %{name: name, bool_gate: bool_gate, group_gate: group_gate, actor_gate: actor_gate, pot_gate: pot_gate} do
 
-      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate, ^pot_gate]}} = PersiEcto.get(name)          
+      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate, ^pot_gate]}} = PersiEcto.get(name)
       assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate]}} = PersiEcto.delete(name, pot_gate)
     end
 
@@ -309,7 +318,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       actor_gate = %Gate{type: :actor, for: "string_actor", enabled: true}
       poa_gate = %Gate{type: :percentage_of_actors, for: 0.5, enabled: true}
 
-      flag = %Flag{name: name, gates: sort_gates([bool_gate, group_gate, actor_gate, poa_gate])}
+      flag = %Flag{name: name, gates: sort_gates_by_type([bool_gate, group_gate, actor_gate, poa_gate])}
 
       {:ok, %Flag{name: ^name}} = PersiEcto.put(name, bool_gate)
       {:ok, %Flag{name: ^name}} = PersiEcto.put(name, group_gate)
@@ -337,7 +346,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
     test "delete(flag_name, gate) returns the tuple {:ok, %Flag{}}",
          %{name: name, bool_gate: bool_gate, group_gate: group_gate, actor_gate: actor_gate, poa_gate: poa_gate} do
 
-      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate, ^poa_gate]}} = PersiEcto.get(name)          
+      assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate, ^poa_gate]}} = PersiEcto.get(name)
       assert {:ok, %Flag{name: ^name, gates: [^actor_gate, ^bool_gate, ^group_gate]}} = PersiEcto.delete(name, poa_gate)
     end
 
@@ -370,7 +379,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       bool_gate = %Gate{type: :boolean, enabled: false}
       group_gate = %Gate{type: :group, for: "admins", enabled: true}
       actor_gate = %Gate{type: :actor, for: "string_actor", enabled: true}
-      flag = %Flag{name: name, gates: sort_gates([bool_gate, group_gate, actor_gate])}
+      flag = %Flag{name: name, gates: sort_gates_by_type([bool_gate, group_gate, actor_gate])}
 
       {:ok, %Flag{name: ^name}} = PersiEcto.put(name, bool_gate)
       {:ok, %Flag{name: ^name}} = PersiEcto.put(name, group_gate)
@@ -420,7 +429,7 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = PersiEcto.get(name)
       PersiEcto.put(name, gate)
       assert {:ok, %Flag{name: ^name, gates: [^gate]}} = PersiEcto.get(name)
-    end  
+    end
   end
 
 
@@ -495,7 +504,6 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       end
     end
   end
-  
 
 
   describe "integration: enable and disable with the top-level API" do
@@ -513,7 +521,23 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
   end
 
 
-  defp sort_gates(gates) do
+  defp sort_gates_by_type(gates) do
     Enum.sort_by(gates, &(&1.type))
+  end
+
+  defp sort_flag_gates(flag) do
+    %{flag | gates: Enum.sort(flag.gates)}
+  end
+
+  defp sort_db_result_gates({:ok, flag}) do
+    {:ok, sort_flag_gates(flag)}
+  end
+
+  # DBs may return the rows in undeterministic orders.
+  # This is fine in terms of functionality, but it makes is hard to write assertions.
+  # This function is a way to de-flake some tests.
+  #
+  defp make_expected_flag(name, gates) do
+    sort_flag_gates(%Flag{name: name, gates: gates})
   end
 end
