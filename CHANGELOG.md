@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.0 (unreleased)
+
+Work is in progress towards v2.0 of the package.
+
+Main goals:
+
+* [ ] Config overhaul. Stop using the config.exs file, and rather do something like what Ecto does. The host application should define its own module (like an Ecto repo) that provides the flag querying and toggling API. The package config should be provided with an init callback in the custom module.
+* [ ] Start behaviour. It should never start automatically.
+* [ ] Stop relying on atoms. Use binaries wherever possible. Relying on atoms makes some things harder, especially when handling user input in the UI package.
+
 ## v1.12.0
 
 * Add support for Elixir 1.17 and 1.16. Drop support for Elixir 1.13 and 1.14. Elixir >= 1.15 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
