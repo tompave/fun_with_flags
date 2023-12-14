@@ -2,9 +2,9 @@ name: Code Quality
 
 on:
   push:
-    branches: [master]
+    branches: [master, v2]
   pull_request:
-    branches: [master]
+    branches: [master, v2]
 
 env:
   elixir_version: '1.15'
