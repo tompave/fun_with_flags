@@ -1,5 +1,13 @@
 # FunWithFlags
 
+---
+⚠️ This is the branch for version 2.0 of the package. It's a work in progress and unstable.
+
+v2: [![Mix Tests](https://github.com/tompave/fun_with_flags/actions/workflows/test.yml/badge.svg?branch=v2)](https://github.com/tompave/fun_with_flags/actions/workflows/test.yml?query=branch%3Av2)  
+v2: [![Code Quality](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml/badge.svg?branch=v2)](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml?query=branch%3Av2)  
+
+---
+
 [![Mix Tests](https://github.com/tompave/fun_with_flags/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/tompave/fun_with_flags/actions/workflows/test.yml?query=branch%3Amaster)
 [![Code Quality](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml/badge.svg?branch=master)](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml?query=branch%3Amaster)  
 [![Hex.pm](https://img.shields.io/hexpm/v/fun_with_flags.svg)](https://hex.pm/packages/fun_with_flags)
