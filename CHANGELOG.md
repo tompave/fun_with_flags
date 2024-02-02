@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.12.0 (Unreleased)
+
+* Add support for Elixir 1.16. Drop support for Elixir 1.13. Elixir >= 1.14 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
+
 ## v1.11.0
 
 * Add support for Elixir 1.15. Drop support for Elixir 1.12. Elixir >= 1.13 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
