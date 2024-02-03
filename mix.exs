@@ -39,11 +39,21 @@ defmodule FunWithFlags.Mixfile do
   # adapter is configured.
   #
   defp local_extra_applications do
+    # Required to run the Erlang observer with Elixir 1.15 and above.
+    # https://elixirforum.com/t/cannot-start-observer-undefinedfunctionerror-function-observer-start-0-is-undefined/56642
+    # https://github.com/elixir-lang/elixir/blob/v1.15/CHANGELOG.md#potential-incompatibilities
+    apps =
+      if Version.match?(System.version, ">= 1.15.0") do
+        [:logger, :observer, :wx, :runtime_tools]
+      else
+        [:logger]
+      end
+
     apps =
       if System.get_env("PERSISTENCE") == "ecto" do
-        [:logger, :ecto, :ecto_sql, :postgrex]
+        apps ++ [:ecto, :ecto_sql, :postgrex]
       else
-        [:logger, :redix]
+        apps
       end
 
     apps =
@@ -53,6 +63,7 @@ defmodule FunWithFlags.Mixfile do
         apps
       end
 
+    # IO.puts("Alocal_extra_applicationsPPS: #{inspect(apps)}")
     apps
   end
 
