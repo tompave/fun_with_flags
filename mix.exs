@@ -53,7 +53,7 @@ defmodule FunWithFlags.Mixfile do
       if System.get_env("PERSISTENCE") == "ecto" do
         apps ++ [:ecto, :ecto_sql, :postgrex]
       else
-        [:redix | apps]
+        apps
       end
 
     apps =
