@@ -57,4 +57,7 @@ cacheinfo = fn() ->
   :ets.i(:fun_with_flags_cache)
 end
 
+# Start the FWF Supervision tree.
+FunWithFlags.Supervisor.start_link(nil)
+
 # FunWithFlags.Telemetry.attach_debug_handler()
