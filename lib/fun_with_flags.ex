@@ -306,7 +306,7 @@ defmodule FunWithFlags do
       {:ok, false}
 
   """
-  @spec disable(atom, options) :: {:ok, false} | {:error, any}
+  @spec disable(atom, options) :: {:ok, boolean()} | {:error, any}
   def disable(flag_name, options \\ [])
 
   def disable(flag_name, []) when is_atom(flag_name) do
