@@ -3,6 +3,7 @@
 ## v1.12.0 (Unreleased)
 
 * Add support for Elixir 1.16. Drop support for Elixir 1.13. Elixir >= 1.14 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
+* Fix incorrect return value in `FunWithFlags.disable/2` typespec. (Thanks [mbuffa](https://github.com/mbuffa), [pull/170](https://github.com/tompave/fun_with_flags/pull/170))
 
 ## v1.11.0
 
