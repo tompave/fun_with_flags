@@ -15,6 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         elixir:
+          - '1.17'
           - '1.16'
           - '1.15'
           - '1.14'
@@ -23,9 +24,9 @@ jobs:
           - '26.1'
           - '25.3'
           - '24.3'
-        # exclude:
-          # - elixir: '1.13'
-          #   otp: '26.1'
+        exclude:
+          - elixir: '1.17'
+            otp: '24.3'
 
     services:
       postgres:
