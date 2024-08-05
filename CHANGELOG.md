@@ -2,7 +2,9 @@
 
 ## v1.12.0 (Unreleased)
 
-* Add support for Elixir 1.16. Drop support for Elixir 1.13. Elixir >= 1.14 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
+* Add support for Elixir 1.17 and 1.16. Drop support for Elixir 1.13 and 1.14. Elixir >= 1.15 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
+    * Note: The FunWithFlags package has usually increased its supported Elixir version one at a time, usually supporting the last three minor versions. With this version `v1.12.0` it fast-forwards to Elixir 1.17 from 1.15, and drops support for Elixir versions 1.13 and 1.14 at the same time. That's because a new version of the package wasn't released to support Elixir 1.16 specifically, when it came out, and now there are two new Elixir versions out there. The good news is that this is just a formality to be clear on which Elixir and OTP versions are officially supported, and the FunWithFlags package actually has been working pretty well with new Elixir versions, and even with older Elixir versions that are formally unsupported.
+* Drop support for Erlang/OTP 24, and Erlang/OTP >= 25 is now required. Dropping support for older versions of Erlang/OTP simply means that this package is not tested with them in CI, and that no compatibility issues are considered bugs.
 * Fix incorrect return value in `FunWithFlags.disable/2` typespec. (Thanks [mbuffa](https://github.com/mbuffa), [pull/170](https://github.com/tompave/fun_with_flags/pull/170))
 
 ## v1.11.0
