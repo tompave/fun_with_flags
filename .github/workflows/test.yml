@@ -15,14 +15,13 @@ jobs:
       fail-fast: false
       matrix:
         elixir:
+          - '1.17'
           - '1.16'
           - '1.15'
-          - '1.14'
         otp:
+          - '27.0'
           - '26.2'
-          - '26.1'
           - '25.3'
-          - '24.3'
         # exclude:
           # - elixir: '1.13'
           #   otp: '26.1'
