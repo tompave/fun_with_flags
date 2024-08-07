@@ -57,26 +57,17 @@ defmodule FunWithFlags.Flag do
   end
 
 
-  defp check_actor_gates(gates, item) do
-    gates
-    |> actor_gates()
-    |> do_check_actor_gates(item)
-  end
+  defp check_actor_gates([], _), do: :ignore
 
-  defp do_check_actor_gates([], _), do: :ignore
-
-  defp do_check_actor_gates([gate|rest], item) do
+  defp check_actor_gates([%Gate{type: :actor} = gate | rest], item) do
     case Gate.enabled?(gate, for: item) do
-      :ignore -> do_check_actor_gates(rest, item)
+      :ignore -> check_actor_gates(rest, item)
       result  -> result
     end
   end
 
-
-  defp check_group_gates(gates, item) do
-    gates
-    |> group_gates()
-    |> do_check_group_gates(item)
+  defp check_actor_gates([_gate | rest], item) do
+    check_actor_gates(rest, item)
   end
 
 
@@ -88,16 +79,20 @@ defmodule FunWithFlags.Flag do
   # If a group gate is enabled, store the result but keep
   # looping in case there is another group that is disabled.
   #
-  defp do_check_group_gates(gates, item, result \\ :ignore)
+  defp check_group_gates(gates, item, result \\ :ignore)
 
-  defp do_check_group_gates([], _, result), do: result
+  defp check_group_gates([], _, result), do: result
 
-  defp do_check_group_gates([gate|rest], item, temp_result) do
+  defp check_group_gates([%Gate{type: :group} = gate|rest], item, temp_result) do
     case Gate.enabled?(gate, for: item) do
-      :ignore      -> do_check_group_gates(rest, item, temp_result)
+      :ignore      -> check_group_gates(rest, item, temp_result)
       {:ok, false} -> {:ok, false}
-      {:ok, true}  -> do_check_group_gates(rest, item, {:ok, true})
+      {:ok, true}  -> check_group_gates(rest, item, {:ok, true})
     end
+  end
+
+  defp check_group_gates([_gate | rest], item, temp_result) do
+    check_group_gates(rest, item, temp_result)
   end
 
 
@@ -131,14 +126,6 @@ defmodule FunWithFlags.Flag do
 
   defp boolean_gate(gates) do
     Enum.find(gates, &Gate.boolean?/1)
-  end
-
-  defp actor_gates(gates) do
-    Enum.filter(gates, &Gate.actor?/1)
-  end
-
-  defp group_gates(gates) do
-    Enum.filter(gates, &Gate.group?/1)
   end
 
   defp percentage_of_time_gate(gates) do

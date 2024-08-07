@@ -2,13 +2,13 @@ defmodule FunWithFlags.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/tompave/fun_with_flags"
-  @version "1.11.0"
+  @version "1.12.0"
 
   def project do
     [
       app: :fun_with_flags,
       version: @version,
-      elixir: "~> 1.14",
+      elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env),
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
