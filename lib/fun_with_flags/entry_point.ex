@@ -45,7 +45,6 @@ defmodule FunWithFlags.EntryPoint do
     quote bind_quoted: [opts: opts] do
       @behaviour FunWithFlags.EntryPoint
 
-      # TODO: add what's currently in the top module.
       alias FunWithFlags.{Config, Flag, Gate}
 
       @store FunWithFlags.Config.store_module_determined_at_compile_time()
