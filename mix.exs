@@ -63,7 +63,6 @@ defmodule FunWithFlags.Mixfile do
         apps
       end
 
-    # IO.puts("Alocal_extra_applicationsPPS: #{inspect(apps)}")
     apps
   end
 
