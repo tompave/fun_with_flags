@@ -43,8 +43,6 @@ defmodule FunWithFlags.EntryPoint do
   @doc false
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      @behaviour FunWithFlags.EntryPoint
-
       alias FunWithFlags.{Config, Flag, Gate}
 
       @store FunWithFlags.Config.store_module_determined_at_compile_time()
@@ -543,12 +541,4 @@ defmodule FunWithFlags.EntryPoint do
 
     end
   end
-
-  @doc """
-  An entry point must define this callback to provide its configuration.
-
-  This function is supposed to retrieve any runtime config (e.g. ENV vars) and
-  return it as a keyword list.
-  """
-  @callback config() :: {:ok, Keyword.t()}
 end

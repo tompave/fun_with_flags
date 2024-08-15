@@ -8,9 +8,4 @@ defmodule FunWithFlags do
   """
 
   use FunWithFlags.EntryPoint
-
-  @impl true
-  def config do
-    {:ok, []}
-  end
 end
