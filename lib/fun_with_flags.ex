@@ -74,8 +74,11 @@ defmodule FunWithFlags do
   def enabled?(flag_name, options \\ [])
 
   def enabled?(flag_name, []) when is_atom(flag_name) do
+    start_time = System.monotonic_time()
     {:ok, flag} = @store.lookup(flag_name)
-    Flag.enabled?(flag)
+    result = Flag.enabled?(flag)
+    emit_telemetry_event(:enabled?, flag_name, start_time, result, %{options: []})
+    result
   end
 
   def enabled?(flag_name, [for: nil]) do
@@ -83,8 +86,11 @@ defmodule FunWithFlags do
   end
 
   def enabled?(flag_name, [for: item]) when is_atom(flag_name) do
+    start_time = System.monotonic_time()
     {:ok, flag} = @store.lookup(flag_name)
-    Flag.enabled?(flag, for: item)
+    result = Flag.enabled?(flag, for: item)
+    emit_telemetry_event(:enabled?, flag_name, start_time, result, %{options: [for: item]})
+    result
   end
 
 
@@ -178,11 +184,14 @@ defmodule FunWithFlags do
   def enable(flag_name, options \\ [])
 
   def enable(flag_name, []) when is_atom(flag_name) do
+    start_time = System.monotonic_time()
     gate = Gate.new(:boolean, true)
-    case @store.put(flag_name, gate) do
+    result = case @store.put(flag_name, gate) do
       {:ok, flag} -> verify(flag)
       error -> error
     end
+    emit_telemetry_event(:enable, flag_name, start_time, result, %{options: []})
+    result
   end
 
   def enable(flag_name, [for_actor: nil]) do
@@ -190,11 +199,14 @@ defmodule FunWithFlags do
   end
 
   def enable(flag_name, [for_actor: actor]) when is_atom(flag_name) do
+    start_time = System.monotonic_time()
     gate = Gate.new(:actor, actor, true)
-    case @store.put(flag_name, gate) do
+    result = case @store.put(flag_name, gate) do
       {:ok, flag} -> verify(flag, for: actor)
       error -> error
     end
+    emit_telemetry_event(:enable, flag_name, start_time, result, %{options: [for_actor: actor]})
+    result
   end
 
 
@@ -203,28 +215,37 @@ defmodule FunWithFlags do
   end
 
   def enable(flag_name, [for_group: group_name]) when is_atom(flag_name) do
+    start_time = System.monotonic_time()
     gate = Gate.new(:group, group_name, true)
-    case @store.put(flag_name, gate) do
+    result = case @store.put(flag_name, gate) do
       {:ok, _flag} -> {:ok, true}
       error -> error
     end
+    emit_telemetry_event(:enable, flag_name, start_time, result, %{options: [for_group: group_name]})
+    result
   end
 
 
   def enable(flag_name, [for_percentage_of: {:time, ratio}]) when is_atom(flag_name) do
+    start_time = System.monotonic_time()
     gate = Gate.new(:percentage_of_time, ratio)
-    case @store.put(flag_name, gate) do
+    result = case @store.put(flag_name, gate) do
       {:ok, _flag} -> {:ok, true}
       error -> error
     end
+    emit_telemetry_event(:enable, flag_name, start_time, result, %{options: [for_percentage_of: {:time, ratio}]})
+    result
   end
 
   def enable(flag_name, [for_percentage_of: {:actors, ratio}]) when is_atom(flag_name) do
+    start_time = System.monotonic_time()
     gate = Gate.new(:percentage_of_actors, ratio)
-    case @store.put(flag_name, gate) do
+    result = case @store.put(flag_name, gate) do
       {:ok, _flag} -> {:ok, true}
       error -> error
     end
+    emit_telemetry_event(:enable, flag_name, start_time, result, %{options: [for_percentage_of: {:actors, ratio}]})
+    result
   end
 
 
@@ -310,11 +331,14 @@ defmodule FunWithFlags do
   def disable(flag_name, options \\ [])
 
   def disable(flag_name, []) when is_atom(flag_name) do
+    start_time = System.monotonic_time()
     gate = Gate.new(:boolean, false)
-    case @store.put(flag_name, gate) do
+    result = case @store.put(flag_name, gate) do
       {:ok, flag} -> verify(flag)
       error -> error
     end
+    emit_telemetry_event(:disable, flag_name, start_time, result, %{options: []})
+    result
   end
 
   def disable(flag_name, [for_actor: nil]) do
@@ -322,11 +346,14 @@ defmodule FunWithFlags do
   end
 
   def disable(flag_name, [for_actor: actor]) when is_atom(flag_name) do
+    start_time = System.monotonic_time()
     gate = Gate.new(:actor, actor, false)
-    case @store.put(flag_name, gate) do
+    result = case @store.put(flag_name, gate) do
       {:ok, flag} -> verify(flag, for: actor)
       error -> error
     end
+    emit_telemetry_event(:disable, flag_name, start_time, result, %{options: [for_actor: actor]})
+    result
   end
 
   def disable(flag_name, [for_group: nil]) do
@@ -334,21 +361,27 @@ defmodule FunWithFlags do
   end
 
   def disable(flag_name, [for_group: group_name]) when is_atom(flag_name) do
+    start_time = System.monotonic_time()
     gate = Gate.new(:group, group_name, false)
-    case @store.put(flag_name, gate) do
+    result = case @store.put(flag_name, gate) do
       {:ok, _flag} -> {:ok, false}
       error -> error
     end
+    emit_telemetry_event(:disable, flag_name, start_time, result, %{options: [for_group: group_name]})
+    result
   end
 
 
   def disable(flag_name, [for_percentage_of: {type, ratio}])
   when is_atom(flag_name) and is_float(ratio) do
+    start_time = System.monotonic_time()
     inverted_ratio = 1.0 - ratio
-    case enable(flag_name, [for_percentage_of: {type, inverted_ratio}]) do
+    result = case enable(flag_name, [for_percentage_of: {type, inverted_ratio}]) do
       {:ok, true} -> {:ok, false}
       error -> error
     end
+    emit_telemetry_event(:disable, flag_name, start_time, result, %{options: [for_percentage_of: {type, ratio}]})
+    result
   end
 
 
@@ -418,15 +451,21 @@ defmodule FunWithFlags do
   def clear(flag_name, options \\ [])
 
   def clear(flag_name, []) when is_atom(flag_name) do
-    case @store.delete(flag_name) do
+    start_time = System.monotonic_time()
+    result = case @store.delete(flag_name) do
       {:ok, _flag} -> :ok
       error -> error
     end
+    emit_telemetry_event(:clear, flag_name, start_time, result, %{options: []})
+    result
   end
 
   def clear(flag_name, [boolean: true]) do
+    start_time = System.monotonic_time()
     gate = Gate.new(:boolean, false) # we only care about the gate id
-    _clear_gate(flag_name, gate)
+    result = _clear_gate(flag_name, gate)
+    emit_telemetry_event(:clear, flag_name, start_time, result, %{options: [boolean: true]})
+    result
   end
 
   def clear(flag_name, [for_actor: nil]) do
@@ -434,8 +473,11 @@ defmodule FunWithFlags do
   end
 
   def clear(flag_name, [for_actor: actor]) when is_atom(flag_name) do
+    start_time = System.monotonic_time()
     gate = Gate.new(:actor, actor, false) # we only care about the gate id
-    _clear_gate(flag_name, gate)
+    result = _clear_gate(flag_name, gate)
+    emit_telemetry_event(:clear, flag_name, start_time, result, %{options: [for_actor: actor]})
+    result
   end
 
   def clear(flag_name, [for_group: nil]) do
@@ -443,13 +485,19 @@ defmodule FunWithFlags do
   end
 
   def clear(flag_name, [for_group: group_name]) when is_atom(flag_name) do
+    start_time = System.monotonic_time()
     gate = Gate.new(:group, group_name, false) # we only care about the gate id
-    _clear_gate(flag_name, gate)
+    result = _clear_gate(flag_name, gate)
+    emit_telemetry_event(:clear, flag_name, start_time, result, %{options: [for_group: group_name]})
+    result
   end
 
   def clear(flag_name, [for_percentage: true]) do
+    start_time = System.monotonic_time()
     gate = Gate.new(:percentage_of_time, 0.5) # we only care about the gate id
-    _clear_gate(flag_name, gate)
+    result = _clear_gate(flag_name, gate)
+    emit_telemetry_event(:clear, flag_name, start_time, result, %{options: [for_percentage: true]})
+    result
   end
 
   defp _clear_gate(flag_name, gate) do
@@ -524,4 +572,24 @@ defmodule FunWithFlags do
   #
   @doc false
   def compiled_store, do: @store
+
+  defp emit_telemetry_event(action, flag_name, start_time, result, metadata) do
+    end_time = System.monotonic_time()
+    measurements = %{
+      duration: end_time - start_time
+    }
+
+    event_metadata = Map.merge(metadata, %{
+      flag_name: flag_name,
+      result: result,
+      operation: action,
+    })
+
+    :telemetry.execute(
+       [:fun_with_flags, :flag_operation],
+      measurements,
+      event_metadata
+    )
+  end
+
 end
