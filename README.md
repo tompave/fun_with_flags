@@ -1,7 +1,7 @@
 # FunWithFlags
 
 [![Mix Tests](https://github.com/tompave/fun_with_flags/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/tompave/fun_with_flags/actions/workflows/test.yml?query=branch%3Amaster)
-[![Code Quality](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml/badge.svg?branch=master)](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml?query=branch%3Amaster)  
+[![Code Quality](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml/badge.svg?branch=master)](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml?query=branch%3Amaster)
 [![Hex.pm](https://img.shields.io/hexpm/v/fun_with_flags.svg)](https://hex.pm/packages/fun_with_flags)
 [![hexdocs.pm](https://img.shields.io/badge/docs-1.11.0-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/1.11.0/FunWithFlags.html)
 [![Hex.pm Downloads](https://img.shields.io/hexpm/dt/fun_with_flags)](https://hex.pm/packages/fun_with_flags)
@@ -646,7 +646,7 @@ The library comes with two PubSub adapters for the [`Redix`](https://hex.pm/pack
 
 The Redis PubSub adapter is the default and doesn't need to be explicitly configured. It can only be used in conjunction with the Redis persistence adapter however, and is not available when using Ecto for persistence. When used, it connects directly to the Redis instance used for persisting the flag data.
 
-The Phoenix PubSub adapter uses the high level API of `Phoenix.PubSub`, which means that under the hood it could use either its PG2 or Redis adapters, and this library doesn't need to know. It's provided as a convenient way to leverage distributed Erlang when using FunWithFlags in a Phoenix application, although it can be used independently (without the rest of the Phoenix framework) to add PubSub to Elixir apps running on Erlang clusters.  
+The Phoenix PubSub adapter uses the high level API of `Phoenix.PubSub`, which means that under the hood it could use either its PG2 or Redis adapters, and this library doesn't need to know. It's provided as a convenient way to leverage distributed Erlang when using FunWithFlags in a Phoenix application, although it can be used independently (without the rest of the Phoenix framework) to add PubSub to Elixir apps running on Erlang clusters.
 FunWithFlags expects the `Phoenix.PubSub` process to be started by the host application, and in order to use this adapter the client (name or PID) must be provided in the configuration.
 
 For example, in Phoenix (>= 1.5.0) it would be:
@@ -839,3 +839,9 @@ Steps:
 5. In either terminal, run `Node.list()` to check that there is a connection.
 
 Done that, modifying any flag data in either terminal will notify the other one via PubSub.
+
+### Creating flags with migrations
+
+If you store flags in database and you want to define flags using migrations instead of creating them manually, you can use `mix fwf.gen.flag FlagName` to create a migration which will populate flag with this name into the database.
+
+After this if you use [web dashboard](#web-dashboard), you can manually change values for the flag without the need to create it.
