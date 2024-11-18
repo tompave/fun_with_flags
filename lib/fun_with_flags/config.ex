@@ -22,6 +22,7 @@ defmodule FunWithFlags.Config do
     adapter: FunWithFlags.Store.Persistent.Redis,
     repo: FunWithFlags.NullEctoRepo,
     ecto_table_name: "fun_with_flags_toggles",
+    ecto_schema_prefix: "public",
     ecto_primary_key_type: :id
   ]
 
@@ -103,6 +104,15 @@ defmodule FunWithFlags.Config do
       @compile_time_persistence_config
     )
     Keyword.get(pers_conf, :ecto_primary_key_type)
+  end
+
+
+  def ecto_schema_prefix_determined_at_compile_time do
+    pers_conf = Keyword.merge(
+      @default_persistence_config,
+      @compile_time_persistence_config
+    )
+    Keyword.get(pers_conf, :ecto_schema_prefix)
   end
 
 

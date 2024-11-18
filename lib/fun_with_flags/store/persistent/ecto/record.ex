@@ -7,6 +7,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto.Record do
   alias FunWithFlags.{Config, Gate}
 
   @primary_key {:id, Config.ecto_primary_key_type_determined_at_compile_time(), autogenerate: true}
+  @schema_prefix Config.ecto_schema_prefix_determined_at_compile_time()
 
   schema Config.ecto_table_name_determined_at_compile_time() do
     field :flag_name, :string
