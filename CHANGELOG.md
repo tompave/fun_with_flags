@@ -4,10 +4,11 @@
 
 Work is in progress towards v2.0 of the package.
 
+* Start behaviour has changed. FunWithFlags v2.0 doesn't come with its own Application anymore, therefore its supervision tree should be started and managed manually. The ability to manually control FunWithFlags' supervision tree was initially introduced in [v1.7.0](https://github.com/tompave/fun_with_flags/blob/master/CHANGELOG.md#v170), and has now become the default and only way to use the package.
+
 Main goals:
 
 * [ ] Config overhaul. Stop using the config.exs file, and rather do something like what Ecto does. The host application should define its own module (like an Ecto repo) that provides the flag querying and toggling API. The package config should be provided with an init callback in the custom module.
-* [ ] Start behaviour. It should never start automatically, so the manual management of the supervision tree should become the default.
 * [ ] Stop relying on atoms. Use binaries wherever possible. Relying on atoms makes some things harder, especially when handling user input in the UI package.
 * [ ] Add metadata to the storage layer: timestamps, plus free form JSON for later use.
 
