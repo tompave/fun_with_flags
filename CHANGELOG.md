@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.13.0
+
+* Add support for Elixir 1.18. Drop support for Elixir 1.15. Elixir >= 1.16 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
+* Drop support for Erlang/OTP 24, and Erlang/OTP >= 25 is now required. Dropping support for older versions of Erlang/OTP simply means that this package is not tested with them in CI, and that no compatibility issues are considered bugs.
+
 ## v1.12.0
 
 * Add support for Elixir 1.17 and 1.16. Drop support for Elixir 1.13 and 1.14. Elixir >= 1.15 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
