@@ -5,7 +5,7 @@ defmodule FunWithFlags.Dev.EctoRepo.Migrations.CreateFeatureFlagsTable do
   # is being used. If you have overridden that via configuration, you should
   # change this migration accordingly.
 
-  def up do
+  def change do
     create table(:fun_with_flags_toggles, primary_key: false) do
       add :id, :bigserial, primary_key: true
       # If you configure :ecto_primary_key_type to be :binary_id, you should replace
@@ -22,9 +22,5 @@ defmodule FunWithFlags.Dev.EctoRepo.Migrations.CreateFeatureFlagsTable do
       [:flag_name, :gate_type, :target],
       [unique: true, name: "fwf_flag_name_gate_target_idx"]
     )
-  end
-
-  def down do
-    drop table(:fun_with_flags_toggles)
   end
 end
