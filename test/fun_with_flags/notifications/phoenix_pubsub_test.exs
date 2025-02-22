@@ -24,6 +24,23 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
     end
   end
 
+  describe "subscribed?()" do
+    test "it returns true if the GenServer is subscribed to the pubsub topic" do
+      assert :ok = GenServer.call(PubSub, {:test_helper_set_subscription_status, :subscribed})
+      assert true = PubSub.subscribed?()
+
+      # Kill the process to restore its normal state.
+      kill_process(PubSub)
+    end
+
+    test "it returns false if the GenServer is not subscribed to the pubsub topic" do
+      assert :ok = GenServer.call(PubSub, {:test_helper_set_subscription_status, :unsubscribed})
+      assert false == PubSub.subscribed?()
+
+      # Kill the process to restore its normal state.
+      kill_process(PubSub)
+    end
+  end
 
   describe "publish_change(flag_name)" do
     setup do
