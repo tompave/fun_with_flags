@@ -293,9 +293,13 @@ defmodule FunWithFlags.Notifications.RedisTest do
       assert {:ok, ^stored_flag} = PersiRedis.get(name)
       assert {:ok, ^cached_flag} = Cache.get(name)
 
-      refute match? ^stored_flag, cached_flag
-
       {:ok, name: name, stored_flag: stored_flag, cached_flag: cached_flag}
+    end
+
+    # This should be in `setup` but in there it produces a compiler warning because
+    # the two variables will never match (duh).
+    test "verify test setup", %{cached_flag: cached_flag, stored_flag: stored_flag} do
+      refute match? ^stored_flag, cached_flag
     end
 
 

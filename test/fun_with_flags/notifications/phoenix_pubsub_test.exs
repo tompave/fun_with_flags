@@ -63,7 +63,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
       assert {:ok, _pid} = PubSub.publish_change(name)
 
       payload = {:updated, name, u_id}
-      
+
       receive do
         {:fwf_changes, ^payload} -> :ok
       after
@@ -104,7 +104,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
       client = FunWithFlags.Config.pubsub_client()
       channel = "fun_with_flags_changes"
       message = {:fwf_changes, {:updated, :a_flag_name, u_id}}
-      
+
       with_mock(Store, [:passthrough], []) do
         Phoenix.PubSub.broadcast!(client, channel, message)
         :timer.sleep(30)
@@ -120,7 +120,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
       client = FunWithFlags.Config.pubsub_client()
       channel = "fun_with_flags_changes"
       message = {:fwf_changes, {:updated, :a_flag_name, another_u_id}}
-      
+
       with_mock(Store, [:passthrough], []) do
         Phoenix.PubSub.broadcast!(client, channel, message)
         :timer.sleep(30)
@@ -149,9 +149,13 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
       assert {:ok, ^stored_flag} = Config.persistence_adapter.get(name)
       assert {:ok, ^cached_flag} = Cache.get(name)
 
-      refute match? ^stored_flag, cached_flag
-
       {:ok, name: name, stored_flag: stored_flag, cached_flag: cached_flag}
+    end
+
+    # This should be in `setup` but in there it produces a compiler warning because
+    # the two variables will never match (duh).
+    test "verify test setup", %{cached_flag: cached_flag, stored_flag: stored_flag} do
+      refute match? ^stored_flag, cached_flag
     end
 
 
@@ -160,7 +164,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
       client = FunWithFlags.Config.pubsub_client()
       channel = "fun_with_flags_changes"
       message = {:fwf_changes, {:updated, name, u_id}}
-      
+
       Phoenix.PubSub.broadcast!(client, channel, message)
       :timer.sleep(30)
       assert {:ok, ^cached_flag} = Cache.get(name)
@@ -174,7 +178,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
       client = FunWithFlags.Config.pubsub_client()
       channel = "fun_with_flags_changes"
       message = {:fwf_changes, {:updated, name, another_u_id}}
-      
+
       assert {:ok, ^cached_flag} = Cache.get(name)
       Phoenix.PubSub.broadcast!(client, channel, message)
       :timer.sleep(30)

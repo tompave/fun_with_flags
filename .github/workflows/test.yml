@@ -15,21 +15,25 @@ jobs:
       fail-fast: false
       matrix:
         elixir:
+          - '1.18'
           - '1.17'
           - '1.16'
-          - '1.15'
         otp:
-          - '27.0'
+          - '27.2'
+          - '27.1'
           - '26.2'
           - '25.3'
-          - '24.3'
         exclude:
-          - elixir: '1.17'
-            otp: '24.3'
+          # Elixir 1.18 + OTP 25 is technically supported:
+          #    https://hexdocs.pm/elixir/1.18.1/compatibility-and-deprecations.html#between-elixir-and-erlang-otp
+          # but not on GHA:
+          #    https://github.com/tompave/fun_with_flags/actions/runs/12515433561/job/34912997388?pr=189#step:5:20
+          - elixir: '1.18'
+            otp: '25.3'
           - elixir: '1.16'
-            otp: '27.0'
-          - elixir: '1.15'
-            otp: '27.0'
+            otp: '27.2'
+          - elixir: '1.16'
+            otp: '27.1'
 
     services:
       postgres:
