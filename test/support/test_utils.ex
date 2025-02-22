@@ -87,4 +87,40 @@ defmodule FunWithFlags.TestUtils do
   def on_elixir_15? do
     Version.match?(System.version, ">= 1.15.0")
   end
+
+  def phx_pubsub_ready? do
+    Process.whereis(FunWithFlags.Notifications.PhoenixPubSub) &&
+      FunWithFlags.Notifications.PhoenixPubSub.subscribed?
+  end
+
+  def wait_until_pubsub_is_ready!(attempts \\ 20, wait_time_ms \\ 25)
+
+  def wait_until_pubsub_is_ready!(attempts, wait_time_ms) when attempts > 0 do
+    case phx_pubsub_ready?() do
+      true ->
+        :ok
+      _ ->
+        :timer.sleep(wait_time_ms)
+        wait_until_pubsub_is_ready!(attempts - 1, wait_time_ms)
+    end
+  end
+
+  def wait_until_pubsub_is_ready!(_, _) do
+    raise "Phoenix PubSub is never ready, giving up"
+  end
+
+  def assert_with_retries(attempts \\ 30, wait_time_ms \\ 25, test_fn) do
+    try do
+      test_fn.()
+    rescue
+      e ->
+        if attempts == 1 do
+          reraise e, __STACKTRACE__
+        else
+          IO.write("|")
+          :timer.sleep(wait_time_ms)
+          assert_with_retries(attempts - 1, wait_time_ms, test_fn)
+        end
+    end
+  end
 end

@@ -44,6 +44,8 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
 
   describe "publish_change(flag_name)" do
     setup do
+      wait_until_pubsub_is_ready!()
+
       {:ok, name: unique_atom()}
     end
 
@@ -59,15 +61,16 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
         assert {:ok, _pid} = PubSub.publish_change(name)
-        :timer.sleep(10)
 
-        assert called(
-          Phoenix.PubSub.broadcast!(
-            :fwf_test,
-            "fun_with_flags_changes",
-            {:fwf_changes, {:updated, name, u_id}}
+        assert_with_retries(fn ->
+          assert called(
+            Phoenix.PubSub.broadcast!(
+              :fwf_test,
+              "fun_with_flags_changes",
+              {:fwf_changes, {:updated, name, u_id}}
+            )
           )
-        )
+        end)
       end
     end
 
@@ -100,14 +103,16 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
     channel = "fun_with_flags_changes"
     message = {:fwf_changes, {:updated, :foobar, u_id}}
 
+    wait_until_pubsub_is_ready!()
+
     with_mock(PubSub, [:passthrough], []) do
       Phoenix.PubSub.broadcast!(client, channel, message)
 
-      :timer.sleep(1)
-
-      assert called(
-        PubSub.handle_info(message, u_id)
-      )
+      assert_with_retries(fn ->
+        assert called(
+          PubSub.handle_info(message, {u_id, :subscribed})
+        )
+      end)
     end
   end
 
@@ -122,10 +127,14 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
       channel = "fun_with_flags_changes"
       message = {:fwf_changes, {:updated, :a_flag_name, u_id}}
 
+      wait_until_pubsub_is_ready!()
+
       with_mock(Store, [:passthrough], []) do
         Phoenix.PubSub.broadcast!(client, channel, message)
-        :timer.sleep(30)
-        refute called(Store.reload(:a_flag_name))
+
+        assert_with_retries(fn ->
+          refute called(Store.reload(:a_flag_name))
+        end)
       end
     end
 
@@ -138,10 +147,14 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
       channel = "fun_with_flags_changes"
       message = {:fwf_changes, {:updated, :a_flag_name, another_u_id}}
 
+      wait_until_pubsub_is_ready!()
+
       with_mock(Store, [:passthrough], []) do
         Phoenix.PubSub.broadcast!(client, channel, message)
-        :timer.sleep(30)
-        assert called(Store.reload(:a_flag_name))
+
+        assert_with_retries(fn ->
+          assert called(Store.reload(:a_flag_name))
+        end)
       end
     end
   end
@@ -160,11 +173,14 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
       cached_flag = %Flag{name: name, gates: [gate2]}
 
       {:ok, ^stored_flag} = Config.persistence_adapter.put(name, gate)
-      :timer.sleep(10)
-      {:ok, ^cached_flag} = Cache.put(cached_flag)
+      assert_with_retries(fn ->
+        {:ok, ^cached_flag} = Cache.put(cached_flag)
+      end)
 
       assert {:ok, ^stored_flag} = Config.persistence_adapter.get(name)
       assert {:ok, ^cached_flag} = Cache.get(name)
+
+      wait_until_pubsub_is_ready!()
 
       {:ok, name: name, stored_flag: stored_flag, cached_flag: cached_flag}
     end
@@ -183,8 +199,10 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
       message = {:fwf_changes, {:updated, name, u_id}}
 
       Phoenix.PubSub.broadcast!(client, channel, message)
-      :timer.sleep(30)
-      assert {:ok, ^cached_flag} = Cache.get(name)
+
+      assert_with_retries(fn ->
+        assert {:ok, ^cached_flag} = Cache.get(name)
+      end)
     end
 
 
@@ -198,8 +216,10 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
 
       assert {:ok, ^cached_flag} = Cache.get(name)
       Phoenix.PubSub.broadcast!(client, channel, message)
-      :timer.sleep(30)
-      assert {:ok, ^stored_flag} = Cache.get(name)
+
+      assert_with_retries(fn ->
+        assert {:ok, ^stored_flag} = Cache.get(name)
+      end)
     end
   end
 end
