@@ -152,7 +152,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_tests__redis_pers__redis_pubsub(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --exclude phoenix_pubsub --exclude ecto_persistence #{arg}",
+      "mix test --color --force --exclude phoenix_pubsub --exclude ecto_persistence #{Enum.join(arg, " ")}",
       env: [
         {"CACHE_ENABLED", "true"},
       ]
@@ -164,7 +164,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_integration_tests__redis_pers__redis_pubsub__no_cache(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --only integration #{arg}",
+      "mix test --color --force --only integration #{Enum.join(arg, " ")}",
       env: [
         {"CACHE_ENABLED", "false"},
       ]
@@ -175,7 +175,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_tests__redis_pers__phoenix_pubsub(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --exclude redis_pubsub --exclude ecto_persistence #{arg}",
+      "mix test --color --force --exclude redis_pubsub --exclude ecto_persistence #{Enum.join(arg, " ")}",
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -188,7 +188,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_integration_tests__redis_pers__phoenix_pubsub__no_cache(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --only integration #{arg}",
+      "mix test --color --force --only integration #{Enum.join(arg, " ")}",
       env: [
         {"CACHE_ENABLED", "false"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -200,7 +200,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_tests__ecto_pers_postgres__phoenix_pubsub(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence #{arg}",
+      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence #{Enum.join(arg, " ")}",
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -214,7 +214,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_tests__ecto_pers_mysql__phoenix_pubsub(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence #{arg}",
+      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence #{Enum.join(arg, " ")}",
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -228,7 +228,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_tests__ecto_pers_sqlite__phoenix_pubsub(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence #{arg}",
+      "mix test --color --force --exclude redis_pubsub --exclude redis_persistence #{Enum.join(arg, " ")}",
       env: [
         {"CACHE_ENABLED", "true"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -243,7 +243,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_integration_tests__ecto_pers_postgres__phoenix_pubsub__no_cache(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --only integration #{arg}",
+      "mix test --color --force --only integration #{Enum.join(arg, " ")}",
       env: [
         {"CACHE_ENABLED", "false"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -258,7 +258,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_integration_tests__ecto_pers_mysql__phoenix_pubsub__no_cache(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --only integration #{arg}",
+      "mix test --color --force --only integration #{Enum.join(arg, " ")}",
       env: [
         {"CACHE_ENABLED", "false"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
@@ -273,7 +273,7 @@ defmodule FunWithFlags.Mixfile do
   #
   defp run_integration_tests__ecto_pers_sqlite__phoenix_pubsub__no_cache(arg) do
     Mix.shell.cmd(
-      "mix test --color --force --only integration #{arg}",
+      "mix test --color --force --only integration #{Enum.join(arg, " ")}",
       env: [
         {"CACHE_ENABLED", "false"},
         {"PUBSUB_BROKER", "phoenix_pubsub"},
