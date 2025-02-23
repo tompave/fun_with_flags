@@ -84,10 +84,6 @@ defmodule FunWithFlags.TestUtils do
     configure_redis_with([database: 5])
   end
 
-  def on_elixir_15? do
-    Version.match?(System.version, ">= 1.15.0")
-  end
-
   def phx_pubsub_ready? do
     try do
       Process.whereis(FunWithFlags.Notifications.PhoenixPubSub) &&
