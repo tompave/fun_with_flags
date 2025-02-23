@@ -87,4 +87,54 @@ defmodule FunWithFlags.TestUtils do
   def on_elixir_15? do
     Version.match?(System.version, ">= 1.15.0")
   end
+
+  def phx_pubsub_ready? do
+    try do
+      Process.whereis(FunWithFlags.Notifications.PhoenixPubSub) &&
+        FunWithFlags.Notifications.PhoenixPubSub.subscribed?
+    catch
+      :exit, _reason ->
+        # This is to catch failures when the GenServer is still recovering from `Process.exit(:kill)`,
+        # as in that case this function might fail with:
+        #   (EXIT) no process: the process is not alive or there's no process currently associated with the given name, possibly because its application isn't started
+        #
+        # I'm not entirely sure about the sequencing here. I'd suppose that `Process.whereis()` should
+        # protect us from that, but likely there is a race condition somewhere so that the GenServer is
+        # exited/killed after the `whereis()` call has returned a truthy value.
+
+        # IO.puts "EXIT while checking for Phoenix Pubsub readiness: #{inspect reason}"
+        false
+    end
+  end
+
+  def wait_until_pubsub_is_ready!(attempts \\ 20, wait_time_ms \\ 25)
+
+  def wait_until_pubsub_is_ready!(attempts, wait_time_ms) when attempts > 0 do
+    case phx_pubsub_ready?() do
+      true ->
+        :ok
+      _ ->
+        :timer.sleep(wait_time_ms)
+        wait_until_pubsub_is_ready!(attempts - 1, wait_time_ms)
+    end
+  end
+
+  def wait_until_pubsub_is_ready!(_, _) do
+    raise "Phoenix PubSub is never ready, giving up"
+  end
+
+  def assert_with_retries(attempts \\ 30, wait_time_ms \\ 25, test_fn) do
+    try do
+      test_fn.()
+    rescue
+      e ->
+        if attempts == 1 do
+          reraise e, __STACKTRACE__
+        else
+          IO.write("|")
+          :timer.sleep(wait_time_ms)
+          assert_with_retries(attempts - 1, wait_time_ms, test_fn)
+        end
+    end
+  end
 end

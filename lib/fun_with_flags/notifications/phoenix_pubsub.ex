@@ -37,6 +37,20 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
     unique_id
   end
 
+  # Get the pubsub subscription status for the current note, which tells us if
+  # the GenServer for this module has successfully completed the Phoenix.PubSub
+  # subscription procedure to the change notification topic.
+  #
+  # The GenServer might still be unsubscribed if this is called very early
+  # after the application has started. (i.e. in some unit tests), but in general
+  # a runtime exception is raised if subscribing is not completed within a few
+  # seconds.
+  #
+  def subscribed? do
+    {:ok, subscription_status} = GenServer.call(__MODULE__, :get_subscription_status)
+    subscription_status == :subscribed
+  end
+
 
   def publish_change(flag_name) do
     Logger.debug fn -> "FunWithFlags.Notifications: publish change for '#{flag_name}'" end
@@ -55,8 +69,8 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
   # The unique_id will become the state of the GenServer
   #
   def init(unique_id) do
-    subscribe(1)
-    {:ok, unique_id}
+    subscription_status = subscribe(1)
+    {:ok, {unique_id, subscription_status}}
   end
 
 
@@ -66,11 +80,12 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
         :ok ->
           # All good
           Logger.debug fn -> "FunWithFlags: Connected to Phoenix.PubSub process #{inspect(client())}" end
-          :ok
+          :subscribed
         {:error, reason} ->
           # Handled application errors
           Logger.debug fn -> "FunWithFlags: Cannot subscribe to Phoenix.PubSub process #{inspect(client())} ({:error, #{inspect(reason)}})." end
           try_again_to_subscribe(attempt)
+          :unsubscribed
       end
     rescue
       e ->
@@ -78,6 +93,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
         # first time while the application is booting, and the Phoenix.PubSub process is not fully started yet.
         Logger.debug fn -> "FunWithFlags: Cannot subscribe to Phoenix.PubSub process #{inspect(client())} (exception: #{inspect(e)})." end
         try_again_to_subscribe(attempt)
+        :unsubscribed
     end
   end
 
@@ -96,31 +112,47 @@ defmodule FunWithFlags.Notifications.PhoenixPubSub do
   end
 
 
-  def handle_call(:get_unique_id, _from, unique_id) do
-    {:reply, {:ok, unique_id}, unique_id}
+  def handle_call(:get_unique_id, _from, state = {unique_id, _subscription_status}) do
+    {:reply, {:ok, unique_id}, state}
+  end
+
+  def handle_call(:get_subscription_status, _from, state = {_unique_id, subscription_status}) do
+    {:reply, {:ok, subscription_status}, state}
+  end
+
+  # Test helper
+  #
+  def handle_call({:test_helper_set_subscription_status, new_subscription_status}, _from, {unique_id, _current_subscription_status}) do
+    {:reply, :ok, {unique_id, new_subscription_status}}
   end
 
 
-  def handle_info({:fwf_changes, {:updated, _name, unique_id}}, unique_id) do
+  def handle_info({:fwf_changes, {:updated, _name, unique_id}}, state = {unique_id, _subscription_status}) do
     # received my own message, doing nothing
-    {:noreply, unique_id}
+    {:noreply, state}
   end
 
-  def handle_info({:fwf_changes, {:updated, name, _}}, unique_id) do
+  def handle_info({:fwf_changes, {:updated, name, _}}, state) do
     # received message from another node, reload the flag
     Logger.debug fn -> "FunWithFlags: received change notification for flag '#{name}'" end
     Task.start(Store, :reload, [name])
-    {:noreply, unique_id}
+    {:noreply, state}
   end
 
 
   # When subscribing to the pubsub process fails, the process sends itself a delayed message
   # to try again. It will be handled here.
   #
-  def handle_info({:subscribe_retry, attempt}, unique_id) do
+  def handle_info({:subscribe_retry, attempt}, state = {unique_id, _subscription_status}) do
     Logger.debug fn -> "FunWithFlags: retrying to subscribe to Phoenix.PubSub, attempt #{attempt}." end
-    subscribe(attempt)
-    {:noreply, unique_id}
+    case subscribe(attempt) do
+      :subscribed ->
+        Logger.debug fn -> "FunWithFlags: updating Phoenix.PubSub's subscription status to :subscribed." end
+        {:noreply, {unique_id, :subscribed}}
+      _ ->
+        # don't change the state
+        {:noreply, state}
+    end
   end
 
   defp client, do: Config.pubsub_client()
