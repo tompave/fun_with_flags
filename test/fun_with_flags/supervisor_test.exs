@@ -1,6 +1,5 @@
 defmodule FunWithFlags.SupervisorTest do
   use FunWithFlags.TestCase, async: false
-  import FunWithFlags.TestUtils
 
   alias FunWithFlags.Config
 
@@ -219,10 +218,6 @@ defmodule FunWithFlags.SupervisorTest do
   end
 
   defp expected_supervisor_spec do
-    if on_elixir_15?() do
-      %{intensity: 3, period: 5, strategy: :one_for_one, auto_shutdown: :never}
-    else
-      %{intensity: 3, period: 5, strategy: :one_for_one}
-    end
+    %{intensity: 3, period: 5, strategy: :one_for_one, auto_shutdown: :never}
   end
 end
