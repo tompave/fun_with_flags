@@ -89,8 +89,22 @@ defmodule FunWithFlags.TestUtils do
   end
 
   def phx_pubsub_ready? do
-    Process.whereis(FunWithFlags.Notifications.PhoenixPubSub) &&
-      FunWithFlags.Notifications.PhoenixPubSub.subscribed?
+    try do
+      Process.whereis(FunWithFlags.Notifications.PhoenixPubSub) &&
+        FunWithFlags.Notifications.PhoenixPubSub.subscribed?
+    catch
+      :exit, _reason ->
+        # This is to catch failures when the GenServer is still recovering from `Process.exit(:kill)`,
+        # as in that case this function might fail with:
+        #   (EXIT) no process: the process is not alive or there's no process currently associated with the given name, possibly because its application isn't started
+        #
+        # I'm not entirely sure about the sequencing here. I'd suppose that `Process.whereis()` should
+        # protect us from that, but likely there is a race condition somewhere so that the GenServer is
+        # exited/killed after the `whereis()` call has returned a truthy value.
+
+        # IO.puts "EXIT while checking for Phoenix Pubsub readiness: #{inspect reason}"
+        false
+    end
   end
 
   def wait_until_pubsub_is_ready!(attempts \\ 20, wait_time_ms \\ 25)

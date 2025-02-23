@@ -31,6 +31,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
 
       # Kill the process to restore its normal state.
       kill_process(PubSub)
+      wait_until_pubsub_is_ready!()
     end
 
     test "it returns false if the GenServer is not subscribed to the pubsub topic" do
@@ -39,6 +40,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
 
       # Kill the process to restore its normal state.
       kill_process(PubSub)
+      wait_until_pubsub_is_ready!()
     end
   end
 
