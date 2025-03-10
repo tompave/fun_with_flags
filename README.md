@@ -46,6 +46,7 @@ It stores flag information in Redis or a relational DB (PostgreSQL, MySQL, or SQ
 * [Testing](#testing)
 * [Development](#development)
   - [Working with PubSub Locally](#working-with-pubsub-locally)
+  - [Benchmarks](#benchmarks)
 
 ## What's a Feature Flag?
 
@@ -839,3 +840,7 @@ Steps:
 5. In either terminal, run `Node.list()` to check that there is a connection.
 
 Done that, modifying any flag data in either terminal will notify the other one via PubSub.
+
+### Benchmarks
+
+The package comes with [a suite of synthetic benchmark scripts](https://github.com/tompave/fun_with_flags/tree/master/benchmarks). Their use is recommended when working on the internals of the package.

@@ -1,10 +1,11 @@
 # Changelog
 
-## v1.13.0
+## v1.13.0 (unreleased)
 
 * Add support for Elixir 1.18. Drop support for Elixir 1.15. Elixir >= 1.16 is now required. Dropping support for older versions of Elixir simply means that this package is no longer tested with them in CI, and that compatibility issues are not considered bugs.
 * Drop support for Erlang/OTP 24, and Erlang/OTP >= 25 is now required. Dropping support for older versions of Erlang/OTP simply means that this package is not tested with them in CI, and that no compatibility issues are considered bugs.
 * Improve how the change-notification Phoenix.PubSub adapter manages its connection and readiness status. ([pull/191](https://github.com/tompave/fun_with_flags/pull/191))
+* Adding a suite of synthetic benchmark scripts for the package. ([pull/193](https://github.com/tompave/fun_with_flags/pull/193))
 
 ## v1.12.0
 
