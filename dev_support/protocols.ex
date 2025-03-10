@@ -31,3 +31,18 @@ defimpl FunWithFlags.Group, for: Map do
   def in?(_, _), do: false
 end
 
+
+defmodule PlainUser do
+  defstruct [:id, :group]
+end
+
+defimpl FunWithFlags.Actor, for: PlainUser do
+  def id(%{id: id}) do
+    "user:#{id}"
+  end
+end
+
+defimpl FunWithFlags.Group, for: PlainUser do
+  def in?(%{group: group}, group), do: true
+  def in?(_, _), do: false
+end
