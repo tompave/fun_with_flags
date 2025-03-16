@@ -36,6 +36,79 @@ defmodule FunWithFlags.StoreTest do
       Store.put(name, gate)
       assert {:ok, ^flag} = Store.lookup(name)
     end
+
+    @tag :telemetry
+    test "when there is a cache hit, lookup() will not publish any telemetry event", %{name: name, gate: gate, flag: flag} do
+      event = [:fun_with_flags, :persistence, :read]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      # Write a flag to populate the cache, then read it.
+      assert {:ok, ^flag} = Store.put(name, gate)
+      assert {:ok, ^flag} = Store.lookup(name)
+
+      refute_received {
+        ^event,
+        ^ref,
+        _,
+        _
+      }
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "with no cache hit, when reading succeeds, lookup() will publish a telemetry event", %{name: name, gate: gate, flag: flag} do
+      event = [:fun_with_flags, :persistence, :read]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      # Note: this setup could be omitted, and we could run the test with an
+      # empty store and an empty cache. It would be the same.
+      assert {:ok, ^flag} = Store.put(name, gate)
+      Cache.flush()
+
+      assert {:ok, ^flag} = Store.lookup(name)
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: nil}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "with no cache hit, when reading fails, lookup() will publish an error telemetry event", %{name: name, gate: gate, flag: flag} do
+      event = [:fun_with_flags, :persistence, :error]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+      error_reason = "mocked error"
+
+      # Note: this setup could be omitted, and we could run the test with an
+      # empty store and an empty cache. It would be the same.
+      assert {:ok, ^flag} = Store.put(name, gate)
+      Cache.flush()
+
+      with_mock(@persistence, [], [get: fn(^name) -> {:error, error_reason} end]) do
+        assert_raise RuntimeError, "Can't load feature flag '#{name}' from neither storage nor the cache", fn() ->
+          Store.lookup(name)
+        end
+        assert called(@persistence.get(name))
+      end
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: nil, error: ^error_reason, original_event: :read}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
   end
 
 
@@ -54,6 +127,48 @@ defmodule FunWithFlags.StoreTest do
 
     test "put() returns the tuple {:ok, %Flag{}}", %{name: name, gate: gate, flag: flag} do
       assert {:ok, ^flag} = Store.put(name, gate)
+    end
+
+    @tag :telemetry
+    test "when writing succeeds, put() will publish a telemetry event", %{name: name, gate: gate} do
+      event = [:fun_with_flags, :persistence, :write]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      Store.put(name, gate)
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: ^gate}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "when writing fails, put() will publish an error telemetry event", %{name: name, gate: gate} do
+      event = [:fun_with_flags, :persistence, :error]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+      error_reason = "mocked error"
+
+      with_mock(@persistence, [], [put: fn(^name, ^gate) -> {:error, error_reason} end]) do
+        assert {:error, ^error_reason} = Store.put(name, gate)
+        assert called(@persistence.put(name, gate))
+      end
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: ^gate, error: ^error_reason, original_event: :write}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
     end
 
     @tag :redis_pubsub
@@ -119,7 +234,7 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, ^flag} = Store.put(name, gate)
 
       payload = "#{u_id}:#{to_string(name)}"
-      
+
       receive do
         {:redix_pubsub, ^receiver, ^ref, :message, %{channel: ^channel, payload: ^payload}} -> :ok
       after
@@ -153,7 +268,7 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, ^flag} = Store.put(name, gate)
 
       payload = {:updated, name, u_id}
-      
+
       receive do
         {:fwf_changes, ^payload} -> :ok
       after
@@ -242,6 +357,48 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name, group_gate)
     end
 
+    @tag :telemetry
+    test "when deleting succeeds, delete() will publish a telemetry event", %{name: name, gate: gate} do
+      event = [:fun_with_flags, :persistence, :delete_gate]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      Store.delete(name, gate)
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: ^gate}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "when deleting fails, delete() will publish an error telemetry event", %{name: name, gate: gate} do
+      event = [:fun_with_flags, :persistence, :error]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+      error_reason = "mocked error"
+
+      with_mock(@persistence, [], [delete: fn(^name, ^gate) -> {:error, error_reason} end]) do
+        assert {:error, ^error_reason} = Store.delete(name, gate)
+        assert called(@persistence.delete(name, gate))
+      end
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: ^gate, error: ^error_reason, original_event: :delete_gate}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
     @tag :redis_pubsub
     test "when change notifications are enabled, delete(flag_name, gate) will publish a notification to Redis", %{name: name, group_gate: group_gate} do
       assert Config.change_notifications_enabled?
@@ -306,7 +463,7 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, %Flag{name: ^name}} = Store.delete(name, group_gate)
 
       payload = "#{u_id}:#{to_string(name)}"
-      
+
       receive do
         {:redix_pubsub, ^receiver, ^ref, :message, %{channel: ^channel, payload: ^payload}} -> :ok
       after
@@ -340,7 +497,7 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, %Flag{name: ^name}} = Store.delete(name, group_gate)
 
       payload = {:updated, name, u_id}
-      
+
       receive do
         {:fwf_changes, ^payload} -> :ok
       after
@@ -426,6 +583,48 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
     end
 
+    @tag :telemetry
+    test "when deleting succeeds, delete() will publish a telemetry event", %{name: name} do
+      event = [:fun_with_flags, :persistence, :delete_flag]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      Store.delete(name)
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: nil}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "when deleting fails, delete() will publish an error telemetry event", %{name: name} do
+      event = [:fun_with_flags, :persistence, :error]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+      error_reason = "mocked error"
+
+      with_mock(@persistence, [], [delete: fn(^name) -> {:error, error_reason} end]) do
+        assert {:error, ^error_reason} = Store.delete(name)
+        assert called(@persistence.delete(name))
+      end
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: nil, error: ^error_reason, original_event: :delete_flag}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
     @tag :redis_pubsub
     test "when change notifications are enabled, delete(flag_name) will publish a notification to Redis", %{name: name} do
       assert Config.change_notifications_enabled?
@@ -489,7 +688,7 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
 
       payload = "#{u_id}:#{to_string(name)}"
-      
+
       receive do
         {:redix_pubsub, ^receiver, ^ref, :message, %{channel: ^channel, payload: ^payload}} -> :ok
       after
@@ -522,7 +721,7 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
 
       payload = {:updated, name, u_id}
-      
+
       receive do
         {:fwf_changes, ^payload} -> :ok
       after
@@ -789,7 +988,7 @@ defmodule FunWithFlags.StoreTest do
 
       assert {:miss, :not_found, nil} = Cache.get(name)
       assert {:ok, ^flag} = @persistence.get(name)
-      
+
       assert {:ok, ^flag} = Store.lookup(name)
       assert {:ok, ^flag} = Cache.get(name)
     end

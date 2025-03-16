@@ -15,9 +15,11 @@ defmodule FunWithFlags.Store do
       {:miss, reason, stale_value_or_nil} ->
         case persistence_adapter().get(flag_name) do
           {:ok, flag} ->
+            emit_persistence_telemetry({:ok, nil}, :read, flag_name, nil)
             Cache.put(flag)
             {:ok, flag}
-          {:error, _reason} ->
+          err = {:error, _reason} ->
+            emit_persistence_telemetry(err, :read, flag_name, nil)
             try_to_use_the_cached_value(reason, stale_value_or_nil, flag_name)
         end
     end
@@ -37,6 +39,7 @@ defmodule FunWithFlags.Store do
   def put(flag_name, gate) do
     flag_name
     |> persistence_adapter().put(gate)
+    |> emit_persistence_telemetry(:write, flag_name, gate)
     |> publish_change()
     |> cache_persistence_result()
   end
@@ -46,6 +49,7 @@ defmodule FunWithFlags.Store do
   def delete(flag_name, gate) do
     flag_name
     |> persistence_adapter().delete(gate)
+    |> emit_persistence_telemetry(:delete_gate, flag_name, gate)
     |> publish_change()
     |> cache_persistence_result()
   end
@@ -55,6 +59,7 @@ defmodule FunWithFlags.Store do
   def delete(flag_name) do
     flag_name
     |> persistence_adapter().delete()
+    |> emit_persistence_telemetry(:delete_flag, flag_name, nil)
     |> publish_change()
     |> cache_persistence_result()
   end
@@ -99,6 +104,32 @@ defmodule FunWithFlags.Store do
   end
 
   defp publish_change(result) do
+    result
+  end
+
+  # Receive the flag name as an explicit parameter rather than pattern matching
+  # it from the `{:ok, %Flag{}}`, because that tuple is only available on success,
+  # and it's therefore not available when pipelining on an error.
+  #
+  defp emit_persistence_telemetry(result = {:ok, _flag}, event_name, flag_name, gate) do
+    metadata = %{
+      flag_name: flag_name,
+      gate: gate,
+    }
+
+    FunWithFlags.Telemetry.persistence_event(event_name, metadata)
+    result
+  end
+
+  defp emit_persistence_telemetry(result = {:error, reason}, event_name, flag_name, gate) do
+    metadata = %{
+      flag_name: flag_name,
+      gate: gate,
+      error: reason,
+      original_event: event_name
+    }
+
+    FunWithFlags.Telemetry.persistence_event(:error, metadata)
     result
   end
 end
