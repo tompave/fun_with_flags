@@ -70,6 +70,7 @@ defmodule FunWithFlags.Store do
     Logger.debug fn -> "FunWithFlags: reloading cached flag '#{flag_name}' from storage " end
     flag_name
     |> persistence_adapter().get()
+    |> emit_persistence_telemetry(:reload, flag_name, nil)
     |> cache_persistence_result()
   end
 

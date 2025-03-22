@@ -13,6 +13,7 @@ defmodule FunWithFlags.Telemetry do
   * `[:fun_with_flags, :persistence, :write]`
   * `[:fun_with_flags, :persistence, :delete_flag]`
   * `[:fun_with_flags, :persistence, :delete_gate]`
+  * `[:fun_with_flags, :persistence, :reload]`
   * `[:fun_with_flags, :persistence, :error]`
 
   """

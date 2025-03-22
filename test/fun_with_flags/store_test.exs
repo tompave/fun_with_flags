@@ -794,8 +794,6 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, ^empty_flag} = Store.lookup(name)
     end
 
-
-
     test "if the flag is stored in the DB, it stores it in the Cache", %{name: name, gate: gate, flag: flag} do
       {:ok, ^flag} = @persistence.put(name, gate)
       assert {:ok, ^flag} = @persistence.get(name)
@@ -813,6 +811,48 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, ^flag} = Cache.get(name)
       assert {:ok, ^flag} = Store.lookup(name)
       refute match? {:ok, ^flag2}, Store.lookup(name)
+    end
+
+    @tag :telemetry
+    test "when reloading succeeds, reload() will publish a telemetry event", %{name: name} do
+      event = [:fun_with_flags, :persistence, :reload]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      Store.reload(name)
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: nil}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "when reloading fails, reload() will publish an error telemetry event", %{name: name} do
+      event = [:fun_with_flags, :persistence, :error]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+      error_reason = "mocked error"
+
+      with_mock(@persistence, [], [get: fn(^name) -> {:error, error_reason} end]) do
+        assert {:error, ^error_reason} = Store.reload(name)
+        assert called(@persistence.get(name))
+      end
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: nil, error: ^error_reason, original_event: :reload}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
     end
   end
 
