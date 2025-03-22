@@ -417,7 +417,7 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = Store.lookup(name)
     end
 
-    test "delete(flag_name, gate) returns the tuple {:ok, %Flag{}}", %{name: name} do
+    test "delete(flag_name) returns the tuple {:ok, %Flag{}}", %{name: name} do
       assert {:ok, %Flag{name: ^name, gates: []}} = Store.delete(name)
     end
 
@@ -578,8 +578,8 @@ defmodule FunWithFlags.StoreTest do
   end
 
 
-  describe "reload(flag_name) reads the flag value from Redis and updates the Cache" do
-    test "if the flag is not found in Redis, it sets it to false in the Cache", %{name: name, flag: flag} do
+  describe "reload(flag_name) reads the flag value from the DB and updates the Cache" do
+    test "if the flag is not found in the DB, it sets it to false in the Cache", %{name: name, flag: flag} do
       empty_flag = %Flag{name: name, gates: []}
       assert {:ok, ^empty_flag} = @persistence.get(name)
       assert {:miss, :not_found, nil} = Cache.get(name)
@@ -597,7 +597,7 @@ defmodule FunWithFlags.StoreTest do
 
 
 
-    test "if the flag is stored in Redis, it stores it in the Cache", %{name: name, gate: gate, flag: flag} do
+    test "if the flag is stored in the DB, it stores it in the Cache", %{name: name, gate: gate, flag: flag} do
       {:ok, ^flag} = @persistence.put(name, gate)
       assert {:ok, ^flag} = @persistence.get(name)
 
