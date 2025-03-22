@@ -19,8 +19,8 @@ jobs:
           - '1.17'
           - '1.16'
         otp:
+          - '27.3'
           - '27.2'
-          - '27.1'
           - '26.2'
           - '25.3'
         exclude:
@@ -31,9 +31,9 @@ jobs:
           - elixir: '1.18'
             otp: '25.3'
           - elixir: '1.16'
-            otp: '27.2'
+            otp: '27.3'
           - elixir: '1.16'
-            otp: '27.1'
+            otp: '27.2'
 
     services:
       postgres:
