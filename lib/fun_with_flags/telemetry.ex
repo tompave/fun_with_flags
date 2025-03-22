@@ -10,6 +10,8 @@ defmodule FunWithFlags.Telemetry do
   ### Persistence
 
   * `[:fun_with_flags, :persistence, :read]`
+  * `[:fun_with_flags, :persistence, :read_all_flags]`
+  * `[:fun_with_flags, :persistence, :read_all_flag_names]`
   * `[:fun_with_flags, :persistence, :write]`
   * `[:fun_with_flags, :persistence, :delete_flag]`
   * `[:fun_with_flags, :persistence, :delete_gate]`

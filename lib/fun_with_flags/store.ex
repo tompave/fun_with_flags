@@ -78,12 +78,14 @@ defmodule FunWithFlags.Store do
   @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]} | {:error, any()}
   def all_flags do
     persistence_adapter().all_flags()
+    |> emit_persistence_telemetry(:read_all_flags, nil, nil)
   end
 
 
   @spec all_flag_names() :: {:ok, [atom]} | {:error, any()}
   def all_flag_names do
     persistence_adapter().all_flag_names()
+    |> emit_persistence_telemetry(:read_all_flag_names, nil, nil)
   end
 
   defp cache_persistence_result(result = {:ok, flag}) do
@@ -112,7 +114,7 @@ defmodule FunWithFlags.Store do
   # it from the `{:ok, %Flag{}}`, because that tuple is only available on success,
   # and it's therefore not available when pipelining on an error.
   #
-  defp emit_persistence_telemetry(result = {:ok, _flag}, event_name, flag_name, gate) do
+  defp emit_persistence_telemetry(result = {:ok, _}, event_name, flag_name, gate) do
     metadata = %{
       flag_name: flag_name,
       gate: gate,

@@ -895,6 +895,48 @@ defmodule FunWithFlags.StoreTest do
         assert flag in result
       end
     end
+
+    @tag :telemetry
+    test "when loading all flags succeeds, all_flags() will publish a telemetry event" do
+      event = [:fun_with_flags, :persistence, :read_all_flags]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      Store.all_flags()
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: nil, gate: nil}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "when loading all flags fails, all_flags() will publish an error telemetry event" do
+      event = [:fun_with_flags, :persistence, :error]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+      error_reason = "mocked error"
+
+      with_mock(@persistence, [], [all_flags: fn() -> {:error, error_reason} end]) do
+        assert {:error, ^error_reason} = Store.all_flags()
+        assert called(@persistence.all_flags())
+      end
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: nil, gate: nil, error: ^error_reason, original_event: :read_all_flags}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
   end
 
 
@@ -931,6 +973,48 @@ defmodule FunWithFlags.StoreTest do
       for name <- [name1, name2, name3] do
         assert name in result
       end
+    end
+
+    @tag :telemetry
+    test "when loading all flag names succeeds, all_flag_names() will publish a telemetry event" do
+      event = [:fun_with_flags, :persistence, :read_all_flag_names]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      Store.all_flag_names()
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: nil, gate: nil}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "when loading all flag names fails, all_flag_names() will publish an error telemetry event" do
+      event = [:fun_with_flags, :persistence, :error]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+      error_reason = "mocked error"
+
+      with_mock(@persistence, [], [all_flag_names: fn() -> {:error, error_reason} end]) do
+        assert {:error, ^error_reason} = Store.all_flag_names()
+        assert called(@persistence.all_flag_names())
+      end
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: nil, gate: nil, error: ^error_reason, original_event: :read_all_flag_names}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
     end
   end
 
