@@ -22,9 +22,49 @@ defmodule FunWithFlags.Telemetry do
 
   require Logger
 
+  @typedoc false
+  @type pipelining_value :: {:ok, any()} | {:error, any()}
+
+  # Receive the flag name as an explicit parameter rather than pattern matching
+  # it from the `{:ok, _}` tuple, because:
+  #
+  # * That tuple is only available on success, and it's therefore not available
+  #   when pipelining on an error.
+  # * It makes it possible to use this function even when the :ok result does
+  #   not contain a flag.
+  #
   @doc false
-  @spec persistence_event(atom, :telemetry.event_metadata()) :: :ok
-  def persistence_event(event_name, metadata) do
+  @spec emit_persistence_event(
+    pipelining_value(),
+    event_name :: atom(),
+    flag_name :: (atom() | nil),
+    gate :: (FunWithFlags.Gate.t | nil)
+  ) :: pipelining_value()
+  def emit_persistence_event(result = {:ok, _}, event_name, flag_name, gate) do
+    metadata = %{
+      flag_name: flag_name,
+      gate: gate,
+    }
+
+    do_send_event([:fun_with_flags, :persistence, event_name], metadata)
+    result
+  end
+
+  def emit_persistence_event(result = {:error, reason}, event_name, flag_name, gate) do
+    metadata = %{
+      flag_name: flag_name,
+      gate: gate,
+      error: reason,
+      original_event: event_name
+    }
+
+    do_send_event([:fun_with_flags, :persistence, :error], metadata)
+    result
+  end
+
+  @doc false
+  @spec do_send_event([atom], :telemetry.event_metadata()) :: :ok
+  def do_send_event(event_name, metadata) do
     measurements = %{
       system_time: :erlang.system_time()
     }
@@ -33,11 +73,6 @@ defmodule FunWithFlags.Telemetry do
       "Telemetry event: #{inspect(event_name)}, metadata: #{inspect(metadata)}, measurements: #{inspect(measurements)}"
     end)
 
-    :telemetry.execute([:fun_with_flags, :persistence, event_name], measurements, metadata)
+    :telemetry.execute(event_name, measurements, metadata)
   end
-
-  # @spec as_milliseconds(integer) :: integer
-  # defp as_milliseconds(time) do
-  #   :erlang.convert_time_unit(time, :native, :millisecond)
-  # end
 end

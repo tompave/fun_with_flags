@@ -3,7 +3,7 @@ defmodule FunWithFlags.Store do
 
   require Logger
   alias FunWithFlags.Store.Cache
-  alias FunWithFlags.{Config, Flag}
+  alias FunWithFlags.{Config, Flag, Telemetry}
 
   import FunWithFlags.Config, only: [persistence_adapter: 0]
 
@@ -15,11 +15,11 @@ defmodule FunWithFlags.Store do
       {:miss, reason, stale_value_or_nil} ->
         case persistence_adapter().get(flag_name) do
           {:ok, flag} ->
-            emit_persistence_telemetry({:ok, nil}, :read, flag_name, nil)
+            Telemetry.emit_persistence_event({:ok, nil}, :read, flag_name, nil)
             Cache.put(flag)
             {:ok, flag}
           err = {:error, _reason} ->
-            emit_persistence_telemetry(err, :read, flag_name, nil)
+            Telemetry.emit_persistence_event(err, :read, flag_name, nil)
             try_to_use_the_cached_value(reason, stale_value_or_nil, flag_name)
         end
     end
@@ -39,7 +39,7 @@ defmodule FunWithFlags.Store do
   def put(flag_name, gate) do
     flag_name
     |> persistence_adapter().put(gate)
-    |> emit_persistence_telemetry(:write, flag_name, gate)
+    |> Telemetry.emit_persistence_event(:write, flag_name, gate)
     |> publish_change()
     |> cache_persistence_result()
   end
@@ -49,7 +49,7 @@ defmodule FunWithFlags.Store do
   def delete(flag_name, gate) do
     flag_name
     |> persistence_adapter().delete(gate)
-    |> emit_persistence_telemetry(:delete_gate, flag_name, gate)
+    |> Telemetry.emit_persistence_event(:delete_gate, flag_name, gate)
     |> publish_change()
     |> cache_persistence_result()
   end
@@ -59,7 +59,7 @@ defmodule FunWithFlags.Store do
   def delete(flag_name) do
     flag_name
     |> persistence_adapter().delete()
-    |> emit_persistence_telemetry(:delete_flag, flag_name, nil)
+    |> Telemetry.emit_persistence_event(:delete_flag, flag_name, nil)
     |> publish_change()
     |> cache_persistence_result()
   end
@@ -70,7 +70,7 @@ defmodule FunWithFlags.Store do
     Logger.debug fn -> "FunWithFlags: reloading cached flag '#{flag_name}' from storage " end
     flag_name
     |> persistence_adapter().get()
-    |> emit_persistence_telemetry(:reload, flag_name, nil)
+    |> Telemetry.emit_persistence_event(:reload, flag_name, nil)
     |> cache_persistence_result()
   end
 
@@ -78,14 +78,14 @@ defmodule FunWithFlags.Store do
   @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]} | {:error, any()}
   def all_flags do
     persistence_adapter().all_flags()
-    |> emit_persistence_telemetry(:read_all_flags, nil, nil)
+    |> Telemetry.emit_persistence_event(:read_all_flags, nil, nil)
   end
 
 
   @spec all_flag_names() :: {:ok, [atom]} | {:error, any()}
   def all_flag_names do
     persistence_adapter().all_flag_names()
-    |> emit_persistence_telemetry(:read_all_flag_names, nil, nil)
+    |> Telemetry.emit_persistence_event(:read_all_flag_names, nil, nil)
   end
 
   defp cache_persistence_result(result = {:ok, flag}) do
@@ -107,32 +107,6 @@ defmodule FunWithFlags.Store do
   end
 
   defp publish_change(result) do
-    result
-  end
-
-  # Receive the flag name as an explicit parameter rather than pattern matching
-  # it from the `{:ok, %Flag{}}`, because that tuple is only available on success,
-  # and it's therefore not available when pipelining on an error.
-  #
-  defp emit_persistence_telemetry(result = {:ok, _}, event_name, flag_name, gate) do
-    metadata = %{
-      flag_name: flag_name,
-      gate: gate,
-    }
-
-    FunWithFlags.Telemetry.persistence_event(event_name, metadata)
-    result
-  end
-
-  defp emit_persistence_telemetry(result = {:error, reason}, event_name, flag_name, gate) do
-    metadata = %{
-      flag_name: flag_name,
-      gate: gate,
-      error: reason,
-      original_event: event_name
-    }
-
-    FunWithFlags.Telemetry.persistence_event(:error, metadata)
     result
   end
 end
