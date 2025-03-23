@@ -5,8 +5,12 @@
 
 # :observer.start
 
+Logger.configure(level: :error)
+
 # Start the ecto repo if running the benchmarks with ecto.
-# {:ok, _pid} = FunWithFlags.Dev.EctoRepo.start_link()
+if System.get_env("PERSISTENCE") == "ecto" do
+  {:ok, _pid} = FunWithFlags.Dev.EctoRepo.start_link()
+end
 
 FunWithFlags.clear(:one)
 FunWithFlags.clear(:two)
