@@ -895,5 +895,74 @@ defmodule FunWithFlagsTest do
 
       assert ^expected = FunWithFlags.get_flag(name)
     end
+
+    @tag :telemetry
+    test "when reading succeeds, get_flag() will publish a telemetry event", %{name: name} do
+      event = [:fun_with_flags, :persistence, :read]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      # Ensure there is a flag to read.
+      FunWithFlags.enable(name, for_group: "foobar")
+
+      FunWithFlags.get_flag(name)
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: nil}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "when reading succeeds, but there is no flag, get_flag() will not publish a telemetry event", %{name: name} do
+      event = [:fun_with_flags, :persistence, :read]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      # Ensure there is nothing for this flag.
+      FunWithFlags.clear(name)
+
+      FunWithFlags.get_flag(name)
+
+      refute_received {
+        ^event,
+        ^ref,
+        _,
+        _
+      }
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "when reading fails, get_flag() will publish an error telemetry event", %{name: name} do
+      persi = FunWithFlags.Config.persistence_adapter()
+      event = [:fun_with_flags, :persistence, :error]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+      error_reason = "mocked error"
+
+      # Ensure there is a flag to read.
+      FunWithFlags.enable(name, for_group: "foobar")
+
+      with_mock(persi, [:passthrough], [get: fn(^name) -> {:error, error_reason} end]) do
+        assert {:error, ^error_reason} = FunWithFlags.get_flag(name)
+        assert called(persi.get(name))
+      end
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: nil, error: ^error_reason, original_event: :read}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
   end
 end
