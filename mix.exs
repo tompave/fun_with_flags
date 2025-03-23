@@ -2,7 +2,7 @@ defmodule FunWithFlags.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/tompave/fun_with_flags"
-  @version "1.12.0"
+  @version "1.13.0"
 
   def project do
     [

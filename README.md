@@ -3,7 +3,7 @@
 [![Mix Tests](https://github.com/tompave/fun_with_flags/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/tompave/fun_with_flags/actions/workflows/test.yml?query=branch%3Amaster)
 [![Code Quality](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml/badge.svg?branch=master)](https://github.com/tompave/fun_with_flags/actions/workflows/quality.yml?query=branch%3Amaster)  
 [![Hex.pm](https://img.shields.io/hexpm/v/fun_with_flags.svg)](https://hex.pm/packages/fun_with_flags)
-[![hexdocs.pm](https://img.shields.io/badge/docs-1.12.0-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/1.12.0/FunWithFlags.html)
+[![hexdocs.pm](https://img.shields.io/badge/docs-1.13.0-brightgreen.svg)](https://hexdocs.pm/fun_with_flags/1.13.0/FunWithFlags.html)
 [![Hex.pm Downloads](https://img.shields.io/hexpm/dt/fun_with_flags)](https://hex.pm/packages/fun_with_flags)
 [![License](https://img.shields.io/hexpm/l/fun_with_flags.svg)](https://github.com/tompave/fun_with_flags/blob/master/LICENSE.txt)
 [![ElixirWeekly](https://img.shields.io/badge/featured-ElixirWeekly-8e5ab5.svg)](https://elixirweekly.net/issues/43)
@@ -499,7 +499,7 @@ In order to have a small installation footprint, the dependencies for the differ
 ```elixir
 def deps do
   [
-    {:fun_with_flags, "~> 1.12.0"},
+    {:fun_with_flags, "~> 1.13.0"},
 
     # either:
     {:redix, "~> 0.9"},
