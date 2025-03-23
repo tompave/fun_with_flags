@@ -42,6 +42,7 @@ It stores flag information in Redis or a relational DB (PostgreSQL, MySQL, or SQ
   - [PubSub Adapters](#pubsub-adapters)
 * [Extensibility](#extensibility)
   - [Custom Persistence Adapters](#custom-persistence-adapters)
+* [Telemetry](#telemetry)
 * [Application Start Behaviour](#application-start-behaviour)
 * [Testing](#testing)
 * [Development](#development)
@@ -705,6 +706,11 @@ And then configure the library to use it:
 ```elixir
 config :fun_with_flags, :persistence, adapter: MyApp.MyAlternativeFlagStore
 ```
+## Telemetry
+
+FunWithFlags is instrumented with [Telemetry](https://hex.pm/packages/telemetry) and emits events at runtime. Please refer to the [Telemetry docs](https://hexdocs.pm/telemetry/readme.html) for detailed instructions on how to consume the emitted events.
+
+The full list of events emitted by FunWithFlags are documented in the [FunWithFlags.Telemetry](https://hexdocs.pm/fun_with_flags/FunWithFlags.Telemetry.html) module.
 
 ## Application Start Behaviour
 

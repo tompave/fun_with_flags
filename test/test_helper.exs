@@ -41,6 +41,8 @@ if does_anything_need_redis do
   FunWithFlags.TestUtils.use_redis_test_db()
 end
 
+# FunWithFlags.Telemetry.attach_debug_handler()
+
 ExUnit.start()
 
 if FunWithFlags.Config.persist_in_ecto? do

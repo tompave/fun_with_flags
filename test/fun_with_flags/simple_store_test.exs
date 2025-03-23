@@ -4,7 +4,9 @@ defmodule FunWithFlags.SimpleStoreTest do
   import Mock
 
   alias FunWithFlags.SimpleStore
-  alias FunWithFlags.{Flag, Gate}
+  alias FunWithFlags.{Flag, Gate, Config}
+
+  @persistence Config.persistence_adapter()
 
   setup_all do
     on_exit(__MODULE__, fn() -> clear_test_db() end)
@@ -34,6 +36,48 @@ defmodule FunWithFlags.SimpleStoreTest do
 
     test "put() returns the tuple {:ok, %Flag{}}", %{name: name, gate: gate, flag: flag} do
       assert {:ok, ^flag} = SimpleStore.put(name, gate)
+    end
+
+    @tag :telemetry
+    test "when writing succeeds, put() will publish a telemetry event", %{name: name, gate: gate} do
+      event = [:fun_with_flags, :persistence, :write]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      SimpleStore.put(name, gate)
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: ^gate}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "when writing fails, put() will publish an error telemetry event", %{name: name, gate: gate} do
+      event = [:fun_with_flags, :persistence, :error]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+      error_reason = "mocked error"
+
+      with_mock(@persistence, [], [put: fn(^name, ^gate) -> {:error, error_reason} end]) do
+        assert {:error, ^error_reason} = SimpleStore.put(name, gate)
+        assert called(@persistence.put(name, gate))
+      end
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: ^gate, error: ^error_reason, original_event: :write}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
     end
   end
 
@@ -71,6 +115,48 @@ defmodule FunWithFlags.SimpleStoreTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.delete(name, group_gate)
       assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.delete(name, group_gate)
     end
+
+    @tag :telemetry
+    test "when deleting succeeds, delete() will publish a telemetry event", %{name: name, bool_gate: gate} do
+      event = [:fun_with_flags, :persistence, :delete_gate]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      SimpleStore.delete(name, gate)
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: ^gate}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "when deleting fails, delete() will publish an error telemetry event", %{name: name, bool_gate: gate} do
+      event = [:fun_with_flags, :persistence, :error]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+      error_reason = "mocked error"
+
+      with_mock(@persistence, [], [delete: fn(^name, ^gate) -> {:error, error_reason} end]) do
+        assert {:error, ^error_reason} = SimpleStore.delete(name, gate)
+        assert called(@persistence.delete(name, gate))
+      end
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: ^gate, error: ^error_reason, original_event: :delete_gate}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
   end
 
 
@@ -103,6 +189,48 @@ defmodule FunWithFlags.SimpleStoreTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.delete(name)
       assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.delete(name)
     end
+
+    @tag :telemetry
+    test "when deleting succeeds, delete() will publish a telemetry event", %{name: name} do
+      event = [:fun_with_flags, :persistence, :delete_flag]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      SimpleStore.delete(name)
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: nil}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "when deleting fails, delete() will publish an error telemetry event", %{name: name} do
+      event = [:fun_with_flags, :persistence, :error]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+      error_reason = "mocked error"
+
+      with_mock(@persistence, [], [delete: fn(^name) -> {:error, error_reason} end]) do
+        assert {:error, ^error_reason} = SimpleStore.delete(name)
+        assert called(@persistence.delete(name))
+      end
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: nil, error: ^error_reason, original_event: :delete_flag}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
   end
 
 
@@ -119,6 +247,52 @@ defmodule FunWithFlags.SimpleStoreTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.lookup(name)
       SimpleStore.put(name, gate)
       assert {:ok, %Flag{name: ^name, gates: [^gate]}} = SimpleStore.lookup(name)
+    end
+
+    @tag :telemetry
+    test "when reading succeeds, lookup() will publish a telemetry event" do
+      name = unique_atom()
+      event = [:fun_with_flags, :persistence, :read]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      SimpleStore.lookup(name)
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: nil}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "when reading fails, lookup() will publish an error telemetry event" do
+      name = unique_atom()
+      event = [:fun_with_flags, :persistence, :error]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+      error_reason = "mocked error"
+
+      with_mock(@persistence, [], [get: fn(^name) -> {:error, error_reason} end]) do
+        assert_raise RuntimeError, "Can't load feature flag", fn() ->
+          SimpleStore.lookup(name)
+        end
+        assert called(@persistence.get(name))
+      end
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: ^name, gate: nil, error: ^error_reason, original_event: :read}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
     end
   end
 
@@ -161,6 +335,48 @@ defmodule FunWithFlags.SimpleStoreTest do
         assert flag in result
       end
     end
+
+    @tag :telemetry
+    test "when loading all flags succeeds, all_flags() will publish a telemetry event" do
+      event = [:fun_with_flags, :persistence, :read_all_flags]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      SimpleStore.all_flags()
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: nil, gate: nil}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "when loading all flags fails, all_flags() will publish an error telemetry event" do
+      event = [:fun_with_flags, :persistence, :error]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+      error_reason = "mocked error"
+
+      with_mock(@persistence, [], [all_flags: fn() -> {:error, error_reason} end]) do
+        assert {:error, ^error_reason} = SimpleStore.all_flags()
+        assert called(@persistence.all_flags())
+      end
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: nil, gate: nil, error: ^error_reason, original_event: :read_all_flags}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
   end
 
 
@@ -197,6 +413,48 @@ defmodule FunWithFlags.SimpleStoreTest do
       for name <- [name1, name2, name3] do
         assert name in result
       end
+    end
+
+    @tag :telemetry
+    test "when loading all flag names succeeds, all_flag_names() will publish a telemetry event" do
+      event = [:fun_with_flags, :persistence, :read_all_flag_names]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+
+      SimpleStore.all_flag_names()
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: nil, gate: nil}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
+    end
+
+    @tag :telemetry
+    test "when loading all flag names fails, all_flag_names() will publish an error telemetry event" do
+      event = [:fun_with_flags, :persistence, :error]
+      ref = :telemetry_test.attach_event_handlers(self(), [event])
+      error_reason = "mocked error"
+
+      with_mock(@persistence, [], [all_flag_names: fn() -> {:error, error_reason} end]) do
+        assert {:error, ^error_reason} = SimpleStore.all_flag_names()
+        assert called(@persistence.all_flag_names())
+      end
+
+      assert_received {
+        ^event,
+        ^ref,
+        %{system_time: time_value},
+        %{flag_name: nil, gate: nil, error: ^error_reason, original_event: :read_all_flag_names}
+      }
+
+      assert is_integer(time_value)
+
+      :telemetry.detach(ref)
     end
   end
 

@@ -56,3 +56,5 @@ cacheinfo = fn() ->
   IO.puts "size: #{size}"
   :ets.i(:fun_with_flags_cache)
 end
+
+# FunWithFlags.Telemetry.attach_debug_handler()

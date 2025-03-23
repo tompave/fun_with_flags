@@ -3,7 +3,7 @@ defmodule FunWithFlags.Store do
 
   require Logger
   alias FunWithFlags.Store.Cache
-  alias FunWithFlags.{Config, Flag}
+  alias FunWithFlags.{Config, Flag, Telemetry}
 
   import FunWithFlags.Config, only: [persistence_adapter: 0]
 
@@ -15,9 +15,11 @@ defmodule FunWithFlags.Store do
       {:miss, reason, stale_value_or_nil} ->
         case persistence_adapter().get(flag_name) do
           {:ok, flag} ->
+            Telemetry.emit_persistence_event({:ok, nil}, :read, flag_name, nil)
             Cache.put(flag)
             {:ok, flag}
-          {:error, _reason} ->
+          err = {:error, _reason} ->
+            Telemetry.emit_persistence_event(err, :read, flag_name, nil)
             try_to_use_the_cached_value(reason, stale_value_or_nil, flag_name)
         end
     end
@@ -37,6 +39,7 @@ defmodule FunWithFlags.Store do
   def put(flag_name, gate) do
     flag_name
     |> persistence_adapter().put(gate)
+    |> Telemetry.emit_persistence_event(:write, flag_name, gate)
     |> publish_change()
     |> cache_persistence_result()
   end
@@ -46,6 +49,7 @@ defmodule FunWithFlags.Store do
   def delete(flag_name, gate) do
     flag_name
     |> persistence_adapter().delete(gate)
+    |> Telemetry.emit_persistence_event(:delete_gate, flag_name, gate)
     |> publish_change()
     |> cache_persistence_result()
   end
@@ -55,6 +59,7 @@ defmodule FunWithFlags.Store do
   def delete(flag_name) do
     flag_name
     |> persistence_adapter().delete()
+    |> Telemetry.emit_persistence_event(:delete_flag, flag_name, nil)
     |> publish_change()
     |> cache_persistence_result()
   end
@@ -65,6 +70,7 @@ defmodule FunWithFlags.Store do
     Logger.debug fn -> "FunWithFlags: reloading cached flag '#{flag_name}' from storage " end
     flag_name
     |> persistence_adapter().get()
+    |> Telemetry.emit_persistence_event(:reload, flag_name, nil)
     |> cache_persistence_result()
   end
 
@@ -72,12 +78,14 @@ defmodule FunWithFlags.Store do
   @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]} | {:error, any()}
   def all_flags do
     persistence_adapter().all_flags()
+    |> Telemetry.emit_persistence_event(:read_all_flags, nil, nil)
   end
 
 
   @spec all_flag_names() :: {:ok, [atom]} | {:error, any()}
   def all_flag_names do
     persistence_adapter().all_flag_names()
+    |> Telemetry.emit_persistence_event(:read_all_flag_names, nil, nil)
   end
 
   defp cache_persistence_result(result = {:ok, flag}) do

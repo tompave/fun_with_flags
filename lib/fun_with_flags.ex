@@ -469,7 +469,7 @@ defmodule FunWithFlags do
   """
   @spec all_flag_names() :: {:ok, [atom]} | {:error, any}
   def all_flag_names do
-    Config.persistence_adapter().all_flag_names()
+    @store.all_flag_names()
   end
 
   @doc """
@@ -483,7 +483,7 @@ defmodule FunWithFlags do
   """
   @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]} | {:error, any}
   def all_flags do
-    Config.persistence_adapter().all_flags()
+    @store.all_flags()
   end
 
 
@@ -498,7 +498,11 @@ defmodule FunWithFlags do
     case all_flag_names() do
       {:ok, names} ->
         if name in names do
-          case Config.persistence_adapter().get(name) do
+          result =
+            Config.persistence_adapter().get(name)
+            |> FunWithFlags.Telemetry.emit_persistence_event(:read, name, nil)
+
+          case result do
             {:ok, flag} -> flag
             error -> error
           end
