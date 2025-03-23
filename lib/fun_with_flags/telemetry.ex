@@ -136,4 +136,39 @@ defmodule FunWithFlags.Telemetry do
 
     :telemetry.execute(event_name, measurements, metadata)
   end
+
+
+  @doc """
+  Attach a debug handler to FunWithFlags telemetry events.
+
+  Attach a Telemetry handler that logs all events at the `:alert` level.
+  It uses the `:alert` level rather than `:debug` or `:info` simply to make it
+  more convenient to eyeball these logs and to print them while running the tests.
+  """
+  @spec attach_debug_handler() :: :ok | {:error, :already_exists}
+  def attach_debug_handler do
+    events = [
+      [:fun_with_flags, :persistence, :read],
+      [:fun_with_flags, :persistence, :read_all_flags],
+      [:fun_with_flags, :persistence, :read_all_flag_names],
+      [:fun_with_flags, :persistence, :write],
+      [:fun_with_flags, :persistence, :delete_flag],
+      [:fun_with_flags, :persistence, :delete_gate],
+      [:fun_with_flags, :persistence, :reload],
+      [:fun_with_flags, :persistence, :error],
+    ]
+
+    :telemetry.attach_many("local-debug-handler", events, &__MODULE__.debug_event_handler/4, %{})
+  end
+
+  @doc false
+  def debug_event_handler([:fun_with_flags, :persistence, event], %{system_time: system_time}, metadata, _config) do
+    dt = DateTime.from_unix!(system_time, :native) |> DateTime.to_iso8601()
+
+    Logger.alert(fn ->
+      "FunWithFlags telemetry event: #{event}, system_time: #{dt}, metadata: #{inspect(metadata)}"
+    end)
+
+    :ok
+  end
 end

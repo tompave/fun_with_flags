@@ -73,4 +73,16 @@ defmodule FunWithFlags.TelemetryTest do
       :telemetry.detach(ref)
     end
   end
+
+  describe "attach_debug_handler" do
+    test "it attaches a debug handler to FunWithFlags telemetry events" do
+      assert :telemetry_handler_table.list_by_prefix([:fun_with_flags]) == []
+
+      FWFTel.attach_debug_handler()
+
+      assert length(:telemetry_handler_table.list_by_prefix([:fun_with_flags])) == 8
+
+      :telemetry.detach("local-debug-handler")
+    end
+  end
 end
