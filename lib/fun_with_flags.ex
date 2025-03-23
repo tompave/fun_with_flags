@@ -469,7 +469,7 @@ defmodule FunWithFlags do
   """
   @spec all_flag_names() :: {:ok, [atom]} | {:error, any}
   def all_flag_names do
-    Config.persistence_adapter().all_flag_names()
+    @store.all_flag_names()
   end
 
   @doc """
@@ -483,7 +483,7 @@ defmodule FunWithFlags do
   """
   @spec all_flags() :: {:ok, [FunWithFlags.Flag.t]} | {:error, any}
   def all_flags do
-    Config.persistence_adapter().all_flags()
+    @store.all_flags()
   end
 
 
