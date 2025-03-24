@@ -30,7 +30,7 @@ defmodule FunWithFlags.Telemetry do
     event is always emitted every time a flag is queried.
 
     Metadata:
-    * `flag_name` (string), the name of the flag being read.
+    * `flag_name` (atom), the name of the flag being read.
 
   * `[:fun_with_flags, :persistence, :read_all_flags]`, emitted when all flags
     are read from the DB. No extra metadata.
@@ -43,20 +43,20 @@ defmodule FunWithFlags.Telemetry do
     is always upserted.
 
     Metadata:
-    * `flag_name` (string), the name of the flag being written.
+    * `flag_name` (atom), the name of the flag being written.
     * `gate` (`FunWithFlags.Gate`), the gate being upserted.
 
   * `[:fun_with_flags, :persistence, :delete_flag]`, emitted when an entire flag
     is deleted from the DB.
 
     Metadata:
-    * `flag_name` (string), the name of the flag being deleted.
+    * `flag_name` (atom), the name of the flag being deleted.
 
   * `[:fun_with_flags, :persistence, :delete_gate]`, emitted when one of the flag's
     gates is deleted from the DB.
 
     Metadata:
-    * `flag_name` (string), the name of the flag whose gate is being deleted.
+    * `flag_name` (atom), the name of the flag whose gate is being deleted.
     * `gate` (`FunWithFlags.Gate`), the gate being deleted.
 
   * `[:fun_with_flags, :persistence, :reload]`, emitted when a flag is reloaded
@@ -65,7 +65,7 @@ defmodule FunWithFlags.Telemetry do
     the flag being reloaded from the DB.
 
     Metadata:
-    * `flag_name` (string), the name of the flag being reloaded.
+    * `flag_name` (atom), the name of the flag being reloaded.
 
   * `[:fun_with_flags, :persistence, :error]`, emitted for erorrs in any of the
     above operations.
@@ -75,7 +75,7 @@ defmodule FunWithFlags.Telemetry do
       appropriate error term returned by the underlying persistence adapters.
     * `original_event` (atom), the name of the original event that failed, e.g.
       `:read`, `:write`, `:delete_gate`, etc.
-    * `flag_name` (string), the name of the flag being operated on, if supported
+    * `flag_name` (atom), the name of the flag being operated on, if supported
       by the original event.
     * `gate` (`FunWithFlags.Gate`), the gate being operated on, if supported by
       the original event.
