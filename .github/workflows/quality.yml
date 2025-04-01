@@ -65,8 +65,10 @@ jobs:
           path: |
             deps
             _build
-          key: ${{ runner.os }}-mix-dev-${{ env.elixir_version }}-${{ env.otp_version }}-${{ hashFiles('**/mix.lock') }}
-          restore-keys: ${{ runner.os }}-mix-dev-${{ env.elixir_version }}-${{ env.otp_version }}-
+          # Dialyzer uses PLT files for caching project info. These are in _build/dev/, but they're only created
+          # when running dialyzer for the first time, and updated when the deps change.
+          key: ${{ runner.os }}-plts-${{ env.elixir_version }}-${{ env.otp_version }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-plts-${{ env.elixir_version }}-${{ env.otp_version }}-
 
       - name: Install Mix dependencies
         run: mix deps.get
