@@ -4,7 +4,7 @@
 
 Work is in progress towards v2.0 of the package.
 
-* Start behaviour has changed. FunWithFlags v2.0 doesn't come with its own Application anymore, therefore its supervision tree should be started and managed manually. The ability to manually control FunWithFlags' supervision tree was initially introduced in [v1.7.0](https://github.com/tompave/fun_with_flags/blob/master/CHANGELOG.md#v170), and has now become the default and only way to use the package.
+* Start behaviour has changed. FunWithFlags v2.0 doesn't come with its own Application anymore, therefore its supervision tree should be started and managed manually. The ability to manually control FunWithFlags' supervision tree was initially introduced in [v1.7.0](https://github.com/tompave/fun_with_flags/blob/master/CHANGELOG.md#v170), and has now become the default and only way to use the package. ([pull/201](https://github.com/tompave/fun_with_flags/pull/201))
 
 Main goals:
 
