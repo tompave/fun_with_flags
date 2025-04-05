@@ -4,7 +4,6 @@ does_anything_need_redis = !(
   FunWithFlags.Config.persist_in_ecto? && FunWithFlags.Config.phoenix_pubsub?
 )
 
-
 if FunWithFlags.Config.phoenix_pubsub? do
   # The Phoenix PubSub application must be running before we try to start our
   # PubSub process and subscribe.
@@ -36,6 +35,9 @@ IO.puts "RDBMS driver:          #{inspect(if FunWithFlags.Config.persist_in_ecto
 IO.puts "Notifications adapter: #{inspect(FunWithFlags.Config.notifications_adapter())}"
 IO.puts "Anything using Redis:  #{inspect(does_anything_need_redis)}"
 IO.puts "--------------------------------------------------------------"
+
+# Start the FWF Supervision tree.
+FunWithFlags.Supervisor.start_link(nil)
 
 if does_anything_need_redis do
   FunWithFlags.TestUtils.use_redis_test_db()

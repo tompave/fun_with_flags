@@ -57,4 +57,16 @@ cacheinfo = fn() ->
   :ets.i(:fun_with_flags_cache)
 end
 
+# Start the FWF Supervision tree as a child of the IEx application.
+# This makes it a bit more convenient to visualize the supervision tree in the
+# observer tool. (`:observer.start()`)
+#
+Supervisor.start_child(IEx.Supervisor, {FunWithFlags.Supervisor, []})
+#
+# Or starting it directly also works:
+#
+# FunWithFlags.Supervisor.start_link(nil)
+
+# Enable this to work with telemetry events:
+#
 # FunWithFlags.Telemetry.attach_debug_handler()
