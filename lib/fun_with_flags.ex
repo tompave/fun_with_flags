@@ -43,6 +43,9 @@ defmodule FunWithFlags do
   * `:for` - used to provide a term for which the flag could
   have a specific value. The passed term should implement the
   `Actor` or `Group` protocol, or both.
+  * `:for_hierarchy` - used to provide a list of terms in hierarchical order.
+  The first actor with an explicit setting will be used. Each term should
+  implement the `Actor` or `Group` protocol, or both.
 
   ## Examples
 
@@ -69,6 +72,20 @@ defmodule FunWithFlags do
       iex> FunWithFlags.enabled?(:magic_wands, for: filch)
       false
 
+  ### Hierarchical Actors Example
+
+      iex> alias FunWithFlags.TestUser, as: User
+      iex> alias FunWithFlags.TestOrg, as: Org
+      iex> org = %Org{id: 1, name: "Hogwarts"}
+      iex> user = %User{id: 1, name: "Harry Potter"}
+      iex> FunWithFlags.disable(:new_feature)
+      iex> FunWithFlags.enable(:new_feature, for_actor: org)
+      iex> FunWithFlags.enabled?(:new_feature, for_hierarchy: [user, org])
+      true
+      iex> FunWithFlags.disable(:new_feature, for_actor: user)
+      iex> FunWithFlags.enabled?(:new_feature, for_hierarchy: [user, org])
+      false
+
   """
   @spec enabled?(atom, options) :: boolean
   def enabled?(flag_name, options \\ [])
@@ -85,6 +102,11 @@ defmodule FunWithFlags do
   def enabled?(flag_name, [for: item]) when is_atom(flag_name) do
     {:ok, flag} = @store.lookup(flag_name)
     Flag.enabled?(flag, for: item)
+  end
+
+  def enabled?(flag_name, [for_hierarchy: actors]) when is_atom(flag_name) and is_list(actors) do
+    {:ok, flag} = @store.lookup(flag_name)
+    Flag.enabled?(flag, for_hierarchy: actors)
   end
 
 

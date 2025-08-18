@@ -26,6 +26,7 @@ It stores flag information in Redis or a relational DB (PostgreSQL, MySQL, or SQ
   - [Gate Priority and Interactions](#gate-priority-and-interactions)
   - [Boolean Gate](#boolean-gate)
   - [Actor Gate](#actor-gate)
+  - [Hierarchical Actors](#hierarchical-actors)
   - [Group Gate](#group-gate)
   - [Percentage of Time Gate](#percentage-of-time-gate)
   - [Percentage of Actors Gate](#percentage-of-actors-gate)
@@ -187,6 +188,59 @@ defimpl FunWithFlags.Actor, for: MyApp.Country do
   end
 end
 ```
+
+### Hierarchical Actors
+
+FunWithFlags supports checking flags against a hierarchy of actors, where the first actor with an explicit setting (enabled or disabled) takes precedence. This is useful for scenarios like organization → user hierarchies, where a flag might be enabled for an organization but disabled for a specific user within that organization.
+
+```elixir
+defmodule MyApp.User do
+  defstruct [:id, :name, :organization_id]
+end
+
+defmodule MyApp.Organization do
+  defstruct [:id, :name]
+end
+
+defimpl FunWithFlags.Actor, for: MyApp.User do
+  def id(%{id: id}) do
+    "user:#{id}"
+  end
+end
+
+defimpl FunWithFlags.Actor, for: MyApp.Organization do
+  def id(%{id: id}) do
+    "org:#{id}"
+  end
+end
+
+user = %MyApp.User{id: 1, name: "Alice", organization_id: 100}
+org = %MyApp.Organization{id: 100, name: "Acme Corp"}
+
+# Enable the flag for the organization
+FunWithFlags.disable(:new_feature)
+FunWithFlags.enable(:new_feature, for_actor: org)
+
+# Check hierarchy: user first, then organization
+FunWithFlags.enabled?(:new_feature, for_hierarchy: [user, org])
+# => true (inherits from organization since user has no explicit setting)
+
+# Override at the user level
+FunWithFlags.disable(:new_feature, for_actor: user)
+FunWithFlags.enabled?(:new_feature, for_hierarchy: [user, org])
+# => false (user setting overrides organization setting)
+```
+
+The hierarchy is processed in order:
+1. For each actor in the list, check for explicit actor gates first
+2. If no actor gate is found, check for group gates for that actor
+3. If no setting is found for an actor, move to the next actor in the hierarchy
+4. If no actor in the hierarchy has a setting, fall back to the boolean or percentage gates.
+
+This enables flexible authorization patterns like:
+- **User → Team → Organization → Global**
+- **Request → User → Account → Feature rollout**
+- **Device → User → Group → Default**
 
 ### Group Gate
 
