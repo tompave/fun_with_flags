@@ -49,7 +49,7 @@ defmodule FunWithFlags do
 
   ## Examples
 
-  This example relies on the [reference implementation](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_user.ex)
+  These examples rely on the [reference implementation](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_structs.ex)
   used in the tests.
 
       iex> alias FunWithFlags.TestUser, as: User
@@ -149,7 +149,7 @@ defmodule FunWithFlags do
 
   ### Enable for a group
 
-  This example relies on the [reference implementation](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_user.ex)
+  This example relies on the [reference implementation](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_structs.ex)
   used in the tests.
 
       iex> alias FunWithFlags.TestUser, as: User
@@ -292,7 +292,7 @@ defmodule FunWithFlags do
 
   ### Disable for a group
 
-  This example relies on the [reference implementation](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_user.ex)
+  This example relies on the [reference implementation](https://github.com/tompave/fun_with_flags/blob/master/test/support/test_structs.ex)
   used in the tests.
 
       iex> alias FunWithFlags.TestUser, as: User
