@@ -46,7 +46,7 @@ defmodule FunWithFlags.Flag do
     end
   end
 
-  def enabled?(%__MODULE__{} = flag, [for_hierarchy: actors]) do
+  def enabled?(flag = %__MODULE__{}, [for_hierarchy: actors]) do
     check_hierarchy(flag, actors)
   end
 
@@ -144,7 +144,7 @@ defmodule FunWithFlags.Flag do
     enabled?(flag, [])
   end
 
-  defp check_hierarchy(%__MODULE__{gates: gates} = flag, [actor | rest_actors]) do
+  defp check_hierarchy(flag = %__MODULE__{gates: gates}, [actor | rest_actors]) do
     case check_actor_gates(gates, actor) do
       {:ok, bool} -> bool
       :ignore ->
