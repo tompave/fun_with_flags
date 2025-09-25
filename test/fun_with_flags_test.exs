@@ -965,4 +965,115 @@ defmodule FunWithFlagsTest do
       :telemetry.detach(ref)
     end
   end
+
+
+  describe "enabled?(name, for_hierarchy: actors)" do
+    setup do
+      user = %FunWithFlags.TestUser{id: 1, name: "Harry Potter", groups: [:wizards]}
+      org = %FunWithFlags.TestOrg{id: 100, name: "Hogwarts", groups: [:schools]}
+      {:ok, user: user, org: org, flag_name: unique_atom()}
+    end
+
+    test "it returns false for non existing feature flags", %{user: user, org: org, flag_name: flag_name} do
+      refute FunWithFlags.enabled?(flag_name, for_hierarchy: [user, org])
+    end
+
+    test "it checks actors in order and returns first explicit setting", %{user: user, org: org, flag_name: flag_name} do
+      FunWithFlags.disable(flag_name)
+      FunWithFlags.enable(flag_name, for_actor: org)
+
+      assert FunWithFlags.enabled?(flag_name, for_hierarchy: [user, org])
+    end
+
+    test "user setting overrides organization setting", %{user: user, org: org, flag_name: flag_name} do
+      FunWithFlags.disable(flag_name)
+      FunWithFlags.enable(flag_name, for_actor: org)
+      FunWithFlags.disable(flag_name, for_actor: user)
+
+      refute FunWithFlags.enabled?(flag_name, for_hierarchy: [user, org])
+    end
+
+    test "it falls back to boolean gate when no actors have explicit settings", %{user: user, org: org, flag_name: flag_name} do
+      FunWithFlags.enable(flag_name)
+
+      assert FunWithFlags.enabled?(flag_name, for_hierarchy: [user, org])
+
+      FunWithFlags.disable(flag_name)
+
+      refute FunWithFlags.enabled?(flag_name, for_hierarchy: [user, org])
+    end
+
+    test "it checks group gates when actor gates don't match", %{user: user, org: org, flag_name: flag_name} do
+      FunWithFlags.disable(flag_name)
+      FunWithFlags.enable(flag_name, for_group: :wizards)
+
+      assert FunWithFlags.enabled?(flag_name, for_hierarchy: [user, org])
+    end
+
+    test "it processes actors in order, checking both actor and group gates", %{user: user, org: org, flag_name: flag_name} do
+      FunWithFlags.disable(flag_name)
+      FunWithFlags.enable(flag_name, for_group: :schools)
+      FunWithFlags.disable(flag_name, for_group: :wizards)
+
+      refute FunWithFlags.enabled?(flag_name, for_hierarchy: [user, org])
+    end
+
+    test "empty hierarchy falls back to boolean gate", %{flag_name: flag_name} do
+      FunWithFlags.enable(flag_name)
+
+      assert FunWithFlags.enabled?(flag_name, for_hierarchy: [])
+
+      FunWithFlags.disable(flag_name)
+
+      refute FunWithFlags.enabled?(flag_name, for_hierarchy: [])
+    end
+
+    test "with multiple actors, first match wins", %{flag_name: flag_name} do
+      user1 = %FunWithFlags.TestUser{id: 1, name: "User 1", groups: []}
+      user2 = %FunWithFlags.TestUser{id: 2, name: "User 2", groups: []}
+      user3 = %FunWithFlags.TestUser{id: 3, name: "User 3", groups: []}
+
+      FunWithFlags.disable(flag_name)
+      FunWithFlags.enable(flag_name, for_actor: user2)
+      FunWithFlags.disable(flag_name, for_actor: user3)
+
+      assert FunWithFlags.enabled?(flag_name, for_hierarchy: [user1, user2, user3])
+    end
+
+    test "respects actor gate precedence over group gates within same actor", %{flag_name: flag_name} do
+      user = %FunWithFlags.TestUser{id: 1, name: "User", groups: [:group1]}
+      org = %FunWithFlags.TestOrg{id: 100, name: "Org", groups: [:group2]}
+
+      FunWithFlags.disable(flag_name)
+      FunWithFlags.disable(flag_name, for_group: :group1)
+      FunWithFlags.enable(flag_name, for_actor: user)
+      FunWithFlags.disable(flag_name, for_group: :group2)
+
+      assert FunWithFlags.enabled?(flag_name, for_hierarchy: [user, org])
+    end
+
+    test "works with complex hierarchy and mixed gates", %{flag_name: flag_name} do
+      user = %FunWithFlags.TestOrg{id: 1, name: "User", groups: [:employees]}
+      team = %FunWithFlags.TestOrg{id: 10, name: "Team", groups: [:teams]}
+      division = %FunWithFlags.TestOrg{id: 100, name: "Division", groups: [:divisions]}
+      company = %FunWithFlags.TestOrg{id: 1000, name: "Company", groups: [:companies]}
+
+      FunWithFlags.disable(flag_name)
+      FunWithFlags.enable(flag_name, for_group: :companies)
+
+      assert FunWithFlags.enabled?(flag_name, for_hierarchy: [user, team, division, company])
+
+      FunWithFlags.disable(flag_name, for_group: :divisions)
+
+      refute FunWithFlags.enabled?(flag_name, for_hierarchy: [user, team, division, company])
+
+      FunWithFlags.enable(flag_name, for_actor: division)
+
+      assert FunWithFlags.enabled?(flag_name, for_hierarchy: [user, team, division, company])
+
+      FunWithFlags.disable(flag_name, for_actor: team)
+
+      refute FunWithFlags.enabled?(flag_name, for_hierarchy: [user, team, division, company])
+    end
+  end
 end

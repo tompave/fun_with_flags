@@ -46,6 +46,10 @@ defmodule FunWithFlags.Flag do
     end
   end
 
+  def enabled?(flag = %__MODULE__{}, [for_hierarchy: actors]) do
+    check_hierarchy(flag, actors)
+  end
+
 
   defp check_percentage_gate(gates, item, flag_name) do
     case percentage_of_actors_gate(gates) do
@@ -134,5 +138,21 @@ defmodule FunWithFlags.Flag do
 
   defp percentage_of_actors_gate(gates) do
     Enum.find(gates, &Gate.percentage_of_actors?/1)
+  end
+
+  defp check_hierarchy(flag, []) do
+    enabled?(flag, [])
+  end
+
+  defp check_hierarchy(flag = %__MODULE__{gates: gates}, [actor | rest_actors]) do
+    case check_actor_gates(gates, actor) do
+      {:ok, bool} -> bool
+      :ignore ->
+        case check_group_gates(gates, actor) do
+          {:ok, bool} -> bool
+          :ignore ->
+            check_hierarchy(flag, rest_actors)
+        end
+    end
   end
 end
