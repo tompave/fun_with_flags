@@ -81,8 +81,6 @@ defmodule FunWithFlags.Telemetry do
       the original event.
   """
 
-  require Logger
-
   @typedoc false
   @type pipelining_value :: {:ok, any()} | {:error, any()}
 
@@ -130,10 +128,6 @@ defmodule FunWithFlags.Telemetry do
       system_time: :erlang.system_time()
     }
 
-    Logger.debug(fn ->
-      "Telemetry event: #{inspect(event_name)}, metadata: #{inspect(metadata)}, measurements: #{inspect(measurements)}"
-    end)
-
     :telemetry.execute(event_name, measurements, metadata)
   end
 
@@ -164,10 +158,6 @@ defmodule FunWithFlags.Telemetry do
   @doc false
   def debug_event_handler([:fun_with_flags, :persistence, event], %{system_time: system_time}, metadata, _config) do
     dt = DateTime.from_unix!(system_time, :native) |> DateTime.to_iso8601()
-
-    Logger.alert(fn ->
-      "FunWithFlags telemetry event: #{event}, system_time: #{dt}, metadata: #{inspect(metadata)}"
-    end)
 
     :ok
   end
