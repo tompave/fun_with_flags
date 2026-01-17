@@ -75,6 +75,7 @@ defmodule FunWithFlags.Mixfile do
       {:myxql, "~> 0.2", optional: true, only: [:dev, :test]},
       {:phoenix_pubsub, "~> 2.0", optional: true},
       {:telemetry, "~> 1.3"},
+      {:igniter, "~> 0.6", optional: true},
 
       {:mock, "~> 0.3", only: :test},
 
