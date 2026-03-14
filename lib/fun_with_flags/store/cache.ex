@@ -9,6 +9,8 @@ defmodule FunWithFlags.Store.Cache do
   @type ttl :: integer
   @type cached_at :: integer
 
+  @behaviour FunWithFlags.Store.Cache.Behaviour
+
   @doc false
   use GenServer
 

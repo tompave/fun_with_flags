@@ -2,21 +2,20 @@ defmodule FunWithFlags.Store do
   @moduledoc false
 
   require Logger
-  alias FunWithFlags.Store.Cache
   alias FunWithFlags.{Config, Flag, Telemetry}
 
-  import FunWithFlags.Config, only: [persistence_adapter: 0]
+  import FunWithFlags.Config, only: [persistence_adapter: 0, cache_adapter: 0]
 
   @spec lookup(atom) :: {:ok, FunWithFlags.Flag.t}
   def lookup(flag_name) do
-    case Cache.get(flag_name) do
+    case cache_adapter().get(flag_name) do
       {:ok, flag} ->
         {:ok, flag}
       {:miss, reason, stale_value_or_nil} ->
         case persistence_adapter().get(flag_name) do
           {:ok, flag} ->
             Telemetry.emit_persistence_event({:ok, nil}, :read, flag_name, nil)
-            Cache.put(flag)
+            cache_adapter().put(flag)
             {:ok, flag}
           err = {:error, _reason} ->
             Telemetry.emit_persistence_event(err, :read, flag_name, nil)
@@ -89,7 +88,7 @@ defmodule FunWithFlags.Store do
   end
 
   defp cache_persistence_result(result = {:ok, flag}) do
-    Cache.put(flag)
+    cache_adapter().put(flag)
     result
   end
 

@@ -43,7 +43,7 @@ defmodule FunWithFlags.Supervisor do
 
   defp children do
     [
-      FunWithFlags.Store.Cache.worker_spec(),
+      Config.cache_adapter().worker_spec(),
       persistence_spec(),
       notifications_spec(),
     ]

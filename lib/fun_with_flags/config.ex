@@ -55,6 +55,11 @@ defmodule FunWithFlags.Config do
   end
 
 
+  def cache_adapter do
+    Keyword.get(ets_cache_config(), :adapter, FunWithFlags.Store.Cache)
+  end
+
+
   def ets_cache_config do
     Keyword.merge(
       @default_cache_config,
