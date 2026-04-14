@@ -282,7 +282,7 @@ defmodule FunWithFlags.Store.Persistent.Ecto do
   # MySQL/SQLite3 UPSERTs don't need it.
   #
   defp upsert_options(repo, gate = %Gate{}) do
-    options = [on_conflict: [set: [enabled: gate.enabled]]]
+    options = [on_conflict: [set: [enabled: gate.enabled, updated_at: DateTime.utc_now()]]]
 
     case db_type(repo) do
       :postgres ->
