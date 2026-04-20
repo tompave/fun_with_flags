@@ -129,6 +129,18 @@ defmodule FunWithFlags.Store.Persistent.EctoTest do
       {:ok, result9} = sort_db_result_gates(PersiEcto.get(name))
       assert drop_timestamps(result9) == expected_flag
     end
+
+    test "put() updates the updated_at timestamp when upserting a gate", %{name: name} do
+      bool_gate = %Gate{type: :boolean, enabled: true}
+      {:ok, %Flag{gates: [first_persisted]}} = PersiEcto.put(name, bool_gate)
+      assert %DateTime{} = first_persisted.updated_at
+
+      Process.sleep(1_000)
+
+      other_bool_gate = %Gate{type: :boolean, enabled: false}
+      {:ok, %Flag{gates: [second_persisted]}} = PersiEcto.put(name, other_bool_gate)
+      assert DateTime.compare(second_persisted.updated_at, first_persisted.updated_at) == :gt
+    end
   end
 
 # -----------------
