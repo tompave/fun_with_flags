@@ -34,7 +34,8 @@ defmodule FunWithFlags.StoreTest do
     test "looking up a defined flag returns the flag", %{name: name, gate: gate, flag: flag} do
       assert {:ok, %Flag{name: ^name, gates: []}} = Store.lookup(name)
       Store.put(name, gate)
-      assert {:ok, ^flag} = Store.lookup(name)
+      {:ok, result} = Store.lookup(name)
+      assert drop_timestamps(result) == flag
     end
 
     @tag :telemetry
@@ -43,8 +44,10 @@ defmodule FunWithFlags.StoreTest do
       ref = :telemetry_test.attach_event_handlers(self(), [event])
 
       # Write a flag to populate the cache, then read it.
-      assert {:ok, ^flag} = Store.put(name, gate)
-      assert {:ok, ^flag} = Store.lookup(name)
+      {:ok, persisted_flag} = Store.put(name, gate)
+      assert drop_timestamps(persisted_flag) == flag
+      {:ok, lookup_result} = Store.lookup(name)
+      assert drop_timestamps(lookup_result) == flag
 
       refute_received {
         ^event,
@@ -63,10 +66,12 @@ defmodule FunWithFlags.StoreTest do
 
       # Note: this setup could be omitted, and we could run the test with an
       # empty store and an empty cache. It would be the same.
-      assert {:ok, ^flag} = Store.put(name, gate)
+      {:ok, persisted_flag} = Store.put(name, gate)
+      assert drop_timestamps(persisted_flag) == flag
       Cache.flush()
 
-      assert {:ok, ^flag} = Store.lookup(name)
+      {:ok, lookup_result} = Store.lookup(name)
+      assert drop_timestamps(lookup_result) == flag
 
       assert_received {
         ^event,
@@ -88,7 +93,8 @@ defmodule FunWithFlags.StoreTest do
 
       # Note: this setup could be omitted, and we could run the test with an
       # empty store and an empty cache. It would be the same.
-      assert {:ok, ^flag} = Store.put(name, gate)
+      {:ok, persisted_flag} = Store.put(name, gate)
+      assert drop_timestamps(persisted_flag) == flag
       Cache.flush()
 
       with_mock(@persistence, [], [get: fn(^name) -> {:error, error_reason} end]) do
@@ -117,16 +123,20 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = Store.lookup(name)
 
       Store.put(name, gate)
-      assert {:ok, ^flag} = Store.lookup(name)
+      {:ok, result} = Store.lookup(name)
+      assert drop_timestamps(result) == flag
 
       gate2 = %Gate{gate | enabled: false}
       Store.put(name, gate2)
-      assert {:ok, %Flag{name: ^name, gates: [^gate2]}} = Store.lookup(name)
-      refute match? ^flag, Store.lookup(name)
+      {:ok, result2} = Store.lookup(name)
+      assert %Flag{name: ^name} = result2
+      assert [persisted_gate2] = result2.gates
+      assert drop_timestamps(persisted_gate2) == gate2
     end
 
     test "put() returns the tuple {:ok, %Flag{}}", %{name: name, gate: gate, flag: flag} do
-      assert {:ok, ^flag} = Store.put(name, gate)
+      {:ok, result} = Store.put(name, gate)
+      assert drop_timestamps(result) == flag
     end
 
     @tag :telemetry
@@ -180,7 +190,8 @@ defmodule FunWithFlags.StoreTest do
       with_mocks([
         {Redix, [:passthrough], []}
       ]) do
-        assert {:ok, ^flag} = Store.put(name, gate)
+        {:ok, result} = Store.put(name, gate)
+        assert drop_timestamps(result) == flag
         :timer.sleep(20)
 
         assert called(
@@ -201,7 +212,8 @@ defmodule FunWithFlags.StoreTest do
       with_mocks([
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
-        assert {:ok, ^flag} = Store.put(name, gate)
+        {:ok, result} = Store.put(name, gate)
+        assert drop_timestamps(result) == flag
         :timer.sleep(20)
 
         assert called(
@@ -231,7 +243,8 @@ defmodule FunWithFlags.StoreTest do
         500 -> flunk "Subscribe didn't work"
       end
 
-      assert {:ok, ^flag} = Store.put(name, gate)
+      {:ok, result} = Store.put(name, gate)
+      assert drop_timestamps(result) == flag
 
       payload = "#{u_id}:#{to_string(name)}"
 
@@ -265,7 +278,8 @@ defmodule FunWithFlags.StoreTest do
       :ok = Phoenix.PubSub.subscribe(:fwf_test, channel) # implicit self
 
 
-      assert {:ok, ^flag} = Store.put(name, gate)
+      {:ok, result} = Store.put(name, gate)
+      assert drop_timestamps(result) == flag
 
       payload = {:updated, name, u_id}
 
@@ -308,7 +322,8 @@ defmodule FunWithFlags.StoreTest do
         {Config, [:passthrough], [change_notifications_enabled?: fn() -> false end]},
         {Phoenix.PubSub, [:passthrough], []}
       ]) do
-        assert {:ok, ^flag} = Store.put(name, gate)
+        {:ok, put} = Store.put(name, gate)
+        assert drop_timestamps(put) == drop_timestamps(flag)
         :timer.sleep(20)
 
         refute called(
@@ -332,9 +347,12 @@ defmodule FunWithFlags.StoreTest do
       Store.put(name, bool_gate)
       Store.put(name, group_gate)
       {:ok, flag} = Store.lookup(name)
-      assert %Flag{name: ^name, gates: [^bool_gate, ^group_gate]} = flag
+      assert %Flag{name: ^name} = flag
+      [persisted_bool, persisted_group] = flag.gates
+      assert drop_timestamps(persisted_bool) == bool_gate
+      assert drop_timestamps(persisted_group) == group_gate
 
-      {:ok, bool_gate: bool_gate, group_gate: group_gate}
+      {:ok, bool_gate: persisted_bool, group_gate: persisted_group}
     end
 
     test "delete(flag_name, gate) can change the value of a flag", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
@@ -562,9 +580,12 @@ defmodule FunWithFlags.StoreTest do
       Store.put(name, bool_gate)
       Store.put(name, group_gate)
       {:ok, flag} = Store.lookup(name)
-      assert %Flag{name: ^name, gates: [^bool_gate, ^group_gate]} = flag
+      assert %Flag{name: ^name} = flag
+      [persisted_bool, persisted_group] = flag.gates
+      assert drop_timestamps(persisted_bool) == bool_gate
+      assert drop_timestamps(persisted_group) == group_gate
 
-      {:ok, bool_gate: bool_gate, group_gate: group_gate}
+      {:ok, bool_gate: persisted_bool, group_gate: persisted_group}
     end
 
     test "delete(flag_name) will reset all the flag gates", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
@@ -795,8 +816,10 @@ defmodule FunWithFlags.StoreTest do
     end
 
     test "if the flag is stored in the DB, it stores it in the Cache", %{name: name, gate: gate, flag: flag} do
-      {:ok, ^flag} = @persistence.put(name, gate)
-      assert {:ok, ^flag} = @persistence.get(name)
+      {:ok, persisted_flag} = @persistence.put(name, gate)
+      assert drop_timestamps(persisted_flag) == flag
+      {:ok, persist_result} = @persistence.get(name)
+      assert drop_timestamps(persist_result) == flag
 
       gate2 = %Gate{gate | enabled: false}
       flag2 = %Flag{name: name, gates: [gate2]}
@@ -804,13 +827,13 @@ defmodule FunWithFlags.StoreTest do
       Cache.put(flag2)
       assert {:ok, ^flag2} = Cache.get(name)
       assert {:ok, ^flag2} = Store.lookup(name)
-      refute match? {:ok, ^flag}, Store.lookup(name)
 
       Store.reload(name)
 
-      assert {:ok, ^flag} = Cache.get(name)
-      assert {:ok, ^flag} = Store.lookup(name)
-      refute match? {:ok, ^flag2}, Store.lookup(name)
+      {:ok, cache_result} = Cache.get(name)
+      assert drop_timestamps(cache_result) == flag
+      {:ok, lookup_result} = Store.lookup(name)
+      assert drop_timestamps(lookup_result) == flag
     end
 
     @tag :telemetry
@@ -887,12 +910,14 @@ defmodule FunWithFlags.StoreTest do
       {:ok, result} = Store.all_flags()
       assert 3 = length(result)
 
+      result_without_timestamps = Enum.map(result, &drop_timestamps/1)
+
       for flag <- [
         %Flag{name: name1, gates: [g_1a, g_1b, g_1c]},
         %Flag{name: name2, gates: [g_2a, g_2b]},
         %Flag{name: name3, gates: [g_3a]}
       ] do
-        assert flag in result
+        assert flag in result_without_timestamps
       end
     end
 
@@ -1062,27 +1087,31 @@ defmodule FunWithFlags.StoreTest do
       assert {:ok, ^empty_flag} = @persistence.get(name)
 
       Store.put(name, gate)
-      assert {:ok, ^flag} = Cache.get(name)
-      assert {:ok, ^flag} = @persistence.get(name)
+      {:ok, cache_result} = Cache.get(name)
+      assert drop_timestamps(cache_result) == flag
+      {:ok, persist_result} = @persistence.get(name)
+      assert drop_timestamps(persist_result) == flag
     end
 
     test "deleting a gate will update both the cache and the persistent store", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
       Store.put(name, bool_gate)
-      Store.put(name, group_gate)
+      {:ok, flag} = Store.put(name, group_gate)
+      # Extract persisted gates with timestamps
+      [persisted_bool, persisted_group] = flag.gates
 
-      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = Cache.get(name)
-      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = @persistence.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^persisted_bool, ^persisted_group]}} = Cache.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^persisted_bool, ^persisted_group]}} = @persistence.get(name)
 
-      Store.delete(name, group_gate)
-      assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = Cache.get(name)
-      assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = @persistence.get(name)
+      Store.delete(name, persisted_group)
+      assert {:ok, %Flag{name: ^name, gates: [^persisted_bool]}} = Cache.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^persisted_bool]}} = @persistence.get(name)
 
       # repeat. check it's safe and idempotent
-      Store.delete(name, group_gate)
-      assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = Cache.get(name)
-      assert {:ok, %Flag{name: ^name, gates: [^bool_gate]}} = @persistence.get(name)
+      Store.delete(name, persisted_group)
+      assert {:ok, %Flag{name: ^name, gates: [^persisted_bool]}} = Cache.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^persisted_bool]}} = @persistence.get(name)
 
-      Store.delete(name, bool_gate)
+      Store.delete(name, persisted_bool)
       assert {:ok, %Flag{name: ^name, gates: []}} = Cache.get(name)
       assert {:ok, %Flag{name: ^name, gates: []}} = @persistence.get(name)
     end
@@ -1090,10 +1119,12 @@ defmodule FunWithFlags.StoreTest do
 
     test "deleting a flag will reset both the cache and the persistent store", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
       Store.put(name, bool_gate)
-      Store.put(name, group_gate)
+      {:ok, flag} = Store.put(name, group_gate)
+      # Extract persisted gates with timestamps
+      [persisted_bool, persisted_group] = flag.gates
 
-      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = Cache.get(name)
-      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = @persistence.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^persisted_bool, ^persisted_group]}} = Cache.get(name)
+      assert {:ok, %Flag{name: ^name, gates: [^persisted_bool, ^persisted_group]}} = @persistence.get(name)
 
       Store.delete(name)
       assert {:ok, %Flag{name: ^name, gates: []}} = Cache.get(name)
@@ -1111,10 +1142,13 @@ defmodule FunWithFlags.StoreTest do
       @persistence.put(name, gate)
 
       assert {:miss, :not_found, nil} = Cache.get(name)
-      assert {:ok, ^flag} = @persistence.get(name)
+      {:ok, persist_result} = @persistence.get(name)
+      assert drop_timestamps(persist_result) == flag
 
-      assert {:ok, ^flag} = Store.lookup(name)
-      assert {:ok, ^flag} = Cache.get(name)
+      {:ok, lookup_result} = Store.lookup(name)
+      assert drop_timestamps(lookup_result) == flag
+      {:ok, cache_result} = Cache.get(name)
+      assert drop_timestamps(cache_result) == flag
     end
 
 
@@ -1131,19 +1165,25 @@ defmodule FunWithFlags.StoreTest do
 
 
     test "put() will change both the value stored in the Cache and in Redis", %{name: name, gate: gate, flag: flag} do
-      {:ok, ^flag} = @persistence.put(name, gate)
-      {:ok, ^flag} = Cache.put(flag)
+      {:ok, persisted_flag} = @persistence.put(name, gate)
+      assert drop_timestamps(persisted_flag) == flag
+      {:ok, _} = Cache.put(persisted_flag)
 
-      assert {:ok, ^flag} = Cache.get(name)
-      assert {:ok, ^flag} = @persistence.get(name)
+      {:ok, cache_result} = Cache.get(name)
+      assert drop_timestamps(cache_result) == flag
+      {:ok, persist_result} = @persistence.get(name)
+      assert drop_timestamps(persist_result) == flag
 
       gate2 = %Gate{gate | enabled: false}
       flag2 = %Flag{name: name, gates: [gate2]}
 
-      {:ok, ^flag2} = Store.put(name, gate2)
+      {:ok, result2} = Store.put(name, gate2)
+      assert drop_timestamps(result2) == flag2
 
-      assert {:ok, ^flag2} = Cache.get(name)
-      assert {:ok, ^flag2} = @persistence.get(name)
+      {:ok, cache_result2} = Cache.get(name)
+      assert drop_timestamps(cache_result2) == flag2
+      {:ok, persist_result2} = @persistence.get(name)
+      assert drop_timestamps(persist_result2) == flag2
     end
 
 
@@ -1152,15 +1192,21 @@ defmodule FunWithFlags.StoreTest do
       @persistence.put(name, gate)
 
       assert {:miss, :not_found, nil} = Cache.get(name)
-      assert {:ok, ^flag} = @persistence.get(name)
+      {:ok, persist_result} = @persistence.get(name)
+      assert drop_timestamps(persist_result) == flag
 
-      assert {:ok, ^flag} = Store.lookup(name)
-      assert {:ok, ^flag} = Cache.get(name)
+      {:ok, lookup_result} = Store.lookup(name)
+      assert drop_timestamps(lookup_result) == flag
+      {:ok, cache_result} = Cache.get(name)
+      assert drop_timestamps(cache_result) == flag
 
       timetravel by: (Config.cache_ttl + 1) do
-        assert {:miss, :expired, ^flag} = Cache.get(name)
-        assert {:ok, ^flag} = Store.lookup(name)
-        assert {:ok, ^flag} = Cache.get(name)
+        {:miss, :expired, expired_flag} = Cache.get(name)
+        assert drop_timestamps(expired_flag) == flag
+        {:ok, lookup_result2} = Store.lookup(name)
+        assert drop_timestamps(lookup_result2) == flag
+        {:ok, cache_result2} = Cache.get(name)
+        assert drop_timestamps(cache_result2) == flag
       end
     end
   end
@@ -1183,7 +1229,8 @@ defmodule FunWithFlags.StoreTest do
 
     test "if the Cached value is expired, it will still be used", %{name: name, gate: gate, flag: flag} do
       @persistence.put(name, gate)
-      assert {:ok, ^flag} = Store.lookup(name)
+      {:ok, lookup_result} = Store.lookup(name)
+      assert drop_timestamps(lookup_result) == flag
 
       gate2 = %Gate{gate | enabled: false}
       flag2 = %Flag{name: name, gates: [gate2]}
@@ -1204,7 +1251,8 @@ defmodule FunWithFlags.StoreTest do
 
     test "if there is no cached value, it raises an error", %{name: name, gate: gate, flag: flag} do
       @persistence.put(name, gate)
-      assert {:ok, ^flag} = Store.lookup(name)
+      {:ok, lookup_result} = Store.lookup(name)
+      assert drop_timestamps(lookup_result) == flag
 
       Cache.flush()
       assert {:miss, :not_found, nil} = Cache.get(name)
@@ -1219,4 +1267,11 @@ defmodule FunWithFlags.StoreTest do
     end
   end
 
+  defp drop_timestamps(%Gate{} = gate) do
+    %{gate | inserted_at: nil, updated_at: nil}
+  end
+
+  defp drop_timestamps(%Flag{} = flag) do
+    %{flag | last_modified_at: nil, gates: Enum.map(flag.gates, &drop_timestamps/1)}
+  end
 end

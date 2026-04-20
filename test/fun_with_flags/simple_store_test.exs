@@ -26,16 +26,22 @@ defmodule FunWithFlags.SimpleStoreTest do
       assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.lookup(name)
 
       SimpleStore.put(name, gate)
-      assert {:ok, %Flag{name: ^name, gates: [^gate]}} = SimpleStore.lookup(name)
+      {:ok, result} = SimpleStore.lookup(name)
+      assert %Flag{name: ^name} = result
+      assert [persisted_gate] = result.gates
+      assert drop_timestamps(persisted_gate) == gate
 
       gate2 = %Gate{gate | enabled: false}
       SimpleStore.put(name, gate2)
-      assert {:ok, %Flag{name: ^name, gates: [^gate2]}} = SimpleStore.lookup(name)
-      refute match? {:ok, %Flag{name: ^name, gates: [^gate]}}, SimpleStore.lookup(name)
+      {:ok, result2} = SimpleStore.lookup(name)
+      assert %Flag{name: ^name} = result2
+      assert [persisted_gate2] = result2.gates
+      assert drop_timestamps(persisted_gate2) == gate2
     end
 
     test "put() returns the tuple {:ok, %Flag{}}", %{name: name, gate: gate, flag: flag} do
-      assert {:ok, ^flag} = SimpleStore.put(name, gate)
+      {:ok, result} = SimpleStore.put(name, gate)
+      assert drop_timestamps(result) == flag
     end
 
     @tag :telemetry
@@ -91,27 +97,45 @@ defmodule FunWithFlags.SimpleStoreTest do
       SimpleStore.put(name, bool_gate)
       SimpleStore.put(name, group_gate)
       {:ok, flag} = SimpleStore.lookup(name)
-      assert %Flag{name: ^name, gates: [^bool_gate, ^group_gate]} = flag
+      assert %Flag{name: ^name} = flag
+      assert [persisted_bool, persisted_group] = flag.gates
+      assert drop_timestamps(persisted_bool) == bool_gate
+      assert drop_timestamps(persisted_group) == group_gate
 
-      {:ok, name: name, bool_gate: bool_gate, group_gate: group_gate}
+      {:ok, name: name, bool_gate: persisted_bool, group_gate: persisted_group}
     end
 
     test "delete(flag_name, gate) can change the value of a flag", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
-      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = SimpleStore.lookup(name)
+      {:ok, flag} = SimpleStore.lookup(name)
+      assert %Flag{name: ^name} = flag
+      assert length(flag.gates) == 2
 
       SimpleStore.delete(name, bool_gate)
-      assert {:ok, %Flag{name: ^name, gates: [^group_gate]}} = SimpleStore.lookup(name)
+      {:ok, flag2} = SimpleStore.lookup(name)
+      assert %Flag{name: ^name} = flag2
+      assert [remaining_gate] = flag2.gates
+      assert drop_timestamps(remaining_gate) == drop_timestamps(group_gate)
+
       SimpleStore.delete(name, group_gate)
       assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.lookup(name)
     end
 
     test "delete(flag_name, gate) returns the tuple {:ok, %Flag{}}", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
-      assert {:ok, %Flag{name: ^name, gates: [^group_gate]}} = SimpleStore.delete(name, bool_gate)
+      {:ok, result} = SimpleStore.delete(name, bool_gate)
+      assert %Flag{name: ^name} = result
+      assert [remaining_gate] = result.gates
+      assert drop_timestamps(remaining_gate) == drop_timestamps(group_gate)
     end
 
     test "deleting is safe and idempotent", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
-      assert {:ok, %Flag{name: ^name, gates: [^group_gate]}} = SimpleStore.delete(name, bool_gate)
-      assert {:ok, %Flag{name: ^name, gates: [^group_gate]}} = SimpleStore.delete(name, bool_gate)
+      {:ok, result1} = SimpleStore.delete(name, bool_gate)
+      assert [g1] = result1.gates
+      assert drop_timestamps(g1) == drop_timestamps(group_gate)
+
+      {:ok, result2} = SimpleStore.delete(name, bool_gate)
+      assert [g2] = result2.gates
+      assert drop_timestamps(g2) == drop_timestamps(group_gate)
+
       assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.delete(name, group_gate)
       assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.delete(name, group_gate)
     end
@@ -169,13 +193,18 @@ defmodule FunWithFlags.SimpleStoreTest do
       SimpleStore.put(name, bool_gate)
       SimpleStore.put(name, group_gate)
       {:ok, flag} = SimpleStore.lookup(name)
-      assert %Flag{name: ^name, gates: [^bool_gate, ^group_gate]} = flag
+      assert %Flag{name: ^name} = flag
+      assert [persisted_bool, persisted_group] = flag.gates
+      assert drop_timestamps(persisted_bool) == bool_gate
+      assert drop_timestamps(persisted_group) == group_gate
 
-      {:ok, name: name, bool_gate: bool_gate, group_gate: group_gate}
+      {:ok, name: name, bool_gate: persisted_bool, group_gate: persisted_group}
     end
 
-    test "delete(flag_name) will reset all the flag gates", %{name: name, bool_gate: bool_gate, group_gate: group_gate} do
-      assert {:ok, %Flag{name: ^name, gates: [^bool_gate, ^group_gate]}} = SimpleStore.lookup(name)
+    test "delete(flag_name) will reset all the flag gates", %{name: name} do
+      {:ok, flag} = SimpleStore.lookup(name)
+      assert %Flag{name: ^name} = flag
+      assert length(flag.gates) == 2
 
       SimpleStore.delete(name)
       assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.lookup(name)
@@ -246,7 +275,10 @@ defmodule FunWithFlags.SimpleStoreTest do
 
       assert {:ok, %Flag{name: ^name, gates: []}} = SimpleStore.lookup(name)
       SimpleStore.put(name, gate)
-      assert {:ok, %Flag{name: ^name, gates: [^gate]}} = SimpleStore.lookup(name)
+      {:ok, result} = SimpleStore.lookup(name)
+      assert %Flag{name: ^name} = result
+      assert [persisted_gate] = result.gates
+      assert drop_timestamps(persisted_gate) == gate
     end
 
     @tag :telemetry
@@ -327,12 +359,14 @@ defmodule FunWithFlags.SimpleStoreTest do
       {:ok, result} = SimpleStore.all_flags()
       assert 3 = length(result)
 
+      result_without_timestamps = Enum.map(result, &drop_timestamps/1)
+
       for flag <- [
         %Flag{name: name1, gates: [g_1a, g_1b, g_1c]},
         %Flag{name: name2, gates: [g_2a, g_2b]},
         %Flag{name: name3, gates: [g_3a]}
       ] do
-        assert flag in result
+        assert flag in result_without_timestamps
       end
     end
 
@@ -530,5 +564,13 @@ defmodule FunWithFlags.SimpleStoreTest do
         assert {:error, "mocked error"} = PersiEcto.get(name)
       end
     end
+  end
+
+  defp drop_timestamps(%Gate{} = gate) do
+    %{gate | inserted_at: nil, updated_at: nil}
+  end
+
+  defp drop_timestamps(%Flag{} = flag) do
+    %{flag | last_modified_at: nil, gates: Enum.map(flag.gates, &drop_timestamps/1)}
   end
 end

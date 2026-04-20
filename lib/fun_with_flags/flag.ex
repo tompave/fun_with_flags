@@ -7,16 +7,28 @@ defmodule FunWithFlags.Flag do
 
   alias FunWithFlags.Gate
 
-  defstruct [name: nil, gates: []]
-  @type t :: %FunWithFlags.Flag{name: atom, gates: [FunWithFlags.Gate.t]}
-  @typep options :: Keyword.t
+  defstruct name: nil, gates: [], last_modified_at: nil
 
+  @type t :: %FunWithFlags.Flag{
+          name: atom,
+          gates: [FunWithFlags.Gate.t()],
+          last_modified_at: DateTime.t() | nil
+        }
+  @typep options :: Keyword.t()
 
   @doc false
   def new(name, gates \\ []) when is_atom(name) do
-    %__MODULE__{name: name, gates: gates}
-  end
+    last_modified_at =
+      gates
+      |> Enum.map(& &1.updated_at)
+      |> Enum.reject(&is_nil/1)
+      |> case do
+        [] -> nil
+        dates -> Enum.max(dates)
+      end
 
+    %__MODULE__{name: name, gates: gates, last_modified_at: last_modified_at}
+  end
 
   @doc false
   @spec enabled?(t, options) :: boolean

@@ -26,24 +26,24 @@ defmodule FunWithFlags.Store.Serializer.Ecto do
   def deserialize_gate(_flag_name, _record), do: nil
 
 
-  defp do_deserialize_gate(%Record{gate_type: "boolean", enabled: enabled}) do
-    %Gate{type: :boolean, for: nil, enabled: enabled}
+  defp do_deserialize_gate(%Record{gate_type: "boolean", enabled: enabled} = record) do
+    %Gate{type: :boolean, for: nil, enabled: enabled, inserted_at: record.inserted_at, updated_at: record.updated_at}
   end
 
-  defp do_deserialize_gate(%Record{gate_type: "actor", enabled: enabled, target: target}) do
-    %Gate{type: :actor, for: target, enabled: enabled}
+  defp do_deserialize_gate(%Record{gate_type: "actor", enabled: enabled, target: target} = record) do
+    %Gate{type: :actor, for: target, enabled: enabled, inserted_at: record.inserted_at, updated_at: record.updated_at}
   end
 
-  defp do_deserialize_gate(%Record{gate_type: "group", enabled: enabled, target: target}) do
-    %Gate{type: :group, for: target, enabled: enabled}
+  defp do_deserialize_gate(%Record{gate_type: "group", enabled: enabled, target: target} = record) do
+    %Gate{type: :group, for: target, enabled: enabled, inserted_at: record.inserted_at, updated_at: record.updated_at}
   end
 
-  defp do_deserialize_gate(%Record{gate_type: "percentage", target: "time/" <> ratio_s}) do
-    %Gate{type: :percentage_of_time, for: parse_float(ratio_s), enabled: true}
+  defp do_deserialize_gate(%Record{gate_type: "percentage", target: "time/" <> ratio_s} = record) do
+    %Gate{type: :percentage_of_time, for: parse_float(ratio_s), enabled: true, inserted_at: record.inserted_at, updated_at: record.updated_at}
   end
 
-  defp do_deserialize_gate(%Record{gate_type: "percentage", target: "actors/" <> ratio_s}) do
-    %Gate{type: :percentage_of_actors, for: parse_float(ratio_s), enabled: true}
+  defp do_deserialize_gate(%Record{gate_type: "percentage", target: "actors/" <> ratio_s} = record) do
+    %Gate{type: :percentage_of_actors, for: parse_float(ratio_s), enabled: true, inserted_at: record.inserted_at, updated_at: record.updated_at}
   end
 
   def to_atom(atm) when is_atom(atm), do: atm

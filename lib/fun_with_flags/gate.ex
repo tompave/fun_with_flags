@@ -16,10 +16,17 @@ defmodule FunWithFlags.Gate do
     defexception [:message]
   end
 
+  defstruct [:type, :for, :enabled, inserted_at: nil, updated_at: nil]
 
-  defstruct [:type, :for, :enabled]
-  @type t :: %FunWithFlags.Gate{type: atom, for: (nil | String.t), enabled: boolean}
-  @typep options :: Keyword.t
+  @type t :: %FunWithFlags.Gate{
+          type: atom,
+          for: nil | String.t(),
+          enabled: boolean,
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
+        }
+
+  @typep options :: Keyword.t()
 
   @doc false
   @spec new(atom, boolean | float) :: t

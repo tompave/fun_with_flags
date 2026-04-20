@@ -6,6 +6,9 @@ defmodule FunWithFlagsTest do
   @moduletag :integration
   doctest FunWithFlags
 
+  alias FunWithFlags.Flag
+  alias FunWithFlags.Gate
+
   setup_all do
     on_exit(__MODULE__, fn() ->
       clear_test_db()
@@ -781,13 +784,15 @@ defmodule FunWithFlagsTest do
       {:ok, result} = FunWithFlags.all_flags()
       assert 4 = length(result)
 
+      result_without_timestamps = Enum.map(result, &drop_timestamps/1)
+
       for flag <- [
         %Flag{name: name1, gates: [Gate.new(:boolean, true)]},
         %Flag{name: name2, gates: [Gate.new(:boolean, false)]},
         %Flag{name: name3, gates: [Gate.new(:actor, actor, true)]},
         %Flag{name: name4, gates: [Gate.new(:percentage_of_time, 0.9)]},
       ] do
-        assert flag in result
+        assert flag in result_without_timestamps
       end
 
       FunWithFlags.clear(name1)
@@ -795,12 +800,14 @@ defmodule FunWithFlagsTest do
       {:ok, result} = FunWithFlags.all_flags()
       assert 3 = length(result)
 
+      result_without_timestamps = Enum.map(result, &drop_timestamps/1)
+
       for flag <- [
         %Flag{name: name2, gates: [Gate.new(:boolean, false)]},
         %Flag{name: name3, gates: [Gate.new(:actor, actor, true)]},
         %Flag{name: name4, gates: [Gate.new(:percentage_of_time, 0.9)]},
       ] do
-        assert flag in result
+        assert flag in result_without_timestamps
       end
 
       FunWithFlags.clear(name4)
@@ -808,11 +815,13 @@ defmodule FunWithFlagsTest do
       {:ok, result} = FunWithFlags.all_flags()
       assert 2 = length(result)
 
+      result_without_timestamps = Enum.map(result, &drop_timestamps/1)
+
       for flag <- [
         %Flag{name: name2, gates: [Gate.new(:boolean, false)]},
         %Flag{name: name3, gates: [Gate.new(:actor, actor, true)]},
       ] do
-        assert flag in result
+        assert flag in result_without_timestamps
       end
     end
   end
@@ -889,11 +898,13 @@ defmodule FunWithFlagsTest do
         gates: [
           Gate.new(:boolean, false),
           Gate.new(:group, "foobar", true),
-          Gate.new(:percentage_of_time, 0.75),
+          Gate.new(:percentage_of_time, 0.75)
         ]
       }
 
-      assert ^expected = FunWithFlags.get_flag(name)
+      actual = FunWithFlags.get_flag(name)
+      assert ^expected = drop_timestamps(actual)
+      assert %DateTime{} = actual.last_modified_at
     end
 
     @tag :telemetry
@@ -964,5 +975,13 @@ defmodule FunWithFlagsTest do
 
       :telemetry.detach(ref)
     end
+  end
+
+  defp drop_timestamps(%Gate{} = gate) do
+    %{gate | inserted_at: nil, updated_at: nil}
+  end
+
+  defp drop_timestamps(%Flag{} = flag) do
+    %{flag | last_modified_at: nil, gates: Enum.map(flag.gates, &drop_timestamps/1)}
   end
 end

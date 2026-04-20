@@ -169,17 +169,21 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
     setup do
       name = unique_atom()
       gate = %Gate{type: :boolean, enabled: true}
-      stored_flag = %Flag{name: name, gates: [gate]}
+      expected_stored_flag = %Flag{name: name, gates: [gate]}
 
       gate2 = %Gate{type: :boolean, enabled: false}
       cached_flag = %Flag{name: name, gates: [gate2]}
 
-      {:ok, ^stored_flag} = Config.persistence_adapter.put(name, gate)
+      {:ok, stored_flag} = Config.persistence_adapter.put(name, gate)
+      assert drop_timestamps(stored_flag) == expected_stored_flag
+
       assert_with_retries(fn ->
-        {:ok, ^cached_flag} = Cache.put(cached_flag)
+        {:ok, put} = Cache.put(cached_flag)
+        assert drop_timestamps(put) == drop_timestamps(cached_flag)
       end)
 
-      assert {:ok, ^stored_flag} = Config.persistence_adapter.get(name)
+      {:ok, persisted} = Config.persistence_adapter.get(name)
+      assert drop_timestamps(persisted) == expected_stored_flag
       assert {:ok, ^cached_flag} = Cache.get(name)
 
       wait_until_pubsub_is_ready!()
@@ -190,7 +194,7 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
     # This should be in `setup` but in there it produces a compiler warning because
     # the two variables will never match (duh).
     test "verify test setup", %{cached_flag: cached_flag, stored_flag: stored_flag} do
-      refute match? ^stored_flag, cached_flag
+      refute match? ^stored_flag, drop_timestamps(cached_flag)
     end
 
 
@@ -203,7 +207,8 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
       Phoenix.PubSub.broadcast!(client, channel, message)
 
       assert_with_retries(fn ->
-        assert {:ok, ^cached_flag} = Cache.get(name)
+        assert {:ok, put} = Cache.get(name)
+        assert drop_timestamps(put) == drop_timestamps(cached_flag)
       end)
     end
 
@@ -220,8 +225,17 @@ defmodule FunWithFlags.Notifications.PhoenixPubSubTest do
       Phoenix.PubSub.broadcast!(client, channel, message)
 
       assert_with_retries(fn ->
-        assert {:ok, ^stored_flag} = Cache.get(name)
+        assert {:ok, result} = Cache.get(name)
+        assert drop_timestamps(result) == drop_timestamps(stored_flag)
       end)
     end
+  end
+
+  defp drop_timestamps(%FunWithFlags.Gate{} = gate) do
+    %{gate | inserted_at: nil, updated_at: nil}
+  end
+
+  defp drop_timestamps(%FunWithFlags.Flag{} = flag) do
+    %{flag | last_modified_at: nil, gates: Enum.map(flag.gates, &drop_timestamps/1)}
   end
 end
