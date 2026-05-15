@@ -65,18 +65,17 @@ defmodule FunWithFlags.Config do
   # Used to determine the store module at compile time, which is stored in a
   # module attribute. `Application.compile_env` cannot be used in functions,
   # so here we are.
-  @compile_time_cache_config Application.compile_env(:fun_with_flags, :cache, [])
+  @compile_time_cache_enabled Application.compile_env(
+    :fun_with_flags,
+    [:cache, :enabled],
+    Keyword.fetch!(@default_cache_config, :enabled)
+  )
 
   # If we're not using the cache, then don't bother with
   # the 2-level logic in the default Store module.
   #
   def store_module_determined_at_compile_time do
-    cache_conf = Keyword.merge(
-      @default_cache_config,
-      @compile_time_cache_config
-    )
-
-    if Keyword.get(cache_conf, :enabled) do
+    if @compile_time_cache_enabled do
       FunWithFlags.Store
     else
       FunWithFlags.SimpleStore
@@ -84,26 +83,33 @@ defmodule FunWithFlags.Config do
   end
 
 
-  # Used to determine the Ecto table name at compile time.
-  @compile_time_persistence_config Application.compile_env(:fun_with_flags, :persistence, [])
+  # Only the specific keys that are read at compile time are tracked here.
+  # `:ecto_table_name` is interpolated into the `schema(...)` macro call in
+  # `FunWithFlags.Store.Persistent.Ecto.Record`, and `:ecto_primary_key_type`
+  # is used in the `@primary_key` module attribute in the same module — both
+  # must be compile-time constants.
+  #
+  # Other keys in the `:persistence` config (`:repo`, `:adapter`) are read at
+  # runtime via `persistence_config/0` and must NOT be captured here. Snapshotting
+  # the whole keyword list would cause Elixir's release-boot `validate_compile_env`
+  # check to abort whenever a host application legitimately overrides a runtime-only
+  # key — for example pointing `:repo` at a read replica in a specific app profile.
+  @compile_time_ecto_table_name Application.compile_env(
+    :fun_with_flags,
+    [:persistence, :ecto_table_name],
+    Keyword.fetch!(@default_persistence_config, :ecto_table_name)
+  )
+
+  @compile_time_ecto_primary_key_type Application.compile_env(
+    :fun_with_flags,
+    [:persistence, :ecto_primary_key_type],
+    Keyword.fetch!(@default_persistence_config, :ecto_primary_key_type)
+  )
 
 
-  def ecto_table_name_determined_at_compile_time do
-    pers_conf = Keyword.merge(
-      @default_persistence_config,
-      @compile_time_persistence_config
-    )
-    Keyword.get(pers_conf, :ecto_table_name)
-  end
+  def ecto_table_name_determined_at_compile_time, do: @compile_time_ecto_table_name
 
-
-  def ecto_primary_key_type_determined_at_compile_time do
-    pers_conf = Keyword.merge(
-      @default_persistence_config,
-      @compile_time_persistence_config
-    )
-    Keyword.get(pers_conf, :ecto_primary_key_type)
-  end
+  def ecto_primary_key_type_determined_at_compile_time, do: @compile_time_ecto_primary_key_type
 
 
   defp persistence_config do

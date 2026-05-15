@@ -3,6 +3,7 @@
 ## v1.14.0 (unreleased)
 
 * Drop support for Erlang/OTP 25, and Erlang/OTP >= 26 is now required. Dropping support for older versions of Erlang/OTP simply means that this package is not tested with them in CI, and that no compatibility issues are considered bugs.
+* Fix: runtime overrides of `:repo`, `:adapter` (in `:persistence`) and `:ttl` (in `:cache`) via `runtime.exs` no longer cause Elixir's release-boot `validate_compile_env` check to abort. Only the keys that are genuinely baked into compiled code (`:ecto_table_name`, `:ecto_primary_key_type`, and `:cache` → `:enabled`) are now tracked at compile time. No changes required in host applications.
 
 ## v1.13.0
 
